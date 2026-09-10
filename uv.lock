@@ -1266,20 +1266,57 @@ wheels = [
 
 [[package]]
 name = "banks"
-version = "2.5.1"
+version = "2.3.0"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.9.2' and python_full_version < '3.10' and sys_platform == 'win32'",
+    "python_full_version > '3.9' and python_full_version < '3.9.2' and sys_platform == 'win32'",
+    "python_full_version <= '3.9' and sys_platform == 'win32'",
+    "python_full_version >= '3.9.2' and python_full_version < '3.10' and sys_platform != 'win32'",
+    "python_full_version > '3.9' and python_full_version < '3.9.2' and sys_platform != 'win32'",
+    "python_full_version <= '3.9' and sys_platform != 'win32'",
+]
 dependencies = [
     { name = "deprecated", version = "1.2.18", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "deprecated", version = "1.3.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "eval-type-backport", marker = "python_full_version < '3.10'" },
-    { name = "filetype" },
     { name = "griffe", version = "1.14.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "griffe", version = "2.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-    { name = "jinja2" },
+    { name = "jinja2", marker = "python_full_version < '3.10'" },
     { name = "platformdirs", version = "4.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "pydantic", marker = "python_full_version < '3.10'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ca/64/9a4e17dfe7dc172594ffb877a287859edb40d59e0564bc930941e6c5df9d/banks-2.3.0.tar.gz", hash = "sha256:1ecb439a0b340588fcf9a8072d806540aad03c4b874ab9aff59ac8bc08c112ff", size = 182736, upload-time = "2026-01-21T10:03:15.114Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/27/d6/ccceb03dd5193d180e28411c9f880f2cc9a574251de94b9b8a21ebdf51ec/banks-2.3.0-py3-none-any.whl", hash = "sha256:ac6a5800d468f26a0d80e091c0c6971b69457d580ce34c0217ee2bf6c3f07271", size = 32748, upload-time = "2026-01-21T10:03:14.251Z" },
+]
+
+[[package]]
+name = "banks"
+version = "2.5.1"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.14' and sys_platform == 'win32'",
+    "python_full_version >= '3.14' and sys_platform == 'emscripten'",
+    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.13.*' and sys_platform == 'win32'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
+    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.12.*' and sys_platform == 'win32'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
+    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'emscripten'",
+    "python_full_version == '3.11.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.10.*' and sys_platform == 'win32'",
+    "python_full_version == '3.10.*' and sys_platform != 'win32'",
+]
+dependencies = [
+    { name = "deprecated", version = "1.3.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "filetype", marker = "python_full_version >= '3.10'" },
+    { name = "griffe", version = "2.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "jinja2", marker = "python_full_version >= '3.10'" },
     { name = "platformdirs", version = "4.11.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-    { name = "pydantic" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+    { name = "pydantic", marker = "python_full_version >= '3.10'" },
+    { name = "typing-extensions", marker = "python_full_version == '3.10.*'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f0/92/0449c32e718c10e4af40a3e040c830a77cdaeec6e9066622ee60e4c93e6e/banks-2.5.1.tar.gz", hash = "sha256:a7ca5c250b605ae90cfd6e4ca5dd6ce2ee377d5d59021b6feba44e345910026d", size = 196398, upload-time = "2026-09-10T10:15:34.569Z" }
 wheels = [
@@ -7520,7 +7557,7 @@ resolution-markers = [
 dependencies = [
     { name = "aiohttp", version = "3.13.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "aiosqlite", marker = "python_full_version < '3.10'" },
-    { name = "banks", marker = "python_full_version < '3.10'" },
+    { name = "banks", version = "2.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "dataclasses-json", marker = "python_full_version < '3.10'" },
     { name = "deprecated", version = "1.2.18", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "dirtyjson", marker = "python_full_version < '3.10'" },
@@ -7576,7 +7613,7 @@ resolution-markers = [
 dependencies = [
     { name = "aiohttp", version = "3.14.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "aiosqlite", marker = "python_full_version >= '3.10'" },
-    { name = "banks", marker = "python_full_version >= '3.10'" },
+    { name = "banks", version = "2.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "dataclasses-json", marker = "python_full_version >= '3.10'" },
     { name = "deprecated", version = "1.3.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "dirtyjson", marker = "python_full_version >= '3.10'" },
@@ -14847,6 +14884,7 @@ dependencies = [
     { name = "datasets", version = "4.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "datasets", version = "5.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "diskcache" },
+    { name = "eval-type-backport", marker = "python_full_version < '3.10'" },
     { name = "instructor", version = "1.12.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "instructor", version = "1.17.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "langchain" },
@@ -14938,7 +14976,6 @@ dev = [
     { name = "build", version = "1.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "gitpython" },
     { name = "haystack-ai" },
-    { name = "llama-index", version = "0.14.16", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "llama-index", version = "0.14.24", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "nbmake" },
     { name = "notebook", version = "7.5.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
@@ -14972,7 +15009,6 @@ dev-minimal = [
     { name = "build", version = "1.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "gitpython" },
     { name = "haystack-ai" },
-    { name = "llama-index", version = "0.14.16", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "llama-index", version = "0.14.24", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "nbmake" },
     { name = "pre-commit", version = "4.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
@@ -15019,7 +15055,6 @@ docs-pdf = [
 test = [
     { name = "gitpython" },
     { name = "haystack-ai" },
-    { name = "llama-index", version = "0.14.16", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "llama-index", version = "0.14.24", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "rapidfuzz", version = "3.13.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "rapidfuzz", version = "3.14.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
@@ -15039,6 +15074,7 @@ requires-dist = [
     { name = "datasets", specifier = ">=4.0.0" },
     { name = "diskcache", specifier = ">=5.6.3" },
     { name = "dspy-ai", marker = "extra == 'dspy'", specifier = ">=2.4.0" },
+    { name = "eval-type-backport", marker = "python_full_version < '3.10'" },
     { name = "gitpython", marker = "extra == 'all'" },
     { name = "gitpython", marker = "extra == 'git'" },
     { name = "google-api-python-client", marker = "extra == 'gdrive'", specifier = ">=2.178.0" },
@@ -15083,7 +15119,7 @@ dev = [
     { name = "build", specifier = ">=1.3.0" },
     { name = "gitpython" },
     { name = "haystack-ai", specifier = "<3.0.0" },
-    { name = "llama-index" },
+    { name = "llama-index", marker = "python_full_version >= '3.10'" },
     { name = "nbmake" },
     { name = "notebook" },
     { name = "openinference-instrumentation-langchain", specifier = ">=0.1.29" },
@@ -15103,7 +15139,7 @@ dev-minimal = [
     { name = "build", specifier = ">=1.3.0" },
     { name = "gitpython" },
     { name = "haystack-ai", specifier = "<3.0.0" },
-    { name = "llama-index" },
+    { name = "llama-index", marker = "python_full_version >= '3.10'" },
     { name = "nbmake" },
     { name = "pre-commit", specifier = ">=4.3.0" },
     { name = "pyright", specifier = ">=1.1.403" },
@@ -15137,7 +15173,7 @@ docs-pdf = [
 test = [
     { name = "gitpython" },
     { name = "haystack-ai", specifier = "<3.0.0" },
-    { name = "llama-index" },
+    { name = "llama-index", marker = "python_full_version >= '3.10'" },
     { name = "rapidfuzz" },
     { name = "sacrebleu" },
     { name = "scipy" },

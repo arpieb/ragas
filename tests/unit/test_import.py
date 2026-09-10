@@ -5,6 +5,16 @@ from unittest.mock import MagicMock
 
 import pytest
 
+try:
+    from llama_index.core.base.embeddings.base import BaseEmbedding
+
+    LLAMA_INDEX_INSTALLED = True
+except (ImportError, TypeError):
+    # Not installed on Python 3.9 (see the test group in pyproject.toml). TypeError
+    # is caught too because a llama-index built for 3.10+ fails that way on 3.9
+    # rather than with ImportError.
+    LLAMA_INDEX_INSTALLED = False
+
 
 def test_missing_haystack_llmwrapper(monkeypatch):
     real_import = builtins.__import__
@@ -62,23 +72,27 @@ def test_wrappers_with_missing_haystack(monkeypatch):
 
     # Test: Non-Haystack wrappers still work fine
     from langchain_openai.embeddings import OpenAIEmbeddings
-    from llama_index.core.base.embeddings.base import BaseEmbedding
 
-    from ragas.embeddings import LangchainEmbeddingsWrapper, LlamaIndexEmbeddingsWrapper
+    from ragas.embeddings import LangchainEmbeddingsWrapper
 
     langchain_mocked_embedding = MagicMock(spec=OpenAIEmbeddings)
     langchain_mocked_embedding.model = "text-embedding-ada-002"
-    llama_index_mocked_embedding = MagicMock(spec=BaseEmbedding)
 
     langchain_wrapper = LangchainEmbeddingsWrapper(
         embeddings=langchain_mocked_embedding
     )
-    llama_index_wrapper = LlamaIndexEmbeddingsWrapper(
-        embeddings=llama_index_mocked_embedding
-    )
 
     assert langchain_wrapper.embeddings.model == "text-embedding-ada-002"  # type: ignore
-    assert llama_index_wrapper.embeddings is llama_index_mocked_embedding
+
+    if LLAMA_INDEX_INSTALLED:
+        from ragas.embeddings import LlamaIndexEmbeddingsWrapper
+
+        llama_index_mocked_embedding = MagicMock(spec=BaseEmbedding)
+        llama_index_wrapper = LlamaIndexEmbeddingsWrapper(
+            embeddings=llama_index_mocked_embedding
+        )
+
+        assert llama_index_wrapper.embeddings is llama_index_mocked_embedding
 
     # Test: Importing HaystackEmbeddingsWrapper fails
     with pytest.raises(ImportError, match="Haystack is not installed"):

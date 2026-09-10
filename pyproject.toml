@@ -17,6 +17,10 @@ dependencies = [
     "openai>=1.0.0",
     "tqdm",
     "instructor",
+    # instructor (and other pydantic-based deps) annotate model fields with PEP 604
+    # unions like `str | Path`. pydantic can only evaluate those on 3.9 with this
+    # backport installed; without it `import ragas` raises TypeError on 3.9.
+    "eval_type_backport; python_version < '3.10'",
     "pillow>=10.4.0",
     "networkx",
     "scikit-network",
@@ -169,7 +173,11 @@ test = [
     "sacrebleu",   # tests/unit/test_chrf_score.py
     "GitPython",   # tests/unit/test_experiment.py
     "haystack-ai<3.0.0", # tests/unit/test_import.py
-    "llama_index", # tests/unit/test_import.py
+    # llama-index still advertises `requires-python >=3.9`, but since
+    # llama-index-core 0.12.x its module bodies use PEP 604 (`X | None`)
+    # annotations that raise TypeError at import time on 3.9. Only install it
+    # where it actually works; test_import.py skips the wrapper it covers.
+    "llama_index; python_version >= '3.10'", # tests/unit/test_import.py
     "rapidfuzz",   # tests/unit/test_prechunked_generation.py
 ]
 
