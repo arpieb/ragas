@@ -78,7 +78,7 @@ This repository is organized as a single project with integrated experimental fe
 - Lives under `examples/` as an installable package `ragas-examples`
 - Published independently to PyPI via GitHub Actions workflow `publish-examples.yml`
 - Versioning via Git tags with prefix `examples-v` (e.g., `examples-v0.1.0`)
-- Local development: `uv pip install -e . -e ./examples`
+- Local development: `uv sync --locked` (the workspace installs both `ragas` and `ragas-examples` in editable mode)
 - Run examples: `python -m ragas_examples.benchmark_llm.prompt`
 
 ## Development Environment Setup
@@ -104,11 +104,11 @@ make install
 # Install uv if not available
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Minimal dev: Core + essential dev tools
-uv pip install -e ".[dev-minimal]"
+# Minimal dev: core + essential dev tools (uv creates .venv for you)
+uv sync --locked --group dev-minimal
 
-# Full dev: Everything (uses modern uv sync)
-uv sync --group dev
+# Full dev: everything
+uv sync --locked --group dev
 ```
 
 #### Which Option to Choose?
@@ -127,8 +127,23 @@ uv sync --group dev
 
 #### Installation Methods Explained
 
-- **`install-minimal`**: Uses `uv pip install -e ".[dev-minimal]"` for selective minimal dev dependencies
-- **`install`**: Uses `uv sync --group dev` for complete modern dependency management
+- **`install-minimal`**: `uv sync --locked --group dev-minimal` — minimal dev tooling plus
+  everything needed to run `tests/unit`. This is what CI installs.
+- **`install`**: `uv sync --locked --group dev` — includes `dev-minimal` plus the full ML,
+  tracing and notebook stack.
+
+Both install from the committed `uv.lock`, so local and CI environments are identical.
+`dev-minimal` is uv's default group, so bare `uv sync` / `uv run <tool>` use the fast set.
+
+### Changing dependencies
+
+`uv.lock` is committed and CI enforces it with `uv lock --check`. After editing
+dependencies in `pyproject.toml`, regenerate and commit the lock:
+
+```bash
+make lock        # re-resolve, updating uv.lock
+make lock-check  # verify uv.lock matches pyproject.toml (what CI runs)
+```
 
 ### Verification
 ```bash
@@ -414,7 +429,7 @@ uv pip install "ragas[tracing,gdrive,ai-frameworks]"
 ```bash
 uv pip install "numpy>=2.1" --only-binary=:all:
 ```
-If conflicts pin NumPy to 2.0.x, temporarily set `numpy>=2.1` in `pyproject.toml` and run `uv sync --group dev`.
+If conflicts pin NumPy to 2.0.x, temporarily set `numpy>=2.1` in `pyproject.toml`, then run `make lock && uv sync --group dev`.
 
 **Happy coding! 🚀**
 

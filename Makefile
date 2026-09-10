@@ -19,36 +19,37 @@ setup-venv: ## Set up uv virtual environment
 	@echo "Virtual environment created at .venv"
 	@echo "To activate: source .venv/bin/activate"
 
-install-minimal: ## Install minimal dev dependencies (fast setup - 79 packages)
+install-minimal: ## Install minimal dev dependencies (fast, locked)
 	@echo "Installing minimal development dependencies (fast setup)..."
-	@if [ ! -d ".venv" ]; then \
-		echo "Virtual environment not found, creating one..."; \
-		$(MAKE) setup-venv; \
-	fi
-	@echo "Installing core ragas + essential dev tools..."
-	$(Q)uv pip install -e ".[dev-minimal]"
+	@echo "Syncing core ragas + essential dev tools from uv.lock..."
+	$(Q)VIRTUAL_ENV= uv sync --locked --group dev-minimal
 	@echo "Setting up pre-commit hooks..."
 	$(Q)uv run pre-commit install
-	@echo "Minimal installation complete! (79 packages)"
+	@echo "Minimal installation complete!"
 	@echo "Note: For full features including ML packages, use 'make install'"
 
-install: ## Install full dependencies with uv sync (backward compatible - modern approach)
+install: ## Install full dependencies with uv sync (complete ML stack)
 	@echo "Installing full development dependencies with uv sync..."
-	@if [ ! -d ".venv" ]; then \
-		echo "Virtual environment not found, creating one..."; \
-		$(MAKE) setup-venv; \
-	fi
-	@echo "Installing ragas with full dev environment..."
-	$(Q)VIRTUAL_ENV= uv sync --group dev
+	@echo "Syncing ragas with full dev environment from uv.lock..."
+	$(Q)VIRTUAL_ENV= uv sync --locked --group dev
 	@echo "Setting up pre-commit hooks..."
 	$(Q)uv run pre-commit install
-	@echo "Full installation complete! (Modern uv sync approach)"
+	@echo "Full installation complete!"
+
+lock: ## Re-resolve dependencies and update uv.lock
+	@echo "Updating uv.lock..."
+	$(Q)VIRTUAL_ENV= uv lock
+	@echo "uv.lock updated. Commit it alongside your pyproject.toml change."
+
+lock-check: ## Verify uv.lock is up to date with pyproject.toml
+	@echo "Checking uv.lock is in sync with pyproject.toml..."
+	$(Q)VIRTUAL_ENV= uv lock --check
 
 # =============================================================================
 # CODE QUALITY
 # =============================================================================
 
-.PHONY: help setup-venv install-minimal install format type check clean test test-e2e benchmarks benchmarks-docker run-ci run-ci-fast run-ci-format-check run-ci-type run-ci-tests build-docs serve-docs
+.PHONY: help setup-venv install-minimal install lock lock-check format type check clean test test-e2e benchmarks benchmarks-docker run-ci run-ci-fast run-ci-format-check run-ci-type run-ci-tests build-docs serve-docs
 format: ## Format and lint all code
 	@echo "Formatting and linting all code..."
 	@echo "(ruff format) Formatting ragas..."
@@ -113,7 +114,7 @@ run-ci-type: ## Run type checking (matches GitHub CI)
 
 run-ci-tests: ## Run all tests with CI options
 	@echo "Running all tests with CI options..."
-	$(Q)__RAGAS_DEBUG_TRACKING=true RAGAS_DO_NOT_TRACK=true pytest --nbmake tests/unit --dist loadfile -n auto
+	$(Q)__RAGAS_DEBUG_TRACKING=true RAGAS_DO_NOT_TRACK=true uv run --active pytest --nbmake tests/unit --dist loadfile -n auto
 
 run-ci-fast: ## Fast CI check for quick local validation (2-3 minutes)
 	@echo "Running fast CI check for quick feedback..."

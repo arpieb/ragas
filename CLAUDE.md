@@ -19,29 +19,42 @@ The repository contains:
 Choose the appropriate installation based on your needs:
 
 ```bash
-# RECOMMENDED: Minimal dev setup (79 packages - fast)
+# RECOMMENDED: Minimal dev setup (fast)
 make install-minimal
 
-# FULL: Complete dev environment (383 packages - comprehensive)  
+# FULL: Complete dev environment (comprehensive ML stack)
 make install
 
-# OR manual installation:
-# Create a virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-
-# Minimal dev setup (uses [project.optional-dependencies].dev-minimal)
-uv pip install -e ".[dev-minimal]"
-
-# Full dev setup (uses [dependency-groups].dev)
-uv sync --group dev
+# OR manual installation (uv creates and manages .venv for you):
+uv sync --locked --group dev-minimal   # minimal
+uv sync --locked --group dev           # full
 ```
 
 ### Installation Methods Explained
 
-- **Minimal setup**: Uses `uv pip install` with optional dependencies for selective installation
-- **Full setup**: Uses `uv sync` with dependency groups for comprehensive environment management
-- **No naming conflicts**: `dev-minimal` vs `dev` clearly distinguish the two approaches
+Both paths are `uv sync` against the committed `uv.lock`, so every environment
+(local, CI, Docker) resolves to byte-identical dependency versions.
+
+- **Minimal setup**: `[dependency-groups].dev-minimal` — lint, type-check and the
+  full unit test suite. This is what CI installs.
+- **Full setup**: `[dependency-groups].dev` — includes `dev-minimal` plus the heavy
+  ML/tracing stack and all runtime extras.
+- `dev-minimal` is uv's **default group**, so a bare `uv sync` or `uv run <tool>`
+  gets the fast environment without pulling the full ML stack.
+- Dev tooling lives in dependency groups, *not* in `[project.optional-dependencies]`,
+  so it is never published as an extra on PyPI.
+
+### Changing dependencies
+
+`uv.lock` is committed and CI verifies it with `uv lock --check`. After editing
+dependencies in `pyproject.toml`:
+
+```bash
+make lock          # re-resolve and update uv.lock
+make lock-check    # verify uv.lock matches pyproject.toml (what CI runs)
+```
+
+Commit the resulting `uv.lock` alongside the `pyproject.toml` change.
 
 ### Workspace Structure
 
@@ -211,8 +224,9 @@ analytics_logger.addHandler(console_handler)
 
 - whenever you create such docs put in in /\_experiments because that is gitignored and you can use it as a scratchpad or tmp directory for storing these
 - always use uv to run python and python related commandline tools like isort, ruff, pyright etc. This is because we are using uv to manage the .venv and dependencies.
-- The project uses two distinct dependency management approaches:
-  - **Minimal setup**: `[project.optional-dependencies].dev-minimal` for fast development (79 packages)
-  - **Full setup**: `[dependency-groups].dev` for comprehensive development (383 packages)
+- The project uses two dependency groups, both synced from the committed `uv.lock`:
+  - **Minimal setup**: `[dependency-groups].dev-minimal` for fast development (uv's default group)
+  - **Full setup**: `[dependency-groups].dev` for comprehensive development (full ML stack)
+- `uv.lock` is committed. Run `make lock` after changing dependencies and commit the result.
 - Use `make install-minimal` for most development tasks, `make install` for full ML stack work
 - if the user asks you to save a plan, save it into the plan/ directory with an appropriate file name.
