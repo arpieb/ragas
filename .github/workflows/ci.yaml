@@ -56,7 +56,7 @@ jobs:
         include:
           # Critical path: Latest + oldest Python on Ubuntu (full test suite)
           - os: ubuntu-latest
-            python-version: "3.9"
+            python-version: "3.10"
             test-type: "full"
           - os: ubuntu-latest
             python-version: "3.12"

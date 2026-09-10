@@ -1,7 +1,7 @@
 [project]
 name = "ragas"
 description = "Evaluation framework for RAG and LLM applications"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {file = "LICENSE"}
 dependencies = [
     # Core dependencies
@@ -86,7 +86,7 @@ readme = {file = ["README.md"], content-type = "text/markdown"}
 
 [tool.ruff]
 line-length = 88
-target-version = "py39"
+target-version = "py310"
 exclude = ["*.ipynb", "*/_version.py"]  # Exclude Jupyter notebooks and auto-generated version files from linting
 
 [tool.ruff.lint]
@@ -109,7 +109,7 @@ preview = false
 [tool.pyright]
 include = ["src/ragas"]
 exclude = ["@types/*"]
-pythonVersion = "3.9"
+pythonVersion = "3.10"
 pythonPlatform = "All"
 typeCheckingMode = "basic"
 reportMissingImports = false

@@ -84,7 +84,7 @@ This repository is organized as a single project with integrated experimental fe
 ## Development Environment Setup
 
 ### Prerequisites
-- Python 3.9+ 
+- Python 3.10+
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
 - Git
 
@@ -264,7 +264,7 @@ make type  # Type check all code with pyright
 Our GitHub Actions CI runs:
 1. **Dependency Installation**: Using uv for consistent environments
 2. **Code Quality Checks**: Format and type validation
-3. **Testing**: Unit and integration tests across Python 3.9-3.12
+3. **Testing**: Unit and integration tests across Python 3.10-3.13
 4. **Multi-OS Testing**: Ubuntu, macOS, Windows
 
 ### Local CI Simulation
@@ -406,7 +406,7 @@ uv run ruff check --no-fix    # Check issues without fixing
 #### Python 3.13 on macOS ARM: NumPy fails to install (builds from source)
 
 - Symptom: `make install` attempts to build `numpy==2.0.x` from source on Python 3.13 (no prebuilt wheel), failing with C/C++ errors.
-- Status: Ragas CI supports Python 3.9–3.12. Python 3.13 is not officially supported yet.
+- Status: Ragas CI supports Python 3.10–3.13.
 
 Workarounds:
 1) Recommended: use Python 3.12

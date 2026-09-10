@@ -1,8 +1,8 @@
 # Benchmarks image. Built from the repo root (see `make benchmarks-docker`).
 # Pinned to the oldest supported interpreter; this overrides the repo's
 # .python-version so uv uses the interpreter already in the base image.
-FROM ghcr.io/astral-sh/uv:python3.9-bookworm-slim
-ENV UV_PYTHON=3.9
+FROM ghcr.io/astral-sh/uv:python3.10-bookworm-slim
+ENV UV_PYTHON=3.10
 
 # git is required by setuptools_scm to derive the version; make drives the benchmarks.
 RUN apt-get update \

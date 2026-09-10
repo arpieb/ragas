@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "rag-eval"
 version = "0.1.0"
 description = "RAG evaluation example using Ragas"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "ragas[all]>=0.3.0",
     "openai>=1.0.0",
