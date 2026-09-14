@@ -134,7 +134,6 @@ nav:
           - howtos/integrations/index.md
           - Observability:
               - Arize: howtos/integrations/_arize.md
-              - LangSmith: howtos/integrations/langsmith.md
           - LLM Providers:
               - Amazon Bedrock: howtos/integrations/amazon_bedrock.md
               - Google Gemini: howtos/integrations/gemini.md
@@ -143,8 +142,6 @@ nav:
               - AG-UI: howtos/integrations/ag_ui.md
               - Griptape: howtos/integrations/griptape.md
               - Haystack: howtos/integrations/haystack.md
-              - LangChain: howtos/integrations/langchain.md
-              - LangGraph: howtos/integrations/_langgraph_agent_evaluation.md
               - LlamaIndex: howtos/integrations/_llamaindex.md
               - LlamaIndex Agents: howtos/integrations/llamaindex_agents.md
               - LlamaStack: howtos/integrations/llama_stack.md

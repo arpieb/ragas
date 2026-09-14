@@ -49,7 +49,6 @@ Doc file 'howtos/customizations/metrics/_cost.md' contains an unrecognized relat
 Doc file 'howtos/customizations/optimizers/index.md' contains a link '../../metrics/custom-metrics.md', but the target 'howtos/metrics/custom-metrics.md' is not found among documentation files.
 Doc file 'howtos/integrations/_zeno.md' contains a link '../../getstarted/evaluation.md', but the target 'getstarted/evaluation.md' is not found among documentation files.
 Doc file 'howtos/integrations/gemini.md' contains a link '../llm-factory.md', but the target 'howtos/llm-factory.md' is not found among documentation files.
-Doc file 'howtos/integrations/langchain.md' contains an unrecognized relative link './../../concepts/metrics/available_metrics/', it was left as is. Did you mean '../../concepts/metrics/available_metrics/index.md'?
 Doc file 'howtos/integrations/llamaindex_agents.md' contains an unrecognized relative link '../../concepts/metrics/available_metrics/', it was left as is. Did you mean '../../concepts/metrics/available_metrics/index.md'?
 Doc file 'howtos/llm-adapters.md' contains a link './llm-factory.md', but the target 'howtos/llm-factory.md' is not found among documentation files.
 Doc file 'howtos/migrations/migrate_from_v01_to_v02.md' contains a link './../customizations/metrics/_modifying-prompts-metrics.md', but the target 'howtos/customizations/metrics/_modifying-prompts-metrics.md' is not found among documentation files.
@@ -58,20 +57,20 @@ Doc file 'howtos/migrations/migrate_from_v03_to_v04.md' contains a link '../../r
 Doc file 'references/optimizers.md' contains a link '../howtos/customizations/metrics/custom-metrics.md', but the target 'howtos/customizations/metrics/custom-metrics.md' is not found among documentation files.
 Doc file 'references/optimizers.md' contains a link '../howtos/customizations/optimizers/dspy-optimizer.md', but the target 'howtos/customizations/optimizers/dspy-optimizer.md' is not found among documentation files.
 The following pages exist in the docs directory, but are not included in the "nav" configuration:
-griffe: src/ragas/embeddings/base.py:409: Parameter 'cache_folder' does not appear in the function signature
-griffe: src/ragas/embeddings/base.py:409: Parameter 'encode_kwargs' does not appear in the function signature
-griffe: src/ragas/embeddings/base.py:409: Parameter 'model_kwargs' does not appear in the function signature
-griffe: src/ragas/embeddings/base.py:409: Parameter 'model_name' does not appear in the function signature
-griffe: src/ragas/messages.py:31: Parameter 'args' does not appear in the function signature
-griffe: src/ragas/messages.py:31: Parameter 'name' does not appear in the function signature
-griffe: src/ragas/optimizers/base.py:45: Parameter 'metric' does not appear in the function signature
-griffe: src/ragas/optimizers/base.py:45: Parameter 'train_data' does not appear in the function signature
-griffe: src/ragas/prompt/base.py:132: Parameter 'instruction' does not appear in the function signature
-griffe: src/ragas/prompt/base.py:164: Parameter 'n' does not appear in the function signature
-griffe: src/ragas/tokenizers.py:54: No types or annotations for parameters ['If']
-griffe: src/ragas/tokenizers.py:54: Parameter 'If' does not appear in the function signature
-griffe: src/ragas/tokenizers.py:95: No types or annotations for parameters ['One']
-griffe: src/ragas/tokenizers.py:95: Parameter 'One' does not appear in the function signature
+griffe: src/ragas/embeddings/base.py: Parameter 'cache_folder' does not appear in the function signature
+griffe: src/ragas/embeddings/base.py: Parameter 'encode_kwargs' does not appear in the function signature
+griffe: src/ragas/embeddings/base.py: Parameter 'model_kwargs' does not appear in the function signature
+griffe: src/ragas/embeddings/base.py: Parameter 'model_name' does not appear in the function signature
+griffe: src/ragas/messages.py: Parameter 'args' does not appear in the function signature
+griffe: src/ragas/messages.py: Parameter 'name' does not appear in the function signature
+griffe: src/ragas/optimizers/base.py: Parameter 'metric' does not appear in the function signature
+griffe: src/ragas/optimizers/base.py: Parameter 'train_data' does not appear in the function signature
+griffe: src/ragas/prompt/base.py: Parameter 'instruction' does not appear in the function signature
+griffe: src/ragas/prompt/base.py: Parameter 'n' does not appear in the function signature
+griffe: src/ragas/tokenizers.py: No types or annotations for parameters ['If']
+griffe: src/ragas/tokenizers.py: No types or annotations for parameters ['One']
+griffe: src/ragas/tokenizers.py: Parameter 'If' does not appear in the function signature
+griffe: src/ragas/tokenizers.py: Parameter 'One' does not appear in the function signature
 mkdocs_autorefs: howtos/customizations/testgenerator/_persona_generator.md: Could not find cross-reference target 'ragas.testset.generator.TestsetGenerator'
 mkdocs_autorefs: howtos/customizations/testgenerator/_persona_generator.md: Could not find cross-reference target 'ragas.testset.persona.Persona'
 mkdocs_autorefs: howtos/customizations/testgenerator/_persona_generator.md: Could not find cross-reference target 'ragas.testset.persona.generate_personas_from_kg'

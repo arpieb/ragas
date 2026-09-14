@@ -25,7 +25,6 @@ dependencies = [
     # Upper-bounded to the 0.x line: langchain 1.x / langchain-community 0.4 removed
     # `langchain_community.chat_models.vertexai`, which ragas.llms.base imports at
     # module scope, so `import ragas` fails outright against the 1.x line.
-    "langchain<1.0.0",
     "langchain-core<1.0.0",
     "langchain-community<0.4.0",
     "langchain_openai<1.0.0",
@@ -107,13 +106,6 @@ ignore = ["E501"]  # Line length handled by formatter
 # LangChain removal ratchet. Every entry is a file that still imports langchain.
 # Entries are DELETED as each migration stage lands - this list must only shrink.
 # When it is empty, delete it along with the banned-api block above.
-# --- Stage 2 - integrations deleted (6 files)
-"docs/alfred.py" = ["TID251"]
-"src/ragas/integrations/langchain.py" = ["TID251"]
-"src/ragas/integrations/langgraph.py" = ["TID251"]
-"src/ragas/integrations/langsmith.py" = ["TID251"]
-"src/ragas/integrations/llama_index.py" = ["TID251"]
-"src/ragas/integrations/opik.py" = ["TID251"]
 # --- Stage 3 - adapters deleted (3 files)
 "src/ragas/embeddings/base.py" = ["TID251"]
 "src/ragas/evaluation.py" = ["TID251"]
@@ -126,6 +118,7 @@ ignore = ["E501"]  # Line length handled by formatter
 "src/ragas/prompt/multi_modal_prompt.py" = ["TID251"]
 "src/ragas/prompt/pydantic_prompt.py" = ["TID251"]
 # --- Stage 5 - Callbacks type replaced (31 files)
+"src/ragas/integrations/llama_index.py" = ["TID251"]
 "src/ragas/metrics/_answer_correctness.py" = ["TID251"]
 "src/ragas/metrics/_answer_relevance.py" = ["TID251"]
 "src/ragas/metrics/_answer_similarity.py" = ["TID251"]
