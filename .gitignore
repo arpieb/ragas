@@ -142,6 +142,8 @@ venv.bak/
 
 # mkdocs documentation
 /site
+# Generated during `mkdocs build` by the mkdocs-copy-to-llm plugin
+docs/assets/copy-to-llm/
 
 # mypy
 .mypy_cache/

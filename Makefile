@@ -49,7 +49,7 @@ lock-check: ## Verify uv.lock is up to date with pyproject.toml
 # CODE QUALITY
 # =============================================================================
 
-.PHONY: help setup-venv install-minimal install lock lock-check format type check clean test test-e2e benchmarks benchmarks-docker run-ci run-ci-fast run-ci-format-check run-ci-type run-ci-tests build-docs serve-docs
+.PHONY: help setup-venv install-minimal install lock lock-check format type check check-docs clean test test-e2e benchmarks benchmarks-docker run-ci run-ci-fast run-ci-format-check run-ci-type run-ci-tests build-docs serve-docs
 format: ## Format and lint all code
 	@echo "Formatting and linting all code..."
 	@echo "(ruff format) Formatting ragas..."
@@ -156,6 +156,10 @@ test-e2e: ## Run all end-to-end tests
 # =============================================================================
 # DOCUMENTATION
 # =============================================================================
+
+check-docs: ## Build docs and fail on any NEW mkdocs warning
+	@echo "Building docs and checking for new warnings..."
+	$(Q)uv run --group docs python scripts/check_docs.py
 
 build-docs: ## Build all documentation
 	@echo "Building all documentation..."
