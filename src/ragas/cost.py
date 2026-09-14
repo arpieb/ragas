@@ -1,7 +1,7 @@
 import logging
 import typing as t
 
-from langchain_core.callbacks.base import BaseCallbackHandler
+from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.outputs import ChatGeneration, ChatResult, LLMResult
 from pydantic import BaseModel
 

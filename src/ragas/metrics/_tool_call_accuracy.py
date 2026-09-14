@@ -10,7 +10,7 @@ from ragas.metrics._string import ExactMatch
 from ragas.metrics.base import MetricType, MultiTurnMetric, SingleTurnMetric
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks.base import Callbacks
+    from langchain_core.callbacks import Callbacks
 
 
 @dataclass

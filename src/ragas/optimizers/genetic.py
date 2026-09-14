@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import logging
 import typing as t
 from uuid import UUID
 
 import numpy as np
-from langchain_core.callbacks import Callbacks
 from pydantic import BaseModel
 from tqdm.auto import tqdm
 
@@ -21,6 +22,9 @@ from ragas.optimizers.base import Optimizer
 from ragas.optimizers.utils import hamming_distance
 from ragas.prompt import PydanticPrompt
 from ragas.run_config import RunConfig
+
+if t.TYPE_CHECKING:
+    from langchain_core.callbacks import Callbacks
 
 logger = logging.getLogger(__name__)
 
