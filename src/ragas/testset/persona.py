@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 import logging
 import typing as t
 
 import numpy as np
-from langchain_core.callbacks import Callbacks
 from pydantic import BaseModel
 
 from ragas.executor import run_async_batch
 from ragas.llms.base import BaseRagasLLM
 from ragas.prompt import PydanticPrompt, StringIO
 from ragas.testset.graph import KnowledgeGraph, Node
+
+if t.TYPE_CHECKING:
+    from langchain_core.callbacks import Callbacks
 
 logger = logging.getLogger(__name__)
 

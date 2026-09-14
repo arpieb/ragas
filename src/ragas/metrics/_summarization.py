@@ -17,7 +17,7 @@ from ragas.metrics.base import (
 from ragas.prompt import PydanticPrompt, StringIO
 
 if t.TYPE_CHECKING:
-    from langchain.callbacks.base import Callbacks
+    from langchain_core.callbacks import Callbacks
 
 logger = logging.getLogger(__name__)
 
