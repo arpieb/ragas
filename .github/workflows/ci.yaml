@@ -45,6 +45,11 @@ jobs:
             docs:
               - *related
               - "docs/**"
+              - "mkdocs.yml"
+              - "scripts/**"
+              # docstrings are rendered by mkdocstrings, and deleting a module
+              # breaks the pages in docs/references/ that autodoc it
+              - "src/ragas/**"
 
   unit_tests:
     needs:
@@ -154,3 +159,28 @@ jobs:
 
       - name: Type check
         run: make type
+
+  docs_build:
+    runs-on: ubuntu-latest
+    needs:
+      - diff
+
+    if: ${{ (github.event_name == 'pull_request' && needs.diff.outputs.docs == 'true') || github.event_name == 'push' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv (and Python)
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Build docs and fail on new warnings
+        # Not `mkdocs build --strict`: the tree has 75 pre-existing warnings, so
+        # --strict would be red on arrival. This builds the docs and fails only on
+        # warnings absent from docs/.mkdocs_warnings_baseline.txt, which may only
+        # shrink. A plain non-strict build would NOT catch a deleted page that is
+        # still referenced in nav -- mkdocs reports that as a warning, not an error.
+        run: make check-docs

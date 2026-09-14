@@ -1,6 +1,8 @@
 site_name: Ragas
 site_description: Evaluation framework for your AI Application
-site_url: !ENV READTHEDOCS_CANONICAL_URL
+# ReadTheDocs injects READTHEDOCS_CANONICAL_URL; the fallback keeps local and CI
+# builds working, since the llmstxt plugin hard-requires site_url to be set.
+site_url: !ENV [READTHEDOCS_CANONICAL_URL, "https://docs.ragas.io/"]
 repo_name: vibrantlabsai/ragas
 repo_url: https://github.com/vibrantlabsai/ragas
 watch:
