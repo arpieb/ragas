@@ -90,8 +90,125 @@ target-version = "py310"
 exclude = ["*.ipynb", "*/_version.py"]  # Exclude Jupyter notebooks and auto-generated version files from linting
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+select = ["E", "F", "I", "TID251"]
 ignore = ["E501"]  # Line length handled by formatter
+
+# LangChain removal ratchet: importing any langchain package is an error.
+# Files still doing so are listed in [tool.ruff.lint.per-file-ignores] below,
+# grouped by the migration stage that removes them. That list only shrinks.
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"langchain".msg = "ragas is removing LangChain. Use ragas-native APIs (see plan/migrate_off_langchain)."
+"langchain_core".msg = "ragas is removing LangChain. Use ragas-native APIs (see plan/migrate_off_langchain)."
+"langchain_community".msg = "ragas is removing LangChain. Use ragas-native APIs (see plan/migrate_off_langchain)."
+"langchain_openai".msg = "ragas is removing LangChain. Use litellm/instructor providers instead."
+"langchain_text_splitters".msg = "ragas is removing LangChain. Use ragas-native splitters."
+
+[tool.ruff.lint.per-file-ignores]
+# LangChain removal ratchet. Every entry is a file that still imports langchain.
+# Entries are DELETED as each migration stage lands - this list must only shrink.
+# When it is empty, delete it along with the banned-api block above.
+# --- Stage 2 - integrations deleted (6 files)
+"docs/alfred.py" = ["TID251"]
+"src/ragas/integrations/langchain.py" = ["TID251"]
+"src/ragas/integrations/langgraph.py" = ["TID251"]
+"src/ragas/integrations/langsmith.py" = ["TID251"]
+"src/ragas/integrations/llama_index.py" = ["TID251"]
+"src/ragas/integrations/opik.py" = ["TID251"]
+# --- Stage 3 - adapters deleted (3 files)
+"src/ragas/embeddings/base.py" = ["TID251"]
+"src/ragas/evaluation.py" = ["TID251"]
+"src/ragas/llms/base.py" = ["TID251"]
+# --- Stage 4 - native LLM result / prompt value types (6 files)
+"src/ragas/llms/haystack_wrapper.py" = ["TID251"]
+"src/ragas/llms/oci_genai_wrapper.py" = ["TID251"]
+"src/ragas/prompt/base.py" = ["TID251"]
+"src/ragas/prompt/few_shot_pydantic_prompt.py" = ["TID251"]
+"src/ragas/prompt/multi_modal_prompt.py" = ["TID251"]
+"src/ragas/prompt/pydantic_prompt.py" = ["TID251"]
+# --- Stage 5 - Callbacks type replaced (31 files)
+"src/ragas/metrics/_answer_correctness.py" = ["TID251"]
+"src/ragas/metrics/_answer_relevance.py" = ["TID251"]
+"src/ragas/metrics/_answer_similarity.py" = ["TID251"]
+"src/ragas/metrics/_aspect_critic.py" = ["TID251"]
+"src/ragas/metrics/base.py" = ["TID251"]
+"src/ragas/metrics/_bleu_score.py" = ["TID251"]
+"src/ragas/metrics/_chrf_score.py" = ["TID251"]
+"src/ragas/metrics/_context_entities_recall.py" = ["TID251"]
+"src/ragas/metrics/_context_precision.py" = ["TID251"]
+"src/ragas/metrics/_context_recall.py" = ["TID251"]
+"src/ragas/metrics/_datacompy_score.py" = ["TID251"]
+"src/ragas/metrics/_domain_specific_rubrics.py" = ["TID251"]
+"src/ragas/metrics/_factual_correctness.py" = ["TID251"]
+"src/ragas/metrics/_faithfulness.py" = ["TID251"]
+"src/ragas/metrics/_goal_accuracy.py" = ["TID251"]
+"src/ragas/metrics/_instance_specific_rubrics.py" = ["TID251"]
+"src/ragas/metrics/_multi_modal_faithfulness.py" = ["TID251"]
+"src/ragas/metrics/_multi_modal_relevance.py" = ["TID251"]
+"src/ragas/metrics/_noise_sensitivity.py" = ["TID251"]
+"src/ragas/metrics/_nv_metrics.py" = ["TID251"]
+"src/ragas/metrics/_rouge_score.py" = ["TID251"]
+"src/ragas/metrics/_simple_criteria.py" = ["TID251"]
+"src/ragas/metrics/_sql_semantic_equivalence.py" = ["TID251"]
+"src/ragas/metrics/_string.py" = ["TID251"]
+"src/ragas/metrics/_summarization.py" = ["TID251"]
+"src/ragas/metrics/_tool_call_accuracy.py" = ["TID251"]
+"src/ragas/metrics/_tool_call_f1.py" = ["TID251"]
+"src/ragas/metrics/_topic_adherence.py" = ["TID251"]
+"src/ragas/optimizers/base.py" = ["TID251"]
+"src/ragas/optimizers/dspy_optimizer.py" = ["TID251"]
+"src/ragas/optimizers/genetic.py" = ["TID251"]
+# --- Stage 5/6 - OTel tracing + token accounting (2 files)
+"src/ragas/callbacks.py" = ["TID251"]
+"src/ragas/cost.py" = ["TID251"]
+# --- Stage 5/7 - callbacks protocol + Document protocol (10 files)
+"src/ragas/testset/persona.py" = ["TID251"]
+"src/ragas/testset/synthesizers/base.py" = ["TID251"]
+"src/ragas/testset/synthesizers/generate.py" = ["TID251"]
+"src/ragas/testset/synthesizers/multi_hop/abstract.py" = ["TID251"]
+"src/ragas/testset/synthesizers/multi_hop/base.py" = ["TID251"]
+"src/ragas/testset/synthesizers/multi_hop/specific.py" = ["TID251"]
+"src/ragas/testset/synthesizers/single_hop/base.py" = ["TID251"]
+"src/ragas/testset/synthesizers/single_hop/specific.py" = ["TID251"]
+"src/ragas/testset/transforms/default.py" = ["TID251"]
+"src/ragas/testset/transforms/engine.py" = ["TID251"]
+# --- Tests - rewritten alongside their stage (24 files)
+"tests/benchmarks/benchmark_testsetgen.py" = ["TID251"]
+"tests/conftest.py" = ["TID251"]
+"tests/e2e/metrics_migration/test_answer_accuracy_migration.py" = ["TID251"]
+"tests/e2e/metrics_migration/test_answer_correctness_migration.py" = ["TID251"]
+"tests/e2e/metrics_migration/test_context_precision_migration.py" = ["TID251"]
+"tests/e2e/metrics_migration/test_context_relevance_migration.py" = ["TID251"]
+"tests/e2e/metrics_migration/test_factual_correctness_migration.py" = ["TID251"]
+"tests/e2e/metrics_migration/test_faithfulness_migration.py" = ["TID251"]
+"tests/e2e/metrics_migration/test_noise_sensitivity_migration.py" = ["TID251"]
+"tests/e2e/metrics_migration/test_response_groundedness_migration.py" = ["TID251"]
+"tests/e2e/metrics_migration/test_summary_score_migration.py" = ["TID251"]
+"tests/e2e/test_langchain_llm_attributes.py" = ["TID251"]
+"tests/e2e/test_testset_generation.py" = ["TID251"]
+"tests/unit/integrations/test_tracing.py" = ["TID251"]
+"tests/unit/llms/test_llm.py" = ["TID251"]
+"tests/unit/test_analytics.py" = ["TID251"]
+"tests/unit/test_cost.py" = ["TID251"]
+"tests/unit/test_import.py" = ["TID251"]
+"tests/unit/test_langgraph.py" = ["TID251"]
+"tests/unit/test_llm_context.py" = ["TID251"]
+"tests/unit/test_oci_genai_wrapper.py" = ["TID251"]
+"tests/unit/test_prechunked_generation.py" = ["TID251"]
+"tests/unit/test_prompt.py" = ["TID251"]
+"tests/utils/llm_setup.py" = ["TID251"]
+# --- Other (12 files)
+"docs/howtos/applications/cost.ipynb" = ["TID251"]
+"docs/howtos/customizations/caching.ipynb" = ["TID251"]
+"docs/howtos/customizations/metrics/cost.ipynb" = ["TID251"]
+"docs/howtos/customizations/testgenerator/language_adaptation.ipynb" = ["TID251"]
+"docs/howtos/customizations/testgenerator/testgen-customisation.ipynb" = ["TID251"]
+"docs/howtos/customizations/testgenerator/testgen-custom-single-hop.ipynb" = ["TID251"]
+"docs/howtos/integrations/arize.ipynb" = ["TID251"]
+"docs/howtos/integrations/haystack.ipynb" = ["TID251"]
+"docs/howtos/integrations/langchain.ipynb" = ["TID251"]
+"docs/howtos/integrations/langfuse.ipynb" = ["TID251"]
+"docs/howtos/integrations/langgraph_agent_evaluation.ipynb" = ["TID251"]
+"docs/howtos/integrations/opik.ipynb" = ["TID251"]
 
 [tool.ruff.lint.isort]
 # Import sorting configuration
