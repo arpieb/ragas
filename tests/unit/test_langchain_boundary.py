@@ -19,19 +19,16 @@ import sys
 import pytest
 
 # Top-level langchain distributions still reachable from ``import ragas``.
-# Shrinks as stages land: "langchain" goes in stage 2 (integrations deleted),
-# "langchain_community"/"langchain_openai" in stage 3 (adapters deleted),
-# "langchain_core" in stage 8. Then this set is empty and the migration is done.
+# Shrinks as stages land: langchain, langchain_community and langchain_openai all
+# went in stage 3 (adapters deleted). Only langchain_core is left; it goes in
+# stage 8, after which this set is empty and the migration is done.
 ALLOWED_LANGCHAIN_PACKAGES = {
-    "langchain",
-    "langchain_community",
     "langchain_core",
-    "langchain_openai",
 }
 
 # Number of langchain submodules ``import ragas`` drags in. Measured, not guessed.
 # Lower this whenever a stage reduces it; never raise it.
-MAX_LANGCHAIN_MODULES = 115
+MAX_LANGCHAIN_MODULES = 79
 
 # Modules that must import without pulling in any langchain at all. Empty today --
 # ``ragas/__init__.py`` imports ``ragas.evaluation``, which imports langchain at

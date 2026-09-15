@@ -3,7 +3,6 @@ from ragas.llms.base import (
     InstructorBaseRagasLLM,
     InstructorLLM,
     InstructorTypeVar,
-    LangchainLLMWrapper as _LangchainLLMWrapper,
     LlamaIndexLLMWrapper as _LlamaIndexLLMWrapper,
     llm_factory,
 )
@@ -13,15 +12,6 @@ from ragas.llms.oci_genai_wrapper import OCIGenAIWrapper, oci_genai_factory
 from ragas.utils import DeprecationHelper
 
 # Create deprecation wrappers for legacy classes
-LangchainLLMWrapper = DeprecationHelper(
-    _LangchainLLMWrapper,
-    "LangchainLLMWrapper is deprecated and will be removed in a future version. "
-    "Use llm_factory instead: "
-    "from openai import OpenAI; "
-    "from ragas.llms import llm_factory; "
-    "llm = llm_factory('gpt-4o-mini', client=OpenAI(api_key='...'))",
-)
-
 LlamaIndexLLMWrapper = DeprecationHelper(
     _LlamaIndexLLMWrapper,
     "LlamaIndexLLMWrapper is deprecated and will be removed in a future version. "
@@ -36,7 +26,6 @@ __all__ = [
     "HaystackLLMWrapper",
     "InstructorBaseRagasLLM",
     "InstructorLLM",
-    "LangchainLLMWrapper",
     "LlamaIndexLLMWrapper",
     "LiteLLMStructuredLLM",
     "OCIGenAIWrapper",

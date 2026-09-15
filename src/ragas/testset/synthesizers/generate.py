@@ -13,11 +13,10 @@ from ragas.callbacks import new_group
 from ragas.cost import TokenUsageParser
 from ragas.embeddings.base import (
     BaseRagasEmbeddings,
-    LangchainEmbeddingsWrapper,
     LlamaIndexEmbeddingsWrapper,
 )
 from ragas.executor import Executor
-from ragas.llms import BaseRagasLLM, LangchainLLMWrapper, LlamaIndexLLMWrapper
+from ragas.llms import BaseRagasLLM, LlamaIndexLLMWrapper
 from ragas.run_config import RunConfig
 from ragas.testset.graph import KnowledgeGraph, Node, NodeType
 from ragas.testset.persona import Persona, generate_personas_from_kg
@@ -33,8 +32,6 @@ from ragas.testset.transforms import (
 
 if t.TYPE_CHECKING:
     from langchain_core.callbacks import Callbacks
-    from langchain_core.embeddings import Embeddings as LangchainEmbeddings
-    from langchain_core.language_models import BaseLanguageModel as LangchainLLM
     from llama_index.core.base.embeddings.base import (
         BaseEmbedding as LlamaIndexEmbedding,
     )
@@ -72,25 +69,6 @@ class TestsetGenerator:
     knowledge_graph: KnowledgeGraph = field(default_factory=KnowledgeGraph)
     persona_list: t.Optional[t.List[Persona]] = None
     llm_context: t.Optional[str] = None
-
-    @classmethod
-    def from_langchain(
-        cls,
-        llm: LangchainLLM,
-        embedding_model: LangchainEmbeddings,
-        knowledge_graph: t.Optional[KnowledgeGraph] = None,
-        llm_context: t.Optional[str] = None,
-    ) -> TestsetGenerator:
-        """
-        Creates a `TestsetGenerator` from a Langchain LLMs.
-        """
-        knowledge_graph = knowledge_graph or KnowledgeGraph()
-        return cls(
-            LangchainLLMWrapper(llm),
-            LangchainEmbeddingsWrapper(embedding_model),
-            knowledge_graph,
-            llm_context=llm_context,
-        )
 
     @classmethod
     def from_llama_index(

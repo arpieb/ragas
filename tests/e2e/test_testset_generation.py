@@ -7,17 +7,22 @@ from ragas.testset import TestsetGenerator
 
 @pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set")
 def test_testset_generation_e2e():
-    # generate kg
-    from langchain_community.document_loaders import DirectoryLoader
+    # generate kg -- plain file walk, no langchain document loader needed
+    from pathlib import Path
 
-    loader = DirectoryLoader("./docs", glob="**/*.md")
-    docs = loader.load()
+    import openai
+    from langchain_core.documents import Document
 
-    # choose llm
     from ragas.embeddings import embedding_factory
     from ragas.llms import llm_factory
 
-    generator_llm = llm_factory("gpt-4o")
+    docs = [
+        Document(page_content=p.read_text(), metadata={"source": str(p)})
+        for p in sorted(Path("./docs").rglob("*.md"))
+    ]
+
+    # llm_factory requires an explicit client
+    generator_llm = llm_factory("gpt-4o", client=openai.OpenAI())
     generator_embeddings = embedding_factory()
 
     generator = TestsetGenerator(
