@@ -34,9 +34,15 @@ BASELINE = REPO_ROOT / "docs" / ".mkdocs_warnings_baseline.txt"
 WARNING_RE = re.compile(r"^WARNING\s*-\s*(?P<body>.*)$")
 
 
+# griffe warnings carry a source line number, which shifts whenever anything above
+# it changes. Without stripping it, unrelated edits show up as "new" warnings.
+LINENO_RE = re.compile(r"(?P<path>\S+\.py):\d+:")
+
+
 def normalise(body: str) -> str:
-    """Strip anything build-machine specific so the baseline is portable."""
+    """Strip anything build-machine or line-number specific so the baseline is stable."""
     body = body.replace(str(REPO_ROOT) + "/", "")
+    body = LINENO_RE.sub(lambda m: f"{m.group('path')}:", body)
     return " ".join(body.split())
 
 
@@ -98,8 +104,22 @@ def main() -> int:
         return code
 
     if args.update_baseline:
+        # Show exactly what is being absorbed. Without this, --update-baseline
+        # silently accepts newly-introduced warnings, which defeats the ratchet.
+        previous = read_baseline()
+        added = [w for w in warnings if w not in previous]
+        removed = [w for w in previous if w not in warnings]
         write_baseline(warnings)
         print(f"Baseline updated: {len(warnings)} warnings recorded in {BASELINE}.")
+        if removed:
+            print(f"\n  {len(removed)} warning(s) no longer occur (good):")
+            for w in removed:
+                print(f"    - {w}")
+        if added:
+            print(f"\n  WARNING: {len(added)} warning(s) ADDED to the baseline.")
+            print("  Each of these is a problem you are choosing to accept. Check them:")
+            for w in added:
+                print(f"    + {w}")
         return 0
 
     baseline = read_baseline()
