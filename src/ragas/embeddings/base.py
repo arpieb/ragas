@@ -9,7 +9,6 @@ from dataclasses import field
 
 import numpy as np
 from langchain_core.embeddings import Embeddings
-from langchain_openai.embeddings import OpenAIEmbeddings
 from pydantic.dataclasses import dataclass
 from pydantic_core import CoreSchema, core_schema
 
@@ -255,137 +254,6 @@ class BaseRagasEmbeddings(Embeddings, ABC):
             cls,
             core_schema.is_instance_schema(cls),  # The validator function
         )
-
-
-class LangchainEmbeddingsWrapper(BaseRagasEmbeddings):
-    """
-    Wrapper for any embeddings from langchain.
-
-    # TODO: Revisit deprecation warning
-    # .. deprecated::
-    #     LangchainEmbeddingsWrapper is deprecated and will be removed in a future version.
-    #     Use the modern embedding providers directly with embedding_factory() instead:
-    #
-    #     # Instead of:
-    #     # embedder = LangchainEmbeddingsWrapper(langchain_embeddings)
-    #
-    #     # Use:
-    #     # embedder = embedding_factory("openai", model="text-embedding-3-small", client=openai_client)
-    #     # embedder = embedding_factory("huggingface", model="sentence-transformers/all-MiniLM-L6-v2")
-    #     # embedder = embedding_factory("google", client=vertex_client)
-    """
-
-    def __init__(
-        self,
-        embeddings: Embeddings,
-        run_config: t.Optional[RunConfig] = None,
-        cache: t.Optional[CacheInterface] = None,
-    ):
-        warnings.warn(
-            "LangchainEmbeddingsWrapper is deprecated and will be removed in a future version. "
-            "Use the modern embedding providers instead: "
-            "embedding_factory('openai', model='text-embedding-3-small', client=openai_client) "
-            "or from ragas.embeddings import OpenAIEmbeddings, GoogleEmbeddings, HuggingFaceEmbeddings",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        super().__init__(cache=cache)
-        self.embeddings = embeddings
-        if run_config is None:
-            run_config = RunConfig()
-        self.set_run_config(run_config)
-
-    def embed_query(self, text: str) -> t.List[float]:
-        """
-        Embed a single query text.
-        """
-        result = self.embeddings.embed_query(text)
-
-        # Track usage
-        track(
-            EmbeddingUsageEvent(
-                provider="langchain",
-                model=getattr(self.embeddings, "model", None),
-                embedding_type="legacy",
-                num_requests=1,
-                is_async=False,
-            )
-        )
-        return result
-
-    def embed_documents(self, texts: t.List[str]) -> t.List[t.List[float]]:
-        """
-        Embed multiple documents.
-        """
-        result = self.embeddings.embed_documents(texts)
-
-        # Track usage
-        track(
-            EmbeddingUsageEvent(
-                provider="langchain",
-                model=getattr(self.embeddings, "model", None),
-                embedding_type="legacy",
-                num_requests=len(texts),
-                is_async=False,
-            )
-        )
-        return result
-
-    async def aembed_query(self, text: str) -> t.List[float]:
-        """
-        Asynchronously embed a single query text.
-        """
-        result = await self.embeddings.aembed_query(text)
-
-        # Track usage
-        track(
-            EmbeddingUsageEvent(
-                provider="langchain",
-                model=getattr(self.embeddings, "model", None),
-                embedding_type="legacy",
-                num_requests=1,
-                is_async=True,
-            )
-        )
-        return result
-
-    async def aembed_documents(self, texts: t.List[str]) -> t.List[t.List[float]]:
-        """
-        Asynchronously embed multiple documents.
-        """
-        result = await self.embeddings.aembed_documents(texts)
-
-        # Track usage
-        track(
-            EmbeddingUsageEvent(
-                provider="langchain",
-                model=getattr(self.embeddings, "model", None),
-                embedding_type="legacy",
-                num_requests=len(texts),
-                is_async=True,
-            )
-        )
-        return result
-
-    def set_run_config(self, run_config: RunConfig):
-        """
-        Set the run configuration for the embedding operations.
-        """
-        self.run_config = run_config
-
-        # run configurations specially for OpenAI
-        if isinstance(self.embeddings, OpenAIEmbeddings):
-            try:
-                from openai import RateLimitError
-            except ImportError:
-                raise ImportError(
-                    "openai.error.RateLimitError not found. Please install openai package as `pip install openai`"
-                )
-            self.embeddings.request_timeout = run_config.timeout
-            self.run_config.exception_types = RateLimitError
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(embeddings={self.embeddings.__class__.__name__}(...))"
 
 
 @dataclass
@@ -714,39 +582,37 @@ def embedding_factory(
     cache = DiskCacheBackend()
     embedder = embedding_factory("openai", client=openai_client, cache=cache)
     """
-    # Detect if this is a legacy call for backward compatibility
-    is_legacy_call = _is_legacy_embedding_call(provider, model, client, interface)
-
-    if is_legacy_call:
-        import warnings
-
-        warnings.warn(
-            "Legacy embedding_factory interface is deprecated and will be removed in a future version. "
-            "Use the modern interface with explicit provider and client parameters: "
-            "embedding_factory('openai', model='text-embedding-3-small', client=openai_client) "
-            "or import providers directly: from ragas.embeddings import OpenAIEmbeddings, GoogleEmbeddings, HuggingFaceEmbeddings",
-            DeprecationWarning,
-            stacklevel=2,
+    if interface == "legacy":
+        raise ValueError(
+            "The legacy embedding interface has been removed along with LangChain. "
+            "Either pass a client -- embedding_factory('openai', "
+            "model='text-embedding-3-small', client=openai_client) -- or omit it to "
+            "use litellm, which resolves credentials from the environment."
         )
-        # Legacy interface - treat provider as model name if it looks like a model
+
+    # OpenAI is the one provider that REQUIRES_CLIENT, so a client-less call to it
+    # has no modern home. Route it through litellm, which resolves credentials from
+    # the environment and is provider-neutral. This replaces the old LangChain path.
+    # google/huggingface/litellm already construct fine without a client.
+    if client is None and (
+        _looks_like_model_name(provider) or provider.lower() == "openai"
+    ):
+        from ragas.embeddings.litellm_provider import LiteLLMEmbeddings
+
         model_name = (
             provider
             if _looks_like_model_name(provider)
             else (model or "text-embedding-ada-002")
         )
-        openai_embeddings = OpenAIEmbeddings(model=model_name, base_url=base_url)
-        if run_config is not None:
-            openai_embeddings.request_timeout = run_config.timeout
-        else:
-            run_config = RunConfig()
-        result = LangchainEmbeddingsWrapper(openai_embeddings, run_config=run_config)
+        if base_url is not None:
+            kwargs["api_base"] = base_url
+        result = LiteLLMEmbeddings(model=model_name, cache=cache, **kwargs)
 
-        # Track factory usage (legacy)
         track(
             EmbeddingUsageEvent(
-                provider="openai",
+                provider="litellm",
                 model=model_name,
-                embedding_type="factory_legacy",
+                embedding_type="factory_litellm",
                 num_requests=1,
                 is_async=False,
             )
@@ -771,18 +637,6 @@ def embedding_factory(
         )
     )
     return result
-
-
-def _is_legacy_embedding_call(
-    provider: str, model: t.Optional[str], client: t.Optional[t.Any], interface: str
-) -> bool:
-    """Detect if this is a legacy embedding factory call for backward compatibility."""
-    # Explicit interface choice takes precedence
-    if interface in ("legacy", "modern"):
-        return interface == "legacy"
-
-    # Auto-detection: legacy if no client AND (looks like model name OR is openai)
-    return client is None and (_looks_like_model_name(provider) or provider == "openai")
 
 
 # Model name patterns for backward compatibility detection

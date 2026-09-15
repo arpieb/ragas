@@ -1,12 +1,14 @@
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from llama_index.core import download_loader
+from openai import OpenAI
 
+from ragas.embeddings.base import embedding_factory
+from ragas.llms import llm_factory
 from ragas.testset.synthesizers.generate import TestsetGenerator
 
-generator_llm = ChatOpenAI(model="gpt-4o")
-embeddings = OpenAIEmbeddings()
+generator_llm = llm_factory("gpt-4o", client=OpenAI())
+embeddings = embedding_factory()
 
-generator = TestsetGenerator.from_langchain(generator_llm, embeddings)
+generator = TestsetGenerator(llm=generator_llm, embedding_model=embeddings)
 
 
 def get_documents():

@@ -58,18 +58,17 @@ class TestContextPrecisionE2EMigration:
 
     @pytest.fixture
     def test_llm(self):
-        """Create a LangChain LLM for legacy context precision evaluation."""
+        """Create a legacy-interface LLM via llm_factory."""
         try:
-            from langchain_openai import ChatOpenAI
+            import openai
 
-            from ragas.llms import LangchainLLMWrapper
+            from ragas.llms import llm_factory
 
-            langchain_llm = ChatOpenAI(model="gpt-4o", temperature=0.01)
-            return LangchainLLMWrapper(langchain_llm)
+            return llm_factory("gpt-4o", client=openai.OpenAI())
         except ImportError as e:
-            pytest.skip(f"LangChain LLM not available: {e}")
+            pytest.skip(f"LLM factory not available: {e}")
         except Exception as e:
-            pytest.skip(f"Could not create LangChain LLM (API key may be missing): {e}")
+            pytest.skip(f"Could not create LLM (API key may be missing): {e}")
 
     @pytest.fixture
     def test_modern_llm(self):
