@@ -5,11 +5,10 @@ import logging
 import typing as t
 from typing import Dict, List
 
-from langchain_core.outputs import Generation, LLMResult
-from langchain_core.prompt_values import PromptValue
-
 from ragas._analytics import LLMUsageEvent, track
 from ragas.llms.base import BaseRagasLLM
+from ragas.llms.output import Generation, LLMResult
+from ragas.prompt.value import PromptValue
 from ragas.run_config import RunConfig
 
 logger = logging.getLogger(__name__)
@@ -112,25 +111,16 @@ class OCIGenAIWrapper(BaseRagasLLM):
                 {"role": "system", "content": self.default_system_prompt}
             )
 
-        # If prompt can be converted to messages (LangChain chat-style)
+        # ragas Message carries an explicit role, so no class-name sniffing needed
         if hasattr(prompt, "to_messages"):
             try:
-                lc_messages = prompt.to_messages()
-                for m in lc_messages:
-                    # Detect role from message type/name attributes
-                    role = getattr(m, "role", None)
-                    if role is None:
-                        cls_name = m.__class__.__name__.lower()
-                        if "system" in cls_name:
-                            role = "system"
-                        elif "human" in cls_name or "user" in cls_name:
-                            role = "user"
-                        elif "ai" in cls_name or "assistant" in cls_name:
-                            role = "assistant"
-                        else:
-                            role = "user"
-                    content = getattr(m, "content", str(m))
-                    oci_messages.append({"role": role, "content": content})
+                for m in prompt.to_messages():
+                    # OCI's wire format is a flat {role, content} string pair, so
+                    # multimodal list content is rendered rather than passed through.
+                    content = (
+                        m.content if isinstance(m.content, str) else str(m.content)
+                    )
+                    oci_messages.append({"role": m.role, "content": content})
                 return oci_messages
             except Exception:
                 # Fallback to string conversion below

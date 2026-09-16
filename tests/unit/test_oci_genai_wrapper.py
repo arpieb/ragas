@@ -3,10 +3,10 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from langchain_core.outputs import Generation, LLMResult
-from langchain_core.prompt_values import StringPromptValue
 
 from ragas.llms.oci_genai_wrapper import OCIGenAIWrapper, oci_genai_factory
+from ragas.llms.output import Generation, LLMResult
+from ragas.prompt.value import StringPromptValue
 
 
 class TestOCIGenAIWrapper:

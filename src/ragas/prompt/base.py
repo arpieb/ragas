@@ -6,10 +6,10 @@ import os
 import typing as t
 from abc import ABC, abstractmethod
 
-from langchain_core.prompt_values import StringPromptValue
 from pydantic import BaseModel
 
 from ragas._version import __version__
+from ragas.prompt.value import StringPromptValue
 from ragas.utils import camel_to_snake
 
 if t.TYPE_CHECKING:
