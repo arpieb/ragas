@@ -11,10 +11,10 @@ def test_testset_generation_e2e():
     from pathlib import Path
 
     import openai
-    from langchain_core.documents import Document
 
     from ragas.embeddings import embedding_factory
     from ragas.llms import llm_factory
+    from ragas.testset.document import Document
 
     docs = [
         Document(page_content=p.read_text(), metadata={"source": str(p)})
@@ -29,5 +29,5 @@ def test_testset_generation_e2e():
         llm=generator_llm,
         embedding_model=generator_embeddings,  # type: ignore
     )
-    dataset = generator.generate_with_langchain_docs(docs, testset_size=3)
+    dataset = generator.generate_with_docs(docs, testset_size=3)
     assert dataset is not None
