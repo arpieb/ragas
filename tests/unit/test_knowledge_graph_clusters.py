@@ -7,6 +7,34 @@ import pytest
 
 from ragas.testset.graph import KnowledgeGraph, Node, NodeType, Relationship
 
+T = t.TypeVar("T")
+
+
+def measure_best_time(
+    operation: t.Callable[[], T], repeats: int = 5
+) -> t.Tuple[float, T]:
+    """Time ``operation`` across several runs; return (best time, last result).
+
+    A single wall-clock sample is dominated by scheduler noise on shared CI
+    runners. Because these tests then divide two such samples to get a growth
+    ratio, that noise compounds: a run measured 11.7-14.7 locally against a
+    threshold of 128 once reported 131.73 in CI and failed, with no algorithmic
+    change involved.
+
+    The minimum across repeats is the standard estimator for microbenchmarks --
+    interference can only ever add time to a measurement, never remove it, so
+    the smallest sample is the one closest to the true cost. ``perf_counter`` is
+    used rather than ``time.time`` because it is monotonic and has far higher
+    resolution.
+    """
+    best = float("inf")
+    result: t.Optional[T] = None
+    for _ in range(repeats):
+        start = time.perf_counter()
+        result = operation()
+        best = min(best, time.perf_counter() - start)
+    return best, t.cast(T, result)
+
 
 class DebugUUID(uuid.UUID):
     """
@@ -815,12 +843,10 @@ def test_performance_find_n_indirect_clusters_max_density():
         nodes, relationships = create_web_of_similarities(node_count=size)
         kg: KnowledgeGraph = build_knowledge_graph(nodes, relationships)
 
-        # Measure execution time
-        start_time = time.time()
-        clusters: list[set[Node]] = kg.find_n_indirect_clusters(n=size, depth_limit=4)
-        end_time = time.time()
-
-        execution_time = end_time - start_time
+        # Measure execution time (best of several runs; see measure_best_time)
+        execution_time, clusters = measure_best_time(
+            lambda: kg.find_n_indirect_clusters(n=size, depth_limit=4)
+        )
 
         # Store results
         results.append(
@@ -846,9 +872,12 @@ def test_performance_find_n_indirect_clusters_max_density():
         prev_time = results[i - 1]["time"]
         curr_time = results[i]["time"]
 
-        # Skip performance check if previous time is too small to measure accurately
-        # Increased threshold to account for timing variance in different environments
-        if prev_time < 1e-4:  # Less than 100 microseconds
+        # Skip performance check if previous time is too small to measure accurately.
+        # measure_best_time uses perf_counter (~100ns resolution) and takes the best
+        # of several runs, so 10us is still ~100x the clock resolution -- reliable.
+        # A 100us floor here would skip the smallest comparison entirely now that
+        # measurements are no longer inflated by scheduler noise.
+        if prev_time < 1e-5:  # Less than 10 microseconds
             print(
                 f"Skipping performance check for size {results[i]['size']} vs {results[i - 1]['size']}: "
                 f"previous time too small ({prev_time:.9f}s)"
@@ -908,14 +937,10 @@ def test_performance_find_n_indirect_clusters_large_web_constant_n(
     results: list[dict] = []
 
     for kg, size in constant_n_knowledge_graphs:
-        # Measure execution time
-        start_time = time.time()
-        clusters: list[set[Node]] = kg.find_n_indirect_clusters(
-            n=constant_n, depth_limit=3
+        # Measure execution time (best of several runs; see measure_best_time)
+        execution_time, clusters = measure_best_time(
+            lambda: kg.find_n_indirect_clusters(n=constant_n, depth_limit=3)
         )
-        end_time = time.time()
-
-        execution_time = end_time - start_time
 
         # Store results
         results.append(
@@ -952,7 +977,8 @@ def test_performance_find_n_indirect_clusters_large_web_constant_n(
 
         # Skip performance check if previous time is too small to measure accurately
         # Increased threshold to account for timing variance on CI (especially Windows)
-        if prev_time < 1e-4:  # Less than 100 microseconds
+        # See measure_best_time: perf_counter + best-of-N makes 10us reliable.
+        if prev_time < 1e-5:  # Less than 10 microseconds
             print(
                 f"Skipping performance check for size {results[i]['size']} vs {results[i - 1]['size']}: "
                 f"previous time too small ({prev_time:.9f}s)"
@@ -1004,14 +1030,10 @@ def test_performance_find_n_indirect_clusters_independent_chains():
 
         kg: KnowledgeGraph = build_knowledge_graph(all_nodes, all_relationships)
 
-        # Measure execution time
-        start_time = time.time()
-        clusters: list[set[Node]] = kg.find_n_indirect_clusters(
-            n=num_chains, depth_limit=3
+        # Measure execution time (best of several runs; see measure_best_time)
+        execution_time, clusters = measure_best_time(
+            lambda: kg.find_n_indirect_clusters(n=num_chains, depth_limit=3)
         )
-        end_time = time.time()
-
-        execution_time = end_time - start_time
 
         # Store results
         results.append(
@@ -1043,9 +1065,12 @@ def test_performance_find_n_indirect_clusters_independent_chains():
         prev_time = results[i - 1]["time"]
         curr_time = results[i]["time"]
 
-        # Skip performance check if previous time is too small to measure accurately
-        # Increased threshold to account for timing variance in different environments
-        if prev_time < 1e-4:  # Less than 100 microseconds
+        # Skip performance check if previous time is too small to measure accurately.
+        # measure_best_time uses perf_counter (~100ns resolution) and takes the best
+        # of several runs, so 10us is still ~100x the clock resolution -- reliable.
+        # A 100us floor here would skip the smallest comparison entirely now that
+        # measurements are no longer inflated by scheduler noise.
+        if prev_time < 1e-5:  # Less than 10 microseconds
             print(
                 f"Skipping performance check for size {results[i]['size']} vs {results[i - 1]['size']}: "
                 f"previous time too small ({prev_time:.9f}s)"
