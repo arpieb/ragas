@@ -21,11 +21,6 @@ dependencies = [
     "networkx",
     "scikit-network",
 
-    # LangChain ecosystem.
-    # Upper-bounded to the 0.x line: langchain 1.x / langchain-community 0.4 removed
-    # `langchain_community.chat_models.vertexai`, which ragas.llms.base imports at
-    # module scope, so `import ragas` fails outright against the 1.x line.
-    "langchain-core<1.0.0",
     # Provider-neutral LLM/embedding access. embedding_factory() routes client-less
     # calls here, and it is the intended replacement for the LangChain adapters.
     "litellm",
@@ -116,9 +111,6 @@ ignore = ["E501"]  # Line length handled by formatter
 # LangChain removal ratchet. Every entry is a file that still imports langchain.
 # Entries are DELETED as each migration stage lands - this list must only shrink.
 # When it is empty, delete it along with the banned-api block above.
-# --- Stage 8 - drop langchain-core (2 files)
-"src/ragas/embeddings/base.py" = ["TID251"]
-"src/ragas/prompt/pydantic_prompt.py" = ["TID251"]
 # --- Stage 10 - docs rewrite (notebook content) (9 files)
 "docs/howtos/applications/cost.ipynb" = ["TID251"]
 "docs/howtos/customizations/caching.ipynb" = ["TID251"]
@@ -221,7 +213,6 @@ dev = [
     "notebook",
     "unstructured[md]",
     "arize-phoenix>=6.1.0",
-    "openinference-instrumentation-langchain>=0.1.29",
     # Include all optional features
     "ragas[all,tracing,gdrive,ai-frameworks]",
 ]

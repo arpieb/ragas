@@ -5979,23 +5979,6 @@ wheels = [
 ]
 
 [[package]]
-name = "openinference-instrumentation-langchain"
-version = "0.1.76"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "openinference-instrumentation" },
-    { name = "openinference-semantic-conventions" },
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-instrumentation" },
-    { name = "opentelemetry-semantic-conventions" },
-    { name = "wrapt" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ce/75/616b2ae54e7a2da3396fec122f29323f8c840afdec452c6c0d86fcefe121/openinference_instrumentation_langchain-0.1.76.tar.gz", hash = "sha256:dbe28e88ae11b5f148b30243af2ff100691d4a9941cff6d492ce61e13be12e5d", size = 79596, upload-time = "2026-09-10T05:43:20.168Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e0/81/f797cdc84da0f3b6f9306fc435507583be6fac47ecb79a87607590fec9c4/openinference_instrumentation_langchain-0.1.76-py3-none-any.whl", hash = "sha256:a5fd219508e351899e82b7bdd817f26ad775dfdbf642aaa78a868cdba3e08933", size = 25517, upload-time = "2026-09-10T05:43:18.665Z" },
-]
-
-[[package]]
 name = "openinference-semantic-conventions"
 version = "0.1.37"
 source = { registry = "https://pypi.org/simple" }
@@ -6075,21 +6058,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/1a/87/95e2a5aaa795b4e2260d74e16df2d5541deb2ea9de010bcd615f4dee2654/opentelemetry_exporter_otlp_proto_http-1.44.0.tar.gz", hash = "sha256:c633d7270ad6b57cd4cfbe8b0007a9e2e7c0cb50bd6c50fe2a7b245f721a09d8", size = 25806, upload-time = "2026-07-16T15:25:39.162Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cd/d0/fdeb1a98d8d3a6205f5f297c51b4a9bfe65126ab60339669bbe3dd54c2e2/opentelemetry_exporter_otlp_proto_http-1.44.0-py3-none-any.whl", hash = "sha256:838592fce774c1c8bb7b9a0a7facbfa82e17be5a8a4e94cef10cb84ae026bae3", size = 21850, upload-time = "2026-07-16T15:25:20.006Z" },
-]
-
-[[package]]
-name = "opentelemetry-instrumentation"
-version = "0.65b0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-semantic-conventions" },
-    { name = "packaging" },
-    { name = "wrapt" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/13/91/3c58961cb0360cd60509064734f0be4275383c8681d73c580a40ca83ddce/opentelemetry_instrumentation-0.65b0.tar.gz", hash = "sha256:071d9d9eced9bd6460444ec3b0c77229870ed05a881c22c84fdede58e4eed09b", size = 42689, upload-time = "2026-07-16T15:25:50.275Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/40/7b/85eab1215f72adf0e68d3dc4a679b9bff993fa679ff34cd8dd378e2659fd/opentelemetry_instrumentation-0.65b0-py3-none-any.whl", hash = "sha256:ea967a72b9939b5fcfdad572753b4306c59dcb99e3f382d95dae04286805e137", size = 36717, upload-time = "2026-07-16T15:24:51.424Z" },
 ]
 
 [[package]]
@@ -7734,7 +7702,6 @@ dependencies = [
     { name = "datasets" },
     { name = "diskcache" },
     { name = "instructor" },
-    { name = "langchain-core" },
     { name = "litellm" },
     { name = "nest-asyncio" },
     { name = "networkx", version = "3.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -7804,7 +7771,6 @@ dev = [
     { name = "llama-index" },
     { name = "nbmake" },
     { name = "notebook" },
-    { name = "openinference-instrumentation-langchain" },
     { name = "opentelemetry-sdk" },
     { name = "pre-commit" },
     { name = "pyright" },
@@ -7889,7 +7855,6 @@ requires-dist = [
     { name = "haystack-ai", marker = "extra == 'ai-frameworks'", specifier = "<3.0.0" },
     { name = "httpx", marker = "extra == 'ag-ui'", specifier = ">=0.27.0" },
     { name = "instructor" },
-    { name = "langchain-core", specifier = "<1.0.0" },
     { name = "langfuse", marker = "extra == 'tracing'", specifier = ">=3.2.4" },
     { name = "litellm" },
     { name = "llama-index", marker = "extra == 'all'" },
@@ -7927,7 +7892,6 @@ dev = [
     { name = "llama-index" },
     { name = "nbmake" },
     { name = "notebook" },
-    { name = "openinference-instrumentation-langchain", specifier = ">=0.1.29" },
     { name = "opentelemetry-sdk" },
     { name = "pre-commit", specifier = ">=4.3.0" },
     { name = "pyright", specifier = ">=1.1.403" },
