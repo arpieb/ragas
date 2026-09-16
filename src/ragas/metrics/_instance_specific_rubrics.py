@@ -20,8 +20,7 @@ from ragas.metrics.base import (
 from ragas.prompt import PydanticPrompt
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
-
+    from ragas.callbacks import Callbacks
     from ragas.llms import BaseRagasLLM
 
 

@@ -323,15 +323,13 @@ class TestTracingWithCallbackSystem:
         # Tracer should still be functional
         assert isinstance(tracer.traces, dict)
 
-    def test_callback_manager_compatibility(self):
-        """Test compatibility with LangChain callback manager."""
-        from langchain_core.callbacks import CallbackManager
-
-        from ragas.callbacks import RagasTracer
+    def test_callback_group_compatibility(self):
+        """Test compatibility with the ragas callback group."""
+        from ragas.callbacks import CallbackGroup, RagasTracer
         from ragas.integrations.tracing.langfuse import observe
 
         tracer = RagasTracer()
-        callback_manager = CallbackManager([tracer])
+        callback_manager = CallbackGroup([tracer])
 
         @observe()
         def evaluation_function():

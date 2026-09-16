@@ -6,8 +6,6 @@ import typing as t
 import warnings
 from dataclasses import dataclass, field
 
-from langchain_core.callbacks import BaseCallbackManager
-
 from ragas._analytics import TestsetGenerationEvent, track
 from ragas.callbacks import new_group
 from ragas.cost import TokenUsageParser
@@ -32,13 +30,13 @@ from ragas.testset.transforms import (
 )
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
     from llama_index.core.base.embeddings.base import (
         BaseEmbedding as LlamaIndexEmbedding,
     )
     from llama_index.core.base.llms.base import BaseLLM as LlamaIndexLLM
     from llama_index.core.schema import Document as LlamaIndexDocument
 
+    from ragas.callbacks import Callbacks
     from ragas.embeddings.base import BaseRagasEmbeddings
     from ragas.llms.base import BaseRagasLLM
     from ragas.testset.synthesizers import QueryDistribution
@@ -487,12 +485,12 @@ class TestsetGenerator:
         else:
             cost_cb = None
 
-        # append all the ragas_callbacks to the callbacks
+        # `callbacks` may be a CallbackGroup or a plain list of handlers
         for cb in ragas_callbacks.values():
-            if isinstance(callbacks, BaseCallbackManager):
-                callbacks.add_handler(cb)
+            if hasattr(callbacks, "add_handler"):
+                callbacks.add_handler(cb)  # type: ignore[union-attr]
             else:
-                callbacks.append(cb)
+                callbacks.append(cb)  # type: ignore[union-attr]
 
         # new group for Testset Generation
         testset_generation_rm, testset_generation_grp = new_group(

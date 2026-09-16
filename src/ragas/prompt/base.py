@@ -13,8 +13,7 @@ from ragas.prompt.value import StringPromptValue
 from ragas.utils import camel_to_snake
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
-
+    from ragas.callbacks import Callbacks
     from ragas.llms.base import BaseRagasLLM
 
 logger = logging.getLogger(__name__)

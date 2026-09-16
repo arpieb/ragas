@@ -21,7 +21,7 @@ from .base import BasePrompt, StringIO
 from .utils import extract_json, get_all_strings, update_strings
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
+    from ragas.callbacks import Callbacks
 
 from ragas.llms.base import BaseRagasLLM, InstructorBaseRagasLLM
 

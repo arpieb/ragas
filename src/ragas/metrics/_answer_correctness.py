@@ -26,7 +26,7 @@ from ragas.prompt import PydanticPrompt
 from ragas.run_config import RunConfig
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
+    from ragas.callbacks import Callbacks
 
 logger = logging.getLogger(__name__)
 
