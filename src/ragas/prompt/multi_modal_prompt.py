@@ -12,8 +12,6 @@ from io import BytesIO
 from urllib.parse import urlparse
 
 import requests
-from langchain_core.messages import BaseMessage, HumanMessage
-from langchain_core.prompt_values import PromptValue
 from PIL import Image
 from pydantic import BaseModel
 from typing_extensions import TypedDict
@@ -21,6 +19,7 @@ from typing_extensions import TypedDict
 from ragas.callbacks import ChainType, new_group
 from ragas.exceptions import RagasOutputParserException
 from ragas.prompt.pydantic_prompt import PydanticPrompt, RagasOutputParser
+from ragas.prompt.value import Message, PromptValue
 
 if t.TYPE_CHECKING:
     from langchain_core.callbacks import Callbacks
@@ -202,7 +201,7 @@ class ImageTextPromptValue(PromptValue):
         """Return the number of items."""
         return len(self.items)
 
-    def to_messages(self) -> t.List[BaseMessage]:
+    def to_messages(self) -> t.List[Message]:
         """
         Converts items into a list of BaseMessages, securely processing potential
         image references (Base64 data URIs or allowed URLs).
@@ -217,7 +216,7 @@ class ImageTextPromptValue(PromptValue):
 
         # Only create HumanMessage if there's valid content
         if valid_messages_content:
-            return [HumanMessage(content=valid_messages_content)]
+            return [Message(role="user", content=valid_messages_content)]
         else:
             # Return empty list or handle as appropriate if all items failed processing
             return []

@@ -9,18 +9,19 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 import instructor
-from langchain_core.outputs import Generation, LLMResult
 from pydantic import BaseModel
 
 from ragas._analytics import LLMUsageEvent, track
 from ragas.cache import CacheInterface, cacher
 from ragas.exceptions import LLMDidNotFinishException
+from ragas.llms.output import Generation, LLMResult
 from ragas.run_config import RunConfig, add_async_retry
 
 if t.TYPE_CHECKING:
     from langchain_core.callbacks import Callbacks
-    from langchain_core.prompt_values import PromptValue
     from llama_index.core.base.llms.base import BaseLLM
+
+    from ragas.prompt.value import PromptValue
 
 
 logger = logging.getLogger(__name__)

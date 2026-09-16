@@ -1,11 +1,11 @@
 import typing as t
 
 from langchain_core.callbacks import Callbacks
-from langchain_core.outputs import Generation, LLMResult
-from langchain_core.prompt_values import PromptValue
 
 from ragas.cache import CacheInterface
 from ragas.llms import BaseRagasLLM
+from ragas.llms.output import Generation, LLMResult
+from ragas.prompt.value import PromptValue
 from ragas.run_config import RunConfig
 
 if t.TYPE_CHECKING:

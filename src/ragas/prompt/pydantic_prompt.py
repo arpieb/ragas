@@ -9,13 +9,13 @@ import typing as t
 
 from langchain_core.exceptions import OutputParserException
 from langchain_core.output_parsers import PydanticOutputParser
-from langchain_core.prompt_values import StringPromptValue as PromptValue
 from pydantic import BaseModel
 
 from ragas._analytics import PromptUsageEvent, track
 from ragas._version import __version__
 from ragas.callbacks import ChainType, new_group
 from ragas.exceptions import RagasOutputParserException
+from ragas.prompt.value import StringPromptValue as PromptValue
 
 from .base import BasePrompt, StringIO
 from .utils import extract_json, get_all_strings, update_strings
@@ -209,7 +209,7 @@ class PydanticPrompt(BasePrompt, t.Generic[InputModel, OutputModel]):
                     response_model=self.output_model,
                 )
             # Wrap the single response in an LLMResult-like structure for consistency
-            from langchain_core.outputs import Generation, LLMResult
+            from ragas.llms.output import Generation, LLMResult
 
             generation = Generation(text=result.model_dump_json())
             resp = LLMResult(generations=[[generation]])
