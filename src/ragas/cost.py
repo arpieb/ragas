@@ -1,15 +1,38 @@
 import logging
 import typing as t
 
-from langchain_core.callbacks import BaseCallbackHandler
-from langchain_core.outputs import ChatGeneration, ChatResult, LLMResult
 from pydantic import BaseModel
 
-from ragas.utils import get_from_dict
-
-TokenUsageParser = t.Callable[[t.Union[LLMResult, ChatResult]], "TokenUsage"]
-
 logger = logging.getLogger(__name__)
+
+TokenUsageParser = t.Callable[[t.Any], "TokenUsage"]
+"""Extract token usage from a raw provider completion.
+
+Previously this took a LangChain ``LLMResult``/``ChatResult``, populated by the
+``on_llm_end`` callback that only LangChain LLMs ever fired. With those removed
+the whole path was dead, so this now receives the provider's own response object
+-- an ``openai.types.chat.ChatCompletion``, an Anthropic ``Message``, a litellm
+``ModelResponse`` -- whichever your client returns.
+"""
+
+
+def _read(obj: t.Any, *path: str, default: t.Any = None) -> t.Any:
+    """Walk an attribute path, tolerating dicts and missing links.
+
+    Provider SDKs return objects, litellm sometimes returns dict-like responses,
+    and fields are routinely absent when a provider omits usage. Reading usage
+    must never raise -- a missing count is zero, not a crashed evaluation.
+    """
+    current = obj
+    for key in path:
+        if current is None:
+            return default
+        current = (
+            current.get(key, None)
+            if isinstance(current, dict)
+            else getattr(current, key, None)
+        )
+    return default if current is None else current
 
 
 class TokenUsage(BaseModel):
@@ -58,113 +81,75 @@ class TokenUsage(BaseModel):
             return False
 
 
-def get_token_usage_for_openai(
-    llm_result: t.Union[LLMResult, ChatResult],
-) -> TokenUsage:
-    # OpenAI like interfaces
-    llm_output = llm_result.llm_output
-    if llm_output is None:
-        logger.info("No llm_output found in the LLMResult")
+def get_token_usage_for_openai(completion: t.Any) -> TokenUsage:
+    """OpenAI-shaped responses: ``usage.prompt_tokens`` / ``usage.completion_tokens``."""
+    if _read(completion, "usage") is None:
+        logger.info("No usage found on the completion")
         return TokenUsage(input_tokens=0, output_tokens=0)
-    output_tokens = get_from_dict(llm_output, "token_usage.completion_tokens", 0)
-    input_tokens = get_from_dict(llm_output, "token_usage.prompt_tokens", 0)
-    model = get_from_dict(llm_output, "model_name", "")
-
     return TokenUsage(
-        input_tokens=input_tokens, output_tokens=output_tokens, model=model
+        input_tokens=_read(completion, "usage", "prompt_tokens", default=0),
+        output_tokens=_read(completion, "usage", "completion_tokens", default=0),
+        model=_read(completion, "model", default=""),
     )
 
 
-def get_token_usage_for_anthropic(
-    llm_result: t.Union[LLMResult, ChatResult],
-) -> TokenUsage:
-    token_usages = []
-    for gs in llm_result.generations:
-        for g in gs:
-            if isinstance(g, ChatGeneration):
-                if g.message.response_metadata != {}:
-                    # Anthropic
-                    token_usages.append(
-                        TokenUsage(
-                            input_tokens=get_from_dict(
-                                g.message.response_metadata,
-                                "usage.input_tokens",
-                                0,
-                            ),
-                            output_tokens=get_from_dict(
-                                g.message.response_metadata,
-                                "usage.output_tokens",
-                                0,
-                            ),
-                            model=get_from_dict(
-                                g.message.response_metadata, "model", ""
-                            ),
-                        )
-                    )
-        model = next((usage.model for usage in token_usages if usage.model), "")
-        return sum(
-            token_usages, TokenUsage(input_tokens=0, output_tokens=0, model=model)
-        )
-    else:
+def get_token_usage_for_anthropic(completion: t.Any) -> TokenUsage:
+    """Anthropic names them ``input_tokens`` / ``output_tokens``."""
+    if _read(completion, "usage") is None:
+        logger.info("No usage found on the completion")
         return TokenUsage(input_tokens=0, output_tokens=0)
-
-
-def get_token_usage_for_bedrock(
-    llm_result: t.Union[LLMResult, ChatResult],
-) -> TokenUsage:
-    token_usages = []
-    for gs in llm_result.generations:
-        for g in gs:
-            if isinstance(g, ChatGeneration):
-                if g.message.response_metadata != {}:
-                    token_usages.append(
-                        TokenUsage(
-                            input_tokens=get_from_dict(
-                                g.message.response_metadata,
-                                "usage.prompt_tokens",
-                                0,
-                            ),
-                            output_tokens=get_from_dict(
-                                g.message.response_metadata,
-                                "usage.completion_tokens",
-                                0,
-                            ),
-                            model=get_from_dict(
-                                g.message.response_metadata, "model_id", ""
-                            ),
-                        )
-                    )
-        model = next((usage.model for usage in token_usages if usage.model), "")
-        return sum(
-            token_usages, TokenUsage(input_tokens=0, output_tokens=0, model=model)
-        )
-    return TokenUsage(input_tokens=0, output_tokens=0)
-
-
-def get_token_usage_for_azure_ai(
-    llm_result: t.Union[LLMResult, ChatResult],
-) -> TokenUsage:
-    # AzureAI like interfaces
-    llm_output = llm_result.llm_output
-    if llm_output is None:
-        logger.info("No llm_output found in the LLMResult")
-        return TokenUsage(input_tokens=0, output_tokens=0)
-    input_tokens = get_from_dict(llm_output, "token_usage.input_tokens", 0)
-    output_tokens = get_from_dict(llm_output, "token_usage.output_tokens", 0)
-    model = get_from_dict(llm_output, "model_name", "")
-
     return TokenUsage(
-        input_tokens=input_tokens, output_tokens=output_tokens, model=model
+        input_tokens=_read(completion, "usage", "input_tokens", default=0),
+        output_tokens=_read(completion, "usage", "output_tokens", default=0),
+        model=_read(completion, "model", default=""),
     )
 
 
-class CostCallbackHandler(BaseCallbackHandler):
-    def __init__(self, token_usage_parser: TokenUsageParser):
-        self.token_usage_parser = token_usage_parser
+def get_token_usage_for_bedrock(completion: t.Any) -> TokenUsage:
+    """Bedrock is OpenAI-shaped but identifies the model as ``model_id``."""
+    if _read(completion, "usage") is None:
+        logger.info("No usage found on the completion")
+        return TokenUsage(input_tokens=0, output_tokens=0)
+    return TokenUsage(
+        input_tokens=_read(completion, "usage", "prompt_tokens", default=0),
+        output_tokens=_read(completion, "usage", "completion_tokens", default=0),
+        model=_read(
+            completion, "model_id", default=_read(completion, "model", default="")
+        ),
+    )
+
+
+def get_token_usage_for_azure_ai(completion: t.Any) -> TokenUsage:
+    """Azure AI uses the Anthropic-style names with an OpenAI-style envelope."""
+    if _read(completion, "usage") is None:
+        logger.info("No usage found on the completion")
+        return TokenUsage(input_tokens=0, output_tokens=0)
+    return TokenUsage(
+        input_tokens=_read(completion, "usage", "input_tokens", default=0),
+        output_tokens=_read(completion, "usage", "output_tokens", default=0),
+        model=_read(completion, "model", default=""),
+    )
+
+
+class TokenUsageCollector:
+    """Accumulates token usage across an evaluation run.
+
+    Replaces ``CostCallbackHandler``, which was a LangChain callback handler
+    driven by ``on_llm_end``. Ragas never fired that event itself, so it only
+    ever worked for LangChain-backed LLMs. The LLM now calls ``record()``
+    directly with the provider's raw completion.
+    """
+
+    def __init__(self, token_usage_parser: t.Optional[TokenUsageParser] = None):
+        self.token_usage_parser = token_usage_parser or get_token_usage_for_openai
         self.usage_data: t.List[TokenUsage] = []
 
-    def on_llm_end(self, response: LLMResult, **kwargs: t.Any):
-        self.usage_data.append(self.token_usage_parser(response))
+    def record(self, raw_completion: t.Any) -> None:
+        """Record usage for one completion. Never raises."""
+        try:
+            self.usage_data.append(self.token_usage_parser(raw_completion))
+        except Exception:
+            logger.warning("Failed to parse token usage", exc_info=True)
 
     def total_cost(
         self,
@@ -232,3 +217,9 @@ class CostCallbackHandler(BaseCallbackHandler):
             return list(total_table.values())[0]
         else:
             return list(total_table.values())
+
+
+# Deprecated alias. `cost_cb` remains the attribute name on EvaluationResult and
+# Testset, so this keeps `isinstance` checks and type annotations working for one
+# release. It is no longer a callback handler of any kind.
+CostCallbackHandler = TokenUsageCollector
