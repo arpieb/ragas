@@ -3,10 +3,10 @@ from __future__ import annotations
 import logging
 import random
 import typing as t
+import warnings
 from dataclasses import dataclass, field
 
 from langchain_core.callbacks import BaseCallbackManager
-from langchain_core.documents import Document as LCDocument
 
 from ragas._analytics import TestsetGenerationEvent, track
 from ragas.callbacks import new_group
@@ -18,6 +18,7 @@ from ragas.embeddings.base import (
 from ragas.executor import Executor
 from ragas.llms import BaseRagasLLM, LlamaIndexLLMWrapper
 from ragas.run_config import RunConfig
+from ragas.testset.document import Document, DocumentLike
 from ragas.testset.graph import KnowledgeGraph, Node, NodeType
 from ragas.testset.persona import Persona, generate_personas_from_kg
 from ragas.testset.synthesizers import default_query_distribution
@@ -89,9 +90,9 @@ class TestsetGenerator:
             llm_context=llm_context,
         )
 
-    def generate_with_langchain_docs(
+    def generate_with_docs(
         self,
-        documents: t.Sequence[LCDocument],
+        documents: t.Sequence[DocumentLike],
         testset_size: int,
         transforms: t.Optional[Transforms] = None,
         transforms_llm: t.Optional[BaseRagasLLM] = None,
@@ -109,7 +110,7 @@ class TestsetGenerator:
 
         Parameters
         ----------
-        documents : Sequence[LCDocument]
+        documents : Sequence[DocumentLike]
             A sequence of Langchain documents to use as source material
         testset_size : int
             The number of test samples to generate
@@ -197,6 +198,23 @@ class TestsetGenerator:
             return_executor=return_executor,
         )
 
+    def generate_with_langchain_docs(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
+        """Deprecated alias for :meth:`generate_with_docs`.
+
+        The method no longer has anything to do with LangChain -- it accepts any
+        object exposing ``page_content`` and ``metadata``, which LangChain
+        ``Document`` objects still satisfy.
+        """
+        warnings.warn(
+            "generate_with_langchain_docs() is deprecated and will be removed in a "
+            "future version. Use generate_with_docs(), which accepts any object "
+            "with `page_content` and `metadata` attributes -- including LangChain "
+            "Document objects.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.generate_with_docs(*args, **kwargs)
+
     def generate_with_llamaindex_docs(
         self,
         documents: t.Sequence[LlamaIndexDocument],
@@ -242,7 +260,7 @@ class TestsetGenerator:
 
             # create the transforms
             transforms = default_transforms(
-                documents=[LCDocument(page_content=doc.text) for doc in documents],
+                documents=[Document(page_content=doc.text) for doc in documents],
                 llm=llm_for_transforms,
                 embedding_model=embedding_model_for_transforms,
             )
@@ -279,7 +297,7 @@ class TestsetGenerator:
 
     def generate_with_chunks(
         self,
-        chunks: t.Sequence[t.Union[LCDocument, str]],
+        chunks: t.Sequence[t.Union[DocumentLike, str]],
         testset_size: int,
         transforms: t.Optional[Transforms] = None,
         transforms_llm: t.Optional[BaseRagasLLM] = None,
@@ -301,7 +319,7 @@ class TestsetGenerator:
 
         Parameters
         ----------
-        chunks : Sequence[Union[LCDocument, str]]
+        chunks : Sequence[Union[DocumentLike, str]]
             A sequence of Langchain documents or strings to use as chunks.
             Strings will be automatically converted to Documents.
         testset_size : int

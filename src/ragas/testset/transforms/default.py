@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
+from ragas.testset.document import DocumentLike
 from ragas.testset.graph import NodeType
 from ragas.testset.transforms.extractors import (
     EmbeddingExtractor,
@@ -25,14 +26,13 @@ if t.TYPE_CHECKING:
 
     from .engine import Transforms
 
-from langchain_core.documents import Document as LCDocument
 
 from ragas.embeddings.base import BaseRagasEmbeddings
 from ragas.llms.base import BaseRagasLLM
 
 
 def default_transforms(
-    documents: t.List[LCDocument],
+    documents: t.Sequence[DocumentLike],
     llm: t.Union[BaseRagasLLM, "InstructorBaseRagasLLM"],
     embedding_model: BaseRagasEmbeddings,
 ) -> "Transforms":

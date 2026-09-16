@@ -1,7 +1,6 @@
-from langchain_core.documents import Document
-
 from ragas.embeddings import BaseRagasEmbeddings
 from ragas.llms import BaseRagasLLM
+from ragas.testset.document import Document
 from ragas.testset.graph import NodeType
 from ragas.testset.synthesizers.generate import TestsetGenerator
 from ragas.testset.transforms.default import default_transforms_for_prechunked

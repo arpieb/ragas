@@ -129,8 +129,8 @@ class TestEvaluateCancellation:
 class TestGeneratorCancellation:
     """Test cancellation functionality in TestsetGenerator."""
 
-    def test_generate_with_langchain_docs_return_executor_parameter(self):
-        """Test that generate_with_langchain_docs accepts return_executor parameter."""
+    def test_generate_with_docs_return_executor_parameter(self):
+        """Test that generate_with_docs accepts return_executor parameter."""
         # This is mainly a signature test since full testing requires LLM/embeddings
         # Import locally to avoid pytest collection issues
         from ragas.testset.synthesizers.generate import TestsetGenerator
@@ -142,7 +142,7 @@ class TestGeneratorCancellation:
         # Verify the method signature includes return_executor
         import inspect
 
-        sig = inspect.signature(generator.generate_with_langchain_docs)
+        sig = inspect.signature(generator.generate_with_docs)
         assert "return_executor" in sig.parameters
 
         # Verify default value is False
