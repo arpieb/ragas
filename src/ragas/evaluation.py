@@ -52,7 +52,7 @@ from ragas.validation import (
 
 if t.TYPE_CHECKING:
     from ragas.callbacks import Callbacks
-    from ragas.cost import CostCallbackHandler, TokenUsageParser
+    from ragas.cost import TokenUsageCollector, TokenUsageParser
 
 RAGAS_EVALUATION_CHAIN_NAME = "ragas evaluation"
 
@@ -209,12 +209,21 @@ async def aevaluate(
     tracer = RagasTracer()
     ragas_callbacks["tracer"] = tracer
 
-    # check if cost needs to be calculated
+    # Token accounting. No longer a callback handler: ragas never fired on_llm_end,
+    # so that path only ever worked for LangChain LLMs. The collector is attached to
+    # each metric's LLM below and records the provider's raw completion directly.
+    cost_cb = None
     if token_usage_parser is not None:
-        from ragas.cost import CostCallbackHandler
+        from ragas.cost import TokenUsageCollector
 
-        cost_cb = CostCallbackHandler(token_usage_parser=token_usage_parser)
-        ragas_callbacks["cost_cb"] = cost_cb
+        cost_cb = TokenUsageCollector(token_usage_parser=token_usage_parser)
+        # Attach to every metric's LLM, not just ones we assigned -- a user-supplied
+        # metric.llm must be counted too. LLMs that predate the collector attribute
+        # (Haystack, OCI, LlamaIndex wrappers) are skipped rather than patched.
+        for metric in metrics:
+            metric_llm = getattr(metric, "llm", None)
+            if metric_llm is not None and hasattr(metric_llm, "usage_collector"):
+                metric_llm.usage_collector = cost_cb
 
     # The public `callbacks=` parameter was removed along with LangChain; external
     # observability now goes through OpenTelemetry. `_callbacks` remains as private
@@ -308,13 +317,12 @@ async def aevaluate(
     else:
         # evalution run was successful
         # now lets process the results
-        cost_cb = ragas_callbacks["cost_cb"] if "cost_cb" in ragas_callbacks else None
         result = EvaluationResult(
             scores=scores,
             dataset=dataset,
             binary_columns=binary_metrics,
             cost_cb=t.cast(
-                t.Union["CostCallbackHandler", None],
+                t.Union["TokenUsageCollector", None],
                 cost_cb,
             ),
             ragas_traces=tracer.traces,
@@ -323,6 +331,13 @@ async def aevaluate(
         if not evaluation_group_cm.ended:
             evaluation_rm.on_chain_end({"scores": result.scores})
     finally:
+        # detach the usage collector from any LLM it was attached to
+        if cost_cb is not None:
+            for metric in metrics:
+                metric_llm = getattr(metric, "llm", None)
+                if metric_llm is not None and hasattr(metric_llm, "usage_collector"):
+                    metric_llm.usage_collector = None
+
         # reset llms and embeddings if changed
         for i in llm_changed:
             t.cast(MetricWithLLM, metrics[i]).llm = None

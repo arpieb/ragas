@@ -28,7 +28,7 @@ ALLOWED_LANGCHAIN_PACKAGES = {
 
 # Number of langchain submodules ``import ragas`` drags in. Measured, not guessed.
 # Lower this whenever a stage reduces it; never raise it.
-MAX_LANGCHAIN_MODULES = 79
+MAX_LANGCHAIN_MODULES = 78
 
 # Modules that must import without pulling in any langchain at all. Empty today --
 # ``ragas/__init__.py`` imports ``ragas.evaluation``, which imports langchain at

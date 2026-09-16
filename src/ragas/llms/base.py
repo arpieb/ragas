@@ -566,6 +566,12 @@ class InstructorLLM(InstructorBaseRagasLLM):
         # Extract system_prompt separately (not passed to LLM API)
         self.system_prompt = self.model_args.pop("system_prompt", None)
 
+        # Set by evaluate()/TestsetGenerator when a token_usage_parser is supplied.
+        # Attached to the instance rather than carried in a ContextVar because
+        # generate() may hop onto a bare threading.Thread (see
+        # _run_async_in_current_loop), which contextvars do not cross.
+        self.usage_collector: t.Optional[t.Any] = None
+
         self.cache = cache
 
         # Check if client is async-capable at initialization
@@ -841,16 +847,24 @@ class InstructorLLM(InstructorBaseRagasLLM):
             # Map parameters based on provider requirements
             provider_kwargs = self._map_provider_params()
 
-            if self.provider.lower() == "google":
-                result = self.client.create(
+            target = (
+                self.client
+                if self.provider.lower() == "google"
+                else self.client.chat.completions
+            )
+            if self.usage_collector is not None:
+                # create_with_completion also returns the provider's raw response,
+                # which is the only place token counts are available. Gated so the
+                # default path is byte-identical to before.
+                result, raw = target.create_with_completion(
                     model=self.model,
                     messages=messages,
                     response_model=response_model,
                     **provider_kwargs,
                 )
+                self.usage_collector.record(raw)
             else:
-                # OpenAI, Anthropic, LiteLLM
-                result = self.client.chat.completions.create(
+                result = target.create(
                     model=self.model,
                     messages=messages,
                     response_model=response_model,
@@ -889,16 +903,21 @@ class InstructorLLM(InstructorBaseRagasLLM):
         # Map parameters based on provider requirements
         provider_kwargs = self._map_provider_params()
 
-        if self.provider.lower() == "google":
-            result = await self.client.create(
+        target = (
+            self.client
+            if self.provider.lower() == "google"
+            else self.client.chat.completions
+        )
+        if self.usage_collector is not None:
+            result, raw = await target.create_with_completion(
                 model=self.model,
                 messages=messages,
                 response_model=response_model,
                 **provider_kwargs,
             )
+            self.usage_collector.record(raw)
         else:
-            # OpenAI, Anthropic, LiteLLM
-            result = await self.client.chat.completions.create(
+            result = await target.create(
                 model=self.model,
                 messages=messages,
                 response_model=response_model,

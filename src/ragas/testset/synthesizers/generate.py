@@ -476,14 +476,18 @@ class TestsetGenerator:
 
         # dict to store any callbacks we define
         ragas_callbacks = {}
-        # set the token usage parser
+        # Token accounting. Not a callback handler any more -- it attaches to the
+        # generator's LLM and records the provider's raw completion directly.
+        cost_cb = None
         if token_usage_parser is not None:
-            from ragas.cost import CostCallbackHandler
+            from ragas.cost import TokenUsageCollector
 
-            cost_cb = CostCallbackHandler(token_usage_parser=token_usage_parser)
-            ragas_callbacks["cost_cb"] = cost_cb
-        else:
-            cost_cb = None
+            cost_cb = TokenUsageCollector(token_usage_parser=token_usage_parser)
+            # setattr rather than direct assignment: usage_collector lives on
+            # InstructorLLM, not the BaseRagasLLM ABC, and the hasattr guard does
+            # not narrow the declared type for assignment.
+            if self.llm is not None and hasattr(self.llm, "usage_collector"):
+                setattr(self.llm, "usage_collector", cost_cb)
 
         # `callbacks` may be a CallbackGroup or a plain list of handlers
         for cb in ragas_callbacks.values():
