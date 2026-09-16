@@ -4,15 +4,16 @@ The purpose of this guide is to illustrate a simple workflow for testing and eva
 
 ## Basic Setup
 
-We will use `langchain_openai` to set the LLM and embedding model for building our simple RAG. You may choose any other LLM and embedding model of your choice, to do that please refer to [customizing models in langchain](https://python.langchain.com/docs/integrations/chat/).
+We will use the OpenAI SDK to set the LLM and embedding model for building our simple RAG. You may choose any other provider -- see [choosing an evaluator LLM](../extra/components/choose_evaluator_llm.md).
 
 
 ```python
-from langchain_openai import ChatOpenAI
+from openai import OpenAI
 from ragas.embeddings import OpenAIEmbeddings
 import openai
 
-llm = ChatOpenAI(model="gpt-4o")
+openai_client = OpenAI()
+llm = openai_client
 openai_client = openai.OpenAI()
 embeddings = OpenAIEmbeddings(client=openai_client)
 ```
@@ -37,7 +38,7 @@ To build a simple RAG system, we need to define the following components:
     class RAG:
         def __init__(self, model="gpt-4o"):
             import openai
-            self.llm = ChatOpenAI(model=model)
+            self.llm = openai_client
             openai_client = openai.OpenAI()
             self.embeddings = OpenAIEmbeddings(client=openai_client)
             self.doc_embeddings = None
@@ -169,10 +170,10 @@ We have successfully collected the evaluation data. Now, we can evaluate our RAG
 
 ```python
 from ragas import evaluate
-from ragas.llms import LangchainLLMWrapper
+from ragas.llms import llm_factory
 
 
-evaluator_llm = LangchainLLMWrapper(llm)
+evaluator_llm = llm_factory("gpt-4o", client=openai_client)
 from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness
 
 result = evaluate(dataset=evaluation_dataset,metrics=[LLMContextRecall(), Faithfulness(), FactualCorrectness()],llm=evaluator_llm)
