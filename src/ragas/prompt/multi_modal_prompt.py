@@ -22,7 +22,7 @@ from ragas.prompt.pydantic_prompt import PydanticPrompt, RagasOutputParser
 from ragas.prompt.value import Message, PromptValue
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
+    from ragas.callbacks import Callbacks
 
 from ragas.llms.base import BaseRagasLLM
 

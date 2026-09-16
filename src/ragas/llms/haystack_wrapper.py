@@ -1,8 +1,7 @@
 import typing as t
 
-from langchain_core.callbacks import Callbacks
-
 from ragas.cache import CacheInterface
+from ragas.callbacks import Callbacks
 from ragas.llms import BaseRagasLLM
 from ragas.llms.output import Generation, LLMResult
 from ragas.prompt.value import PromptValue

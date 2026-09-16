@@ -18,9 +18,9 @@ from ragas.llms.output import Generation, LLMResult
 from ragas.run_config import RunConfig, add_async_retry
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
     from llama_index.core.base.llms.base import BaseLLM
 
+    from ragas.callbacks import Callbacks
     from ragas.prompt.value import PromptValue
 
 

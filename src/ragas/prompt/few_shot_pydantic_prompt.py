@@ -12,8 +12,7 @@ from ragas.llms.base import BaseRagasLLM
 from ragas.prompt.pydantic_prompt import PydanticPrompt
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
-
+    from ragas.callbacks import Callbacks
     from ragas.embeddings.base import BaseRagasEmbeddings
     from ragas.llms.base import BaseRagasLLM
 

@@ -5,11 +5,16 @@ import warnings
 from uuid import UUID
 
 from datasets import Dataset
-from langchain_core.callbacks import BaseCallbackHandler, BaseCallbackManager
 from tqdm.auto import tqdm
 
 from ragas._analytics import track_was_completed  # type: ignore
-from ragas.callbacks import ChainType, RagasTracer, new_group
+from ragas.callbacks import (
+    ChainCallback,
+    ChainType,
+    RagasTracer,
+    _as_group,
+    new_group,
+)
 from ragas.dataset_schema import (
     EvaluationDataset,
     EvaluationResult,
@@ -46,8 +51,7 @@ from ragas.validation import (
 )
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
-
+    from ragas.callbacks import Callbacks
     from ragas.cost import CostCallbackHandler, TokenUsageParser
 
 RAGAS_EVALUATION_CHAIN_NAME = "ragas evaluation"
@@ -59,7 +63,6 @@ async def aevaluate(
     llm: t.Optional[BaseRagasLLM | InstructorBaseRagasLLM] = None,
     embeddings: t.Optional[BaseRagasEmbeddings | BaseRagasEmbedding] = None,
     experiment_name: t.Optional[str] = None,
-    callbacks: Callbacks = None,
     run_config: t.Optional[RunConfig] = None,
     token_usage_parser: t.Optional[TokenUsageParser] = None,
     raise_exceptions: bool = False,
@@ -68,6 +71,7 @@ async def aevaluate(
     batch_size: t.Optional[int] = None,
     _run_id: t.Optional[UUID] = None,
     _pbar: t.Optional[tqdm] = None,
+    _callbacks: Callbacks = None,
     return_executor: bool = False,
 ) -> t.Union[EvaluationResult, Executor]:
     """
@@ -106,7 +110,6 @@ async def aevaluate(
     )
 
     column_map = column_map or {}
-    callbacks = callbacks or []
     run_config = run_config or RunConfig()
 
     if helicone_config.is_enabled:
@@ -200,7 +203,7 @@ async def aevaluate(
 
     # Ragas Callbacks
     # init the callbacks we need for various tasks
-    ragas_callbacks: t.Dict[str, BaseCallbackHandler] = {}
+    ragas_callbacks: t.Dict[str, ChainCallback] = {}
 
     # Ragas Tracer which traces the run
     tracer = RagasTracer()
@@ -213,12 +216,16 @@ async def aevaluate(
         cost_cb = CostCallbackHandler(token_usage_parser=token_usage_parser)
         ragas_callbacks["cost_cb"] = cost_cb
 
-    # append all the ragas_callbacks to the callbacks
+    # The public `callbacks=` parameter was removed along with LangChain; external
+    # observability now goes through OpenTelemetry. `_callbacks` remains as private
+    # plumbing (like _run_id/_pbar) so an internal caller -- the genetic optimizer,
+    # the llama-index integration -- can nest this evaluation inside its own run
+    # tree. Without it, traces would start a fresh root and parse_run_traces(
+    # traces, _run_id) would find nothing.
+    group = _as_group(_callbacks)
     for cb in ragas_callbacks.values():
-        if isinstance(callbacks, BaseCallbackManager):
-            callbacks.add_handler(cb)
-        else:
-            callbacks.append(cb)
+        group.add_handler(cb)
+    callbacks = group
 
     # new evaluation chain
     row_run_managers = []
@@ -341,7 +348,6 @@ def evaluate(
     llm: t.Optional[BaseRagasLLM] = None,
     embeddings: t.Optional[BaseRagasEmbeddings | BaseRagasEmbedding] = None,
     experiment_name: t.Optional[str] = None,
-    callbacks: Callbacks = None,
     run_config: t.Optional[RunConfig] = None,
     token_usage_parser: t.Optional[TokenUsageParser] = None,
     raise_exceptions: bool = False,
@@ -350,6 +356,7 @@ def evaluate(
     batch_size: t.Optional[int] = None,
     _run_id: t.Optional[UUID] = None,
     _pbar: t.Optional[tqdm] = None,
+    _callbacks: Callbacks = None,
     return_executor: bool = False,
     allow_nest_asyncio: bool = True,
 ) -> t.Union[EvaluationResult, Executor]:
@@ -374,9 +381,6 @@ def evaluate(
         This can be overridden by the embeddings specified in the metric level with `metric.embeddings`.
     experiment_name : str, optional
         The name of the experiment to track. This is used to track the evaluation in the tracing tool.
-    callbacks : Callbacks, optional
-        Lifecycle Langchain Callbacks to run during evaluation.
-        Check the [Langchain documentation](https://python.langchain.com/docs/modules/callbacks/) for more information.
     run_config : RunConfig, optional
         Configuration for runtime settings like timeout and retries. If not provided, default values are used.
     token_usage_parser : TokenUsageParser, optional
@@ -447,7 +451,6 @@ def evaluate(
             llm=llm,
             embeddings=embeddings,
             experiment_name=experiment_name,
-            callbacks=callbacks,
             run_config=run_config,
             token_usage_parser=token_usage_parser,
             raise_exceptions=raise_exceptions,
@@ -456,6 +459,7 @@ def evaluate(
             batch_size=batch_size,
             _run_id=_run_id,
             _pbar=_pbar,
+            _callbacks=_callbacks,
             return_executor=return_executor,
         )
 

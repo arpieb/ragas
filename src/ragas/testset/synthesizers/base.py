@@ -14,8 +14,7 @@ from ragas.testset.graph import KnowledgeGraph, Node
 from ragas.testset.persona import Persona
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
-
+    from ragas.callbacks import Callbacks
     from ragas.dataset_schema import BaseSample
     from ragas.llms.base import InstructorBaseRagasLLM
 

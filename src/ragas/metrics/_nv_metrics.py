@@ -5,8 +5,8 @@ import typing as t
 from dataclasses import dataclass, field
 
 import numpy as np
-from langchain_core.callbacks import Callbacks
 
+from ragas.callbacks import Callbacks
 from ragas.dataset_schema import SingleTurnSample
 from ragas.llms.base import BaseRagasLLM
 from ragas.metrics.base import MetricType, MetricWithLLM, SingleTurnMetric

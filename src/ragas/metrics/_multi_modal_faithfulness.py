@@ -16,7 +16,7 @@ from ragas.metrics.base import (
 from ragas.prompt import ImageTextPrompt
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
+    from ragas.callbacks import Callbacks
 
 
 class FaithfulnessInput(BaseModel):
