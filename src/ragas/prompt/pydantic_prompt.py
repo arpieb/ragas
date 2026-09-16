@@ -7,9 +7,7 @@ import logging
 import os
 import typing as t
 
-from langchain_core.exceptions import OutputParserException
-from langchain_core.output_parsers import PydanticOutputParser
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from ragas._analytics import PromptUsageEvent, track
 from ragas._version import __version__
@@ -464,7 +462,21 @@ class FixOutputFormat(PydanticPrompt[OutputStringAndPrompt, StringIO]):
 fix_output_format_prompt = FixOutputFormat()
 
 
-class RagasOutputParser(PydanticOutputParser[OutputModel]):
+class RagasOutputParser(t.Generic[OutputModel]):
+    """Parses an LLM's text output into ``pydantic_object``.
+
+    Was ``PydanticOutputParser[OutputModel]`` from langchain, of which only
+    ``parse()`` and ``OutputParserException`` were ever used. Both are a few
+    lines here, so the dependency bought very little.
+    """
+
+    def __init__(self, pydantic_object: t.Type[OutputModel]):
+        self.pydantic_object = pydantic_object
+
+    def parse(self, text: str) -> OutputModel:
+        """Validate ``text`` as JSON into the output model."""
+        return self.pydantic_object.model_validate_json(text)
+
     async def parse_output_string(
         self,
         output_string: str,
@@ -476,8 +488,8 @@ class RagasOutputParser(PydanticOutputParser[OutputModel]):
         callbacks = callbacks or []
         try:
             jsonstr = extract_json(output_string)
-            result = super().parse(jsonstr)
-        except OutputParserException:
+            result = self.parse(jsonstr)
+        except (ValidationError, json.JSONDecodeError):
             if retries_left != 0:
                 retry_rm, retry_cb = new_group(
                     name="fix_output_format",
@@ -494,7 +506,7 @@ class RagasOutputParser(PydanticOutputParser[OutputModel]):
                     retries_left=retries_left - 1,
                 )
                 retry_rm.on_chain_end({"fixed_output_string": fixed_output_string})
-                result = super().parse(fixed_output_string.text)
+                result = self.parse(fixed_output_string.text)
             else:
                 raise RagasOutputParserException()
         return result

@@ -18,24 +18,35 @@ import sys
 
 import pytest
 
-# Top-level langchain distributions still reachable from ``import ragas``.
-# Shrinks as stages land: langchain, langchain_community and langchain_openai all
-# went in stage 3 (adapters deleted). Only langchain_core is left; it goes in
-# stage 8, after which this set is empty and the migration is done.
-ALLOWED_LANGCHAIN_PACKAGES = {
-    "langchain_core",
-}
+# The migration is complete: no langchain distribution may be reachable from
+# ``import ragas``. This set must stay empty.
+ALLOWED_LANGCHAIN_PACKAGES: set[str] = set()
 
-# Number of langchain submodules ``import ragas`` drags in. Measured, not guessed.
-# Lower this whenever a stage reduces it; never raise it.
-MAX_LANGCHAIN_MODULES = 78
+# Number of langchain submodules ``import ragas`` drags in. Zero, and it stays
+# zero -- the ruff TID251 ban in pyproject.toml stops one being re-added.
+MAX_LANGCHAIN_MODULES = 0
 
-# Modules that must import without pulling in any langchain at all. Empty today --
-# ``ragas/__init__.py`` imports ``ragas.evaluation``, which imports langchain at
-# module scope, so *every* ragas import currently loads it. Entries get added as
-# stages land, starting with the already-clean modern stack
-# (ragas.metrics.collections, ragas.prompt.metrics, ragas.experiment).
-LANGCHAIN_FREE_MODULES: list[str] = []
+# Modules that must import without pulling in any langchain at all. This started
+# empty -- every ragas import loaded langchain, because ragas/__init__.py imports
+# ragas.evaluation, which imported it at module scope. Now the whole public
+# surface qualifies.
+LANGCHAIN_FREE_MODULES: list[str] = [
+    "ragas",
+    "ragas.evaluation",
+    "ragas.callbacks",
+    "ragas.cost",
+    "ragas.llms",
+    "ragas.llms.base",
+    "ragas.embeddings",
+    "ragas.embeddings.base",
+    "ragas.prompt",
+    "ragas.prompt.pydantic_prompt",
+    "ragas.metrics",
+    "ragas.metrics.collections",
+    "ragas.testset",
+    "ragas.testset.synthesizers.generate",
+    "ragas.experiment",
+]
 
 
 def _langchain_modules_after_importing(module: str) -> list[str]:

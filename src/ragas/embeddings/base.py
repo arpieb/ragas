@@ -8,7 +8,6 @@ from abc import ABC, abstractmethod
 from dataclasses import field
 
 import numpy as np
-from langchain_core.embeddings import Embeddings
 from pydantic.dataclasses import dataclass
 from pydantic_core import CoreSchema, core_schema
 
@@ -178,17 +177,53 @@ class BaseRagasEmbedding(ABC):
         return cls(**init_kwargs)
 
 
-class BaseRagasEmbeddings(Embeddings, ABC):
+def _overrides(cls: type, name: str) -> bool:
+    """Has ``cls`` supplied its own ``name``, rather than inheriting the default?"""
+    return getattr(cls, name, None) is not getattr(BaseRagasEmbeddings, name, None)
+
+
+class BaseRagasEmbeddings(ABC):
     """
     Abstract base class for Ragas embeddings.
 
-    This class extends the Embeddings class and provides methods for embedding
-    text and managing run configurations.
+    Implement **either** the sync pair (``embed_query``/``embed_documents``) or
+    the async pair (``aembed_query``/``aembed_documents``). Whichever you omit is
+    bridged automatically: sync calls run the coroutine, async calls hand the
+    sync method to an executor.
+
+    This used to subclass ``langchain_core.embeddings.Embeddings`` and declare
+    only the async pair abstract, which left ``HuggingfaceEmbeddings`` -- which
+    implements only the sync pair -- permanently abstract and impossible to
+    instantiate. Requiring one pair rather than a specific pair fixes that, and
+    is strictly more permissive than before for user subclasses.
 
     Attributes:
         run_config (RunConfig): Configuration for running the embedding operations.
 
     """
+
+    def __init_subclass__(cls, **kwargs: t.Any) -> None:
+        super().__init_subclass__(**kwargs)
+        if inspect.isabstract(cls):
+            return
+        # Neither pair is abstract any more, so Python cannot catch a subclass
+        # that implements nothing -- instead embed_query would call aembed_query
+        # which would call embed_query, recursing until the stack blew. Check at
+        # class-definition time so the failure is a clear message, not a
+        # RecursionError from deep inside an evaluation.
+        has_sync = _overrides(cls, "embed_query") and _overrides(cls, "embed_documents")
+        has_async = _overrides(cls, "aembed_query") and _overrides(
+            cls, "aembed_documents"
+        )
+        # Overriding the higher-level API instead is also fine: it short-circuits
+        # the chain before either pair is reached.
+        has_high_level = _overrides(cls, "embed_text") or _overrides(cls, "embed_texts")
+        if not (has_sync or has_async or has_high_level):
+            raise TypeError(
+                f"{cls.__name__} must implement either (embed_query, embed_documents), "
+                f"(aembed_query, aembed_documents), or embed_text/embed_texts. "
+                f"Without one of these, embedding calls would recurse indefinitely."
+            )
 
     run_config: RunConfig
     cache: t.Optional[CacheInterface] = None
@@ -231,11 +266,23 @@ class BaseRagasEmbeddings(Embeddings, ABC):
             )
             return await loop.run_in_executor(None, embed_documents_with_retry, texts)
 
-    @abstractmethod
-    async def aembed_query(self, text: str) -> t.List[float]: ...
+    def embed_query(self, text: str) -> t.List[float]:
+        """Embed one string. Bridges to ``aembed_query`` unless overridden."""
+        return run_async_in_current_loop(self.aembed_query(text))
 
-    @abstractmethod
-    async def aembed_documents(self, texts: t.List[str]) -> t.List[t.List[float]]: ...
+    def embed_documents(self, texts: t.List[str]) -> t.List[t.List[float]]:
+        """Embed many strings. Bridges to ``aembed_documents`` unless overridden."""
+        return run_async_in_current_loop(self.aembed_documents(texts))
+
+    async def aembed_query(self, text: str) -> t.List[float]:
+        """Embed one string. Bridges to ``embed_query`` unless overridden."""
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self.embed_query, text)
+
+    async def aembed_documents(self, texts: t.List[str]) -> t.List[t.List[float]]:
+        """Embed many strings. Bridges to ``embed_documents`` unless overridden."""
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self.embed_documents, texts)
 
     def set_run_config(self, run_config: RunConfig):
         """
