@@ -13,13 +13,12 @@ from ragas.metrics.collections import ContextRelevance
 def nvidia_legacy_llm():
     """Create legacy LLM for ContextRelevance (temperature set in metric calls)."""
     try:
-        from langchain_openai import ChatOpenAI
+        import openai
 
-        from ragas.llms.base import LangchainLLMWrapper
+        from ragas.llms import llm_factory
 
         # Legacy sets temperature=0.1 in the metric calls, so use default here
-        langchain_llm = ChatOpenAI(model="gpt-4o", temperature=0.01)
-        return LangchainLLMWrapper(langchain_llm)
+        return llm_factory("gpt-4o", client=openai.OpenAI())
     except Exception as e:
         pytest.skip(str(e))
 

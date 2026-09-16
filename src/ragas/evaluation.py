@@ -6,8 +6,6 @@ from uuid import UUID
 
 from datasets import Dataset
 from langchain_core.callbacks import BaseCallbackHandler, BaseCallbackManager
-from langchain_core.embeddings import Embeddings as LangchainEmbeddings
-from langchain_core.language_models import BaseLanguageModel as LangchainLLM
 from tqdm.auto import tqdm
 
 from ragas._analytics import track_was_completed  # type: ignore
@@ -21,7 +19,6 @@ from ragas.dataset_schema import (
 from ragas.embeddings.base import (
     BaseRagasEmbedding,
     BaseRagasEmbeddings,
-    LangchainEmbeddingsWrapper,
     _infer_embedding_provider_from_llm,
     embedding_factory,
 )
@@ -29,7 +26,7 @@ from ragas.exceptions import ExceptionInRunner
 from ragas.executor import Executor
 from ragas.integrations.helicone import helicone_config
 from ragas.llms import llm_factory
-from ragas.llms.base import BaseRagasLLM, InstructorBaseRagasLLM, LangchainLLMWrapper
+from ragas.llms.base import BaseRagasLLM, InstructorBaseRagasLLM
 from ragas.metrics._answer_correctness import AnswerCorrectness
 from ragas.metrics._aspect_critic import AspectCritic
 from ragas.metrics.base import (
@@ -59,10 +56,8 @@ RAGAS_EVALUATION_CHAIN_NAME = "ragas evaluation"
 async def aevaluate(
     dataset: t.Union[Dataset, EvaluationDataset],
     metrics: t.Optional[t.Sequence[Metric]] = None,
-    llm: t.Optional[BaseRagasLLM | InstructorBaseRagasLLM | LangchainLLM] = None,
-    embeddings: t.Optional[
-        BaseRagasEmbeddings | BaseRagasEmbedding | LangchainEmbeddings
-    ] = None,
+    llm: t.Optional[BaseRagasLLM | InstructorBaseRagasLLM] = None,
+    embeddings: t.Optional[BaseRagasEmbeddings | BaseRagasEmbedding] = None,
     experiment_name: t.Optional[str] = None,
     callbacks: Callbacks = None,
     run_config: t.Optional[RunConfig] = None,
@@ -153,12 +148,6 @@ async def aevaluate(
     if isinstance(dataset, EvaluationDataset):
         validate_required_columns(dataset, metrics)
         validate_supported_metrics(dataset, metrics)
-
-    # set the llm and embeddings
-    if isinstance(llm, LangchainLLM):
-        llm = LangchainLLMWrapper(llm, run_config=run_config)
-    if isinstance(embeddings, LangchainEmbeddings):
-        embeddings = LangchainEmbeddingsWrapper(embeddings)
 
     # init llms and embeddings
     binary_metrics = []
@@ -349,10 +338,8 @@ async def aevaluate(
 def evaluate(
     dataset: t.Union[Dataset, EvaluationDataset],
     metrics: t.Optional[t.Sequence[Metric]] = None,
-    llm: t.Optional[BaseRagasLLM | LangchainLLM] = None,
-    embeddings: t.Optional[
-        BaseRagasEmbeddings | BaseRagasEmbedding | LangchainEmbeddings
-    ] = None,
+    llm: t.Optional[BaseRagasLLM] = None,
+    embeddings: t.Optional[BaseRagasEmbeddings | BaseRagasEmbedding] = None,
     experiment_name: t.Optional[str] = None,
     callbacks: Callbacks = None,
     run_config: t.Optional[RunConfig] = None,

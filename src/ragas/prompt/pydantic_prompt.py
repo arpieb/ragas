@@ -8,7 +8,6 @@ import os
 import typing as t
 
 from langchain_core.exceptions import OutputParserException
-from langchain_core.language_models import BaseLanguageModel
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompt_values import StringPromptValue as PromptValue
 from pydantic import BaseModel
@@ -25,52 +24,6 @@ if t.TYPE_CHECKING:
     from langchain_core.callbacks import Callbacks
 
 from ragas.llms.base import BaseRagasLLM, InstructorBaseRagasLLM
-
-
-def is_langchain_llm(
-    llm: t.Union[BaseRagasLLM, InstructorBaseRagasLLM, BaseLanguageModel],
-) -> bool:
-    """
-    Detect if an LLM is a LangChain LLM or a Ragas LLM.
-
-    Args:
-        llm: The LLM instance to check
-
-    Returns:
-        True if it's a LangChain LLM, False if it's a Ragas LLM
-
-    .. deprecated::
-        Direct usage of LangChain LLMs is deprecated. Use Ragas LLM interfaces instead:
-        from openai import OpenAI
-        from ragas.llms import llm_factory
-        client = OpenAI(api_key="...")
-        llm = llm_factory("gpt-4o-mini", client=client)
-    """
-    # If it's a BaseRagasLLM, it's definitely not a LangChain LLM
-    if isinstance(llm, BaseRagasLLM):
-        return False
-
-    # InstructorLLM and InstructorBaseRagasLLM are also not LangChain LLMs
-    if isinstance(llm, InstructorBaseRagasLLM):
-        return False
-
-    # If it's a LangChain LLM, return True
-    result = isinstance(llm, BaseLanguageModel)
-
-    if result:
-        import warnings
-
-        warnings.warn(
-            "Direct usage of LangChain LLMs with Ragas prompts is deprecated and will be removed in a future version. "
-            "Use Ragas LLM interfaces instead: "
-            "from openai import OpenAI; from ragas.llms import llm_factory; "
-            "client = OpenAI(api_key='...'); llm = llm_factory('gpt-4o-mini', client=client)",
-            DeprecationWarning,
-            stacklevel=3,
-        )
-
-    return result
-
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +88,7 @@ class PydanticPrompt(BasePrompt, t.Generic[InputModel, OutputModel]):
 
     async def generate(
         self,
-        llm: t.Union[BaseRagasLLM, InstructorBaseRagasLLM, BaseLanguageModel],
+        llm: t.Union[BaseRagasLLM, InstructorBaseRagasLLM],
         data: InputModel,
         temperature: t.Optional[float] = None,
         stop: t.Optional[t.List[str]] = None,
@@ -187,7 +140,7 @@ class PydanticPrompt(BasePrompt, t.Generic[InputModel, OutputModel]):
 
     async def generate_multiple(
         self,
-        llm: t.Union[BaseRagasLLM, InstructorBaseRagasLLM, BaseLanguageModel],
+        llm: t.Union[BaseRagasLLM, InstructorBaseRagasLLM],
         data: InputModel,
         n: int = 1,
         temperature: t.Optional[float] = None,
@@ -237,20 +190,9 @@ class PydanticPrompt(BasePrompt, t.Generic[InputModel, OutputModel]):
         prompt_value = PromptValue(text=self.to_string(processed_data))
 
         # Handle different LLM types with different interfaces
-        # 1. LangChain LLMs have agenerate_prompt() for async with specific signature
-        # 2. BaseRagasLLM have generate() with n, temperature, stop, callbacks
-        # 3. InstructorLLM has generate()/agenerate() with only prompt and response_model
-        if is_langchain_llm(llm):
-            # This is a LangChain LLM - use agenerate_prompt() with batch for multiple generations
-            langchain_llm = t.cast(BaseLanguageModel, llm)
-            # LangChain doesn't support n parameter directly, so we batch multiple prompts
-            prompts = t.cast(t.List[t.Any], [prompt_value for _ in range(n)])
-            resp = await langchain_llm.agenerate_prompt(
-                prompts,
-                stop=stop,
-                callbacks=prompt_cb,
-            )
-        elif isinstance(llm, InstructorBaseRagasLLM):
+        # 1. BaseRagasLLM have generate() with n, temperature, stop, callbacks
+        # 2. InstructorLLM has generate()/agenerate() with only prompt and response_model
+        if isinstance(llm, InstructorBaseRagasLLM):
             # This is an InstructorLLM - use its generate()/agenerate() method
             # InstructorLLM.generate()/agenerate() only takes prompt and response_model parameters
             from ragas.llms.base import InstructorLLM
@@ -286,7 +228,7 @@ class PydanticPrompt(BasePrompt, t.Generic[InputModel, OutputModel]):
         parser = RagasOutputParser(pydantic_object=self.output_model)
 
         # Handle cases where LLM returns fewer generations than requested
-        if is_langchain_llm(llm) or isinstance(llm, InstructorBaseRagasLLM):
+        if isinstance(llm, InstructorBaseRagasLLM):
             available_generations = len(resp.generations)
         else:
             available_generations = len(resp.generations[0]) if resp.generations else 0
@@ -306,16 +248,16 @@ class PydanticPrompt(BasePrompt, t.Generic[InputModel, OutputModel]):
             )
 
         for i in range(actual_n):
-            if is_langchain_llm(llm) or isinstance(llm, InstructorBaseRagasLLM):
-                # For LangChain LLMs and InstructorLLM, each generation is in a separate batch result
+            if isinstance(llm, InstructorBaseRagasLLM):
+                # For InstructorLLM, each generation is in a separate batch result
                 output_string = resp.generations[i][0].text
             else:
                 # For Ragas LLMs, all generations are in the first batch
                 output_string = resp.generations[0][i].text
             try:
-                # For the parser, we need a BaseRagasLLM, so if it's a LangChain LLM, we need to handle this
-                if is_langchain_llm(llm) or isinstance(llm, InstructorBaseRagasLLM):
-                    # Skip parsing retry for LangChain LLMs since parser expects BaseRagasLLM
+                # The parser needs a BaseRagasLLM for its retry path
+                if isinstance(llm, InstructorBaseRagasLLM):
+                    # Skip parsing retry for InstructorLLM since parser expects BaseRagasLLM
                     answer = self.output_model.model_validate_json(output_string)
                 else:
                     ragas_llm = t.cast(BaseRagasLLM, llm)
