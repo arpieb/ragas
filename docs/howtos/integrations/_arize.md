@@ -96,7 +96,9 @@ TEST_SIZE = 25
 # generator with openai models
 openai_client = openai.OpenAI()
 generator_llm = llm_factory("gpt-4o-mini", client=openai_client)
-embeddings = embedding_factory("openai", model="text-embedding-3-small", client=openai_client)
+embeddings = embedding_factory(
+    "openai", model="text-embedding-3-small", client=openai_client
+)
 
 generator = TestsetGenerator(llm=generator_llm, embedding_model=embeddings)
 
