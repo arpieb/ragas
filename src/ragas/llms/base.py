@@ -442,19 +442,33 @@ def llm_factory(
         llm = llm_factory("gpt-4o-mini", client=client)
         response = await llm.agenerate(prompt, ResponseModel)
     """
-    if client is None:
-        raise ValueError(
-            "llm_factory() requires a client instance. "
-            "Text-only mode has been removed.\n\n"
-            "To migrate:\n"
-            "  from openai import OpenAI\n"
-            "  client = OpenAI(api_key='...')\n"
-            "  llm = llm_factory('gpt-4o-mini', client=client)\n\n"
-            "For more details: https://docs.ragas.io/en/latest/llm-factory"
-        )
-
     if not model:
         raise ValueError("model parameter is required")
+
+    if client is None:
+        # No client: route through LiteLLM, which resolves credentials from the
+        # environment. This mirrors embedding_factory(), which has worked this way
+        # since the LangChain adapters were removed -- the two factories used to
+        # disagree, with this one raising where the other succeeded.
+        try:
+            import instructor as _instructor
+            import litellm as _litellm
+        except ImportError as e:  # pragma: no cover - litellm is a core dependency
+            raise ImportError(
+                "llm_factory() without an explicit client requires litellm. "
+                "Install it, or pass a client: "
+                "llm_factory('gpt-4o-mini', client=OpenAI())"
+            ) from e
+
+        # Prefix the model with the provider when the caller named one and the
+        # model string does not already carry it, since LiteLLM routes on the
+        # "provider/model" form. "openai" needs no prefix.
+        if provider.lower() not in ("openai", "litellm") and "/" not in model:
+            model = f"{provider.lower()}/{model}"
+
+        client = _instructor.from_litellm(_litellm.completion)
+        provider = "litellm"
+        adapter = "litellm"
 
     provider_lower = provider.lower()
 

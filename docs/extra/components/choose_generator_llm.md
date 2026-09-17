@@ -148,16 +148,9 @@
     ```
 
     ```python
-    import instructor
-    import litellm
     from ragas.llms import llm_factory
 
-    client = instructor.from_litellm(litellm.completion)
-    generator_llm = llm_factory(
-        "bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0",
-        provider="litellm",
-        client=client,
-    )
+    generator_llm = llm_factory("bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0")
     ```
 
     Embeddings default to LiteLLM, which resolves credentials from the
@@ -179,14 +172,10 @@
     ```
 
     ```python
-    import instructor
-    import litellm
     from ragas.llms import llm_factory
 
-    client = instructor.from_litellm(litellm.completion)
-
-    # any model string LiteLLM understands
-    generator_llm = llm_factory("ollama/llama3", provider="litellm", client=client)
+    # any model string LiteLLM understands; credentials come from the environment
+    generator_llm = llm_factory("ollama/llama3")
     ```
 
     See the [LiteLLM provider list](https://docs.litellm.ai/docs/providers) for the

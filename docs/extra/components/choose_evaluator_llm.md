@@ -116,16 +116,9 @@
     ```
 
     ```python
-    import instructor
-    import litellm
     from ragas.llms import llm_factory
 
-    client = instructor.from_litellm(litellm.completion)
-    evaluator_llm = llm_factory(
-        "bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0",
-        provider="litellm",
-        client=client,
-    )
+    evaluator_llm = llm_factory("bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0")
     ```
 
 === "Others (LiteLLM)"
@@ -138,14 +131,10 @@
     ```
 
     ```python
-    import instructor
-    import litellm
     from ragas.llms import llm_factory
 
-    client = instructor.from_litellm(litellm.completion)
-
-    # any model string LiteLLM understands
-    evaluator_llm = llm_factory("ollama/llama3", provider="litellm", client=client)
+    # any model string LiteLLM understands; credentials come from the environment
+    evaluator_llm = llm_factory("ollama/llama3")
     ```
 
     See the [LiteLLM provider list](https://docs.litellm.ai/docs/providers) for the

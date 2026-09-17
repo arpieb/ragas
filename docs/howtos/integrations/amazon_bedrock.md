@@ -565,20 +565,12 @@ Ragas includes metrics suited to such evaluations, and we will explore some of t
 
 
 ```python
-import instructor
-import litellm
 from ragas.llms import llm_factory
 
 model_id = "us.amazon.nova-pro-v1:0"  # Choose your desired model
 region_name = "us-east-1"  # Choose your desired AWS region
 
-client = instructor.from_litellm(litellm.completion)
-evaluator_llm = llm_factory(
-    f"bedrock/{model_id}",
-    provider="litellm",
-    client=client,
-    aws_region_name=region_name,
-)
+evaluator_llm = llm_factory(f"bedrock/{model_id}", aws_region_name=region_name)
 ```
 
 
