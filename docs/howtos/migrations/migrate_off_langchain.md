@@ -52,17 +52,15 @@ Four reasons, in the order they bite:
     evaluator_llm = llm_factory("gpt-4o", client=OpenAI())
     ```
 
-`llm_factory` **requires an explicit client** — there is no implicit,
-environment-only construction. For providers without a first-party SDK you
-want to install, go through LiteLLM:
+Passing a client is optional. Omit it and `llm_factory` routes through LiteLLM,
+resolving credentials from the environment — the same way `embedding_factory()`
+does:
 
 ```python
-import instructor
-import litellm
 from ragas.llms import llm_factory
 
-client = instructor.from_litellm(litellm.completion)
-evaluator_llm = llm_factory("ollama/llama3", provider="litellm", client=client)
+evaluator_llm = llm_factory("ollama/llama3")  # LiteLLM
+evaluator_llm = llm_factory("claude-sonnet-4-5", provider="anthropic")
 ```
 
 That covers 100+ providers, including Bedrock, Vertex AI, Groq, Mistral and

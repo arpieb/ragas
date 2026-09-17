@@ -168,13 +168,10 @@ To use model-based metrics, first define your evaluator LLM and embeddings.
 
 
 ```python
-import instructor
-import litellm
 from ragas.embeddings import embedding_factory
 from ragas.llms import llm_factory
 
-client = instructor.from_litellm(litellm.completion)
-evaluator_llm = llm_factory("vertex_ai/gemini-pro", provider="litellm", client=client)
+evaluator_llm = llm_factory("vertex_ai/gemini-pro")
 evaluator_embeddings = embedding_factory("vertex_ai/text-embedding-004")
 ```
 

@@ -21,9 +21,14 @@ dependencies = [
     "networkx",
     "scikit-network",
 
-    # Provider-neutral LLM/embedding access. embedding_factory() routes client-less
-    # calls here, and it is the intended replacement for the LangChain adapters.
-    "litellm",
+    # Provider-neutral LLM/embedding access. llm_factory()/embedding_factory()
+    # route client-less calls here.
+    #
+    # Upper-bounded on 3.10: litellm 1.98 imports `NotRequired` from `typing`
+    # (llms/anthropic/.../editors/compact.py), which only exists from 3.11, so
+    # `import litellm` fails outright on 3.10 despite litellm claiming support.
+    "litellm; python_version >= '3.11'",
+    "litellm<1.98; python_version < '3.11'",
     # Tracing. The API package only -- spans are a no-op unless the user
     # configures an SDK, which is how a library should behave. EvaluationResult
     # .traces comes from the native run tree, so it works without one.

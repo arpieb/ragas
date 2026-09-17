@@ -221,10 +221,17 @@ def test_llm_model_args_storage(mock_sync_client, monkeypatch):
     assert llm.model_args == model_args  # type: ignore
 
 
-def test_llm_factory_missing_client():
-    """Test that missing client raises ValueError."""
-    with pytest.raises(ValueError, match="requires a client instance"):
-        llm_factory("gpt-4", provider="openai")
+def test_llm_factory_missing_client_routes_to_litellm():
+    """A missing client no longer raises -- it routes through LiteLLM.
+
+    This previously asserted `requires a client instance`. That contract was
+    changed deliberately: embedding_factory() had always worked without a
+    client, so the two factories disagreed. See TestClientlessFactory below.
+    """
+    from ragas.llms.litellm_llm import LiteLLMStructuredLLM
+
+    llm = llm_factory("gpt-4", provider="openai")
+    assert isinstance(llm, LiteLLMStructuredLLM)
 
 
 def test_llm_factory_missing_model():
@@ -333,3 +340,58 @@ def test_llm_factory_mode_with_generic_provider(monkeypatch):
 
     assert llm.model == "custom-model"
     assert captured_mode == instructor.Mode.TOOLS
+
+
+class TestClientlessFactory:
+    """`llm_factory` without a client routes through LiteLLM.
+
+    This used to raise. `embedding_factory()` has worked without a client since
+    the LangChain adapters were removed, so the two factories disagreed -- one
+    succeeded where the other refused. This closes that gap; passing a client
+    behaves exactly as before.
+    """
+
+    def test_no_client_routes_to_litellm(self):
+        from ragas.llms import llm_factory
+        from ragas.llms.litellm_llm import LiteLLMStructuredLLM
+
+        llm = llm_factory("gpt-4o")
+        assert isinstance(llm, LiteLLMStructuredLLM)
+        assert llm.model == "gpt-4o"
+
+    def test_named_provider_is_prefixed_for_litellm_routing(self):
+        from ragas.llms import llm_factory
+
+        assert (
+            llm_factory("claude-sonnet-4-5", provider="anthropic").model
+            == "anthropic/claude-sonnet-4-5"
+        )
+
+    def test_openai_is_not_prefixed(self):
+        """LiteLLM takes bare OpenAI model names."""
+        from ragas.llms import llm_factory
+
+        assert llm_factory("gpt-4o", provider="openai").model == "gpt-4o"
+
+    def test_an_explicit_prefix_is_left_alone(self):
+        from ragas.llms import llm_factory
+
+        assert llm_factory("ollama/llama3").model == "ollama/llama3"
+        assert llm_factory("ollama/llama3", provider="ollama").model == "ollama/llama3"
+
+    def test_passing_a_client_is_unchanged(self):
+        import openai
+
+        from ragas.llms import llm_factory
+        from ragas.llms.base import InstructorLLM
+
+        llm = llm_factory("gpt-4o", client=openai.OpenAI(api_key="sk-test"))
+        assert isinstance(llm, InstructorLLM)
+
+    def test_model_is_still_required(self):
+        import pytest
+
+        from ragas.llms import llm_factory
+
+        with pytest.raises(ValueError, match="model parameter is required"):
+            llm_factory("")
