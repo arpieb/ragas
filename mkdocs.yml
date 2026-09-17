@@ -119,6 +119,7 @@ nav:
             - Align an LLM as a Judge: howtos/applications/align-llm-as-judge.md
           - RAG Evaluation:
             - Evaluate and Improve a RAG App: howtos/applications/evaluate-and-improve-rag.md
+            - Compare Embeddings for a Retriever: howtos/applications/compare_embeddings.md
           - Automation:
             - Adding Ragas to your CI Pipeline: howtos/applications/add_to_ci.md
       - CLI:
@@ -188,12 +189,6 @@ not_in_nav: |
   extra/components/choose_evaluator_llm.md
   extra/components/choose_generator_llm.md
   howtos/customizations/metrics/_cost.md
-
-  # Stale: these import ragas.testset.generator / ragas.testset.evolutions,
-  # removed several releases ago. They need a rewrite, not a nav entry.
-  howtos/applications/compare_embeddings.md
-  howtos/applications/compare_llms.md
-  howtos/integrations/_openlayer.md
 
   # Unmaintained integration pages, superseded or never linked from anywhere.
   # _ag_ui.md and _haystack.md are older copies of ag_ui.md / haystack.md.
