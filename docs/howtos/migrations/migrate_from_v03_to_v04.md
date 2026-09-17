@@ -238,7 +238,7 @@ If you were using wrapper classes, they are now deprecated and will be removed i
 
 ```python
 # Deprecated - will be removed
-from ragas.llms import LangchainLLMWrapper, LlamaIndexLLMWrapper
+from ragas.llms import LlamaIndexLLMWrapper  # LangchainLLMWrapper was removed
 ```
 
 ```python
@@ -1350,7 +1350,7 @@ result = await run(dataset)
 
 ### LLM Wrapper Classes
 
-#### LangchainLLMWrapper - Deprecated
+#### LangchainLLMWrapper - Removed
 
 - **Status**: Still works but discouraged
 - **Deprecation warning**:

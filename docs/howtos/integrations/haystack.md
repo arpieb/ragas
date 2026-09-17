@@ -124,12 +124,11 @@ Make sure to include all relevant data for each metric to ensure accurate evalua
 ```python
 from haystack_integrations.components.evaluators.ragas import RagasEvaluator
 
-from langchain_openai import ChatOpenAI
-from ragas.llms import LangchainLLMWrapper
+from openai import OpenAI
+from ragas.llms import llm_factory
 from ragas.metrics import AnswerRelevancy, ContextPrecision, Faithfulness
 
-llm = ChatOpenAI(model="gpt-4o-mini")
-evaluator_llm = LangchainLLMWrapper(llm)
+evaluator_llm = llm_factory("gpt-4o-mini", client=OpenAI())
 
 ragas_evaluator = RagasEvaluator(
     ragas_metrics=[AnswerRelevancy(), ContextPrecision(), Faithfulness()],

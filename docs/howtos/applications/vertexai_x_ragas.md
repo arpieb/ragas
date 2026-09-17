@@ -93,13 +93,14 @@ To use and define model-based metrics, you need to configure both an evaluator L
 
 
 ```python
-from ragas.llms import LangchainLLMWrapper
-from ragas.embeddings import LangchainEmbeddingsWrapper
-from langchain_google_vertexai import VertexAI, VertexAIEmbeddings
+import instructor
+import litellm
+from ragas.embeddings import embedding_factory
+from ragas.llms import llm_factory
 
-
-evaluator_llm = LangchainLLMWrapper(VertexAI(model_name="gemini-pro"))
-evaluator_embeddings = LangchainEmbeddingsWrapper(VertexAIEmbeddings(model_name="text-embedding-004"))
+client = instructor.from_litellm(litellm.completion)
+evaluator_llm = llm_factory("vertex_ai/gemini-pro", provider="litellm", client=client)
+evaluator_embeddings = embedding_factory("vertex_ai/text-embedding-004")
 ```
 
 ### Build your own model-based point-wise metrics using Ragas

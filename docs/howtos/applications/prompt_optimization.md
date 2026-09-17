@@ -271,14 +271,14 @@ For our diabetes assistant, we will use:
 
 
 ```python
-from ragas.llms import LangchainLLMWrapper
-from langchain_openai import ChatOpenAI
+from ragas.llms import llm_factory
+from openai import OpenAI
 from ragas.metrics import (
     AnswerAccuracy,
     ResponseGroundedness,
 )
 
-evaluator_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o-mini"))
+evaluator_llm = llm_factory("gpt-4o-mini", client=OpenAI())
 
 metrics = [
     AnswerAccuracy(llm=evaluator_llm),
@@ -374,8 +374,8 @@ Ragas offers flexible tools to create custom metrics that measure your specific 
 
 
 ```python
-from ragas.llms import LangchainLLMWrapper
-from langchain_openai import ChatOpenAI
+from ragas.llms import llm_factory
+from openai import OpenAI
 from ragas.metrics import (
     AnswerAccuracy,
     AspectCritic
@@ -388,7 +388,7 @@ no_answer_metric = AspectCritic(
     llm=evaluator_llm,
 )
 
-evaluator_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o-mini"))
+evaluator_llm = llm_factory("gpt-4o-mini", client=OpenAI())
 
 metrics = [
     AnswerAccuracy(llm=evaluator_llm),

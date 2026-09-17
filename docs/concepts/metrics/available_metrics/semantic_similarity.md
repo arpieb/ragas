@@ -74,14 +74,14 @@ The following examples use the legacy metrics API pattern. For new projects, we 
 ```python
 from ragas.dataset_schema import SingleTurnSample
 from ragas.metrics import SemanticSimilarity
-from ragas.embeddings import LangchainEmbeddingsWrapper
+from ragas.embeddings import embedding_factory
 
 sample = SingleTurnSample(
     response="The Eiffel Tower is located in Paris.",
     reference="The Eiffel Tower is located in Paris. It has a height of 1000ft."
 )
 
-scorer = SemanticSimilarity(embeddings=LangchainEmbeddingsWrapper(evaluator_embedding))
+scorer = SemanticSimilarity(embeddings=evaluator_embedding)
 await scorer.single_turn_ascore(sample)
 ```
 

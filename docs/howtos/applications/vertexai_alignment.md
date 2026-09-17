@@ -78,13 +78,14 @@ Import the required wrappers and define your evaluator LLM and embedder.
 
 
 ```python
-from ragas.llms import LangchainLLMWrapper
-from ragas.embeddings import LangchainEmbeddingsWrapper
-from langchain_google_vertexai import VertexAI, VertexAIEmbeddings
+import instructor
+import litellm
+from ragas.embeddings import embedding_factory
+from ragas.llms import llm_factory
 
-
-evaluator_llm = LangchainLLMWrapper(VertexAI(model_name="gemini-2.0-flash-001"))
-evaluator_embeddings = LangchainEmbeddingsWrapper(VertexAIEmbeddings(model_name="text-embedding-004"))
+client = instructor.from_litellm(litellm.completion)
+evaluator_llm = llm_factory("vertex_ai/gemini-2.0-flash-001", provider="litellm", client=client)
+evaluator_embeddings = embedding_factory("vertex_ai/text-embedding-004")
 ```
 
 ### Ragas metrics
@@ -261,13 +262,14 @@ Now that your metric has been aligned with human feedback, re-run the evaluation
 
 
 ```python
-from ragas.llms import LangchainLLMWrapper
-from ragas.embeddings import LangchainEmbeddingsWrapper
-from langchain_google_vertexai import VertexAI, VertexAIEmbeddings
+import instructor
+import litellm
+from ragas.embeddings import embedding_factory
+from ragas.llms import llm_factory
 
-
-evaluator_llm = LangchainLLMWrapper(VertexAI(model_name="gemini-pro"))
-evaluator_embeddings = LangchainEmbeddingsWrapper(VertexAIEmbeddings(model_name="text-embedding-004"))
+client = instructor.from_litellm(litellm.completion)
+evaluator_llm = llm_factory("vertex_ai/gemini-pro", provider="litellm", client=client)
+evaluator_embeddings = embedding_factory("vertex_ai/text-embedding-004")
 ```
 
 

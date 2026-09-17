@@ -127,10 +127,10 @@ The legacy API can still be used but requires `MultiTurnSample`:
 from ragas.dataset_schema import MultiTurnSample
 from ragas.messages import HumanMessage, AIMessage, ToolMessage, ToolCall
 from ragas.metrics import TopicAdherenceScore  # Legacy import
-from ragas.llms import LangchainLLMWrapper
-from langchain_openai import ChatOpenAI
+from ragas.llms import llm_factory
+from openai import OpenAI
 
-evaluator_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o"))
+evaluator_llm = llm_factory("gpt-4o", client=OpenAI())
 
 sample = MultiTurnSample(
     user_input=[...],  # conversation messages
@@ -654,10 +654,10 @@ The legacy API can still be used but requires `MultiTurnSample`:
 from ragas.dataset_schema import MultiTurnSample
 from ragas.messages import AIMessage, HumanMessage, ToolCall, ToolMessage
 from ragas.metrics import AgentGoalAccuracyWithReference  # Legacy import
-from ragas.llms import LangchainLLMWrapper
-from langchain_openai import ChatOpenAI
+from ragas.llms import llm_factory
+from openai import OpenAI
 
-evaluator_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o"))
+evaluator_llm = llm_factory("gpt-4o", client=OpenAI())
 
 sample = MultiTurnSample(
     user_input=[...],  # conversation messages

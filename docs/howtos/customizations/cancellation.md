@@ -6,7 +6,7 @@ When working with large datasets or complex evaluations, some Ragas operations c
 
 Ragas provides cancellation support for:
 - **`evaluate()`** - Evaluation of datasets with metrics
-- **`generate_with_langchain_docs()`** - Test set generation from documents
+- **`generate_with_docs()`** - Test set generation from documents
 
 The cancellation mechanism is thread-safe and allows for graceful termination with partial results when possible.
 
@@ -47,7 +47,7 @@ from ragas.testset.synthesizers.generate import TestsetGenerator
 generator = TestsetGenerator(...)
 
 # Get executor for cancellable generation
-executor = generator.generate_with_langchain_docs(
+executor = generator.generate_with_docs(
     documents=documents,
     testset_size=100,
     return_executor=True  # Allow access to Executor to cancel

@@ -164,11 +164,10 @@ To evaluate our RAG endpoint, we will use the following metrics:
 ```python
 from ragas.metrics import AnswerRelevancy, ContextPrecision, Faithfulness
 from ragas import evaluate
-from langchain_openai import ChatOpenAI
-from ragas.llms import LangchainLLMWrapper
+from openai import OpenAI
+from ragas.llms import llm_factory
 
-llm = ChatOpenAI(model="gpt-4o-mini")
-evaluator_llm = LangchainLLMWrapper(llm)
+evaluator_llm = llm_factory("gpt-4o-mini", client=OpenAI())
 
 ragas_metrics = [AnswerRelevancy(llm=evaluator_llm), ContextPrecision(llm=evaluator_llm), Faithfulness(llm=evaluator_llm)]
 

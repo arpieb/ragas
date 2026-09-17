@@ -92,35 +92,22 @@ exclude = ["*.ipynb", "*/_version.py"]  # Exclude Jupyter notebooks and auto-gen
 select = ["E", "F", "I", "TID251"]
 ignore = ["E501"]  # Line length handled by formatter
 
-# LangChain removal ratchet: importing any langchain package is an error.
-# Files still doing so are listed in [tool.ruff.lint.per-file-ignores] below,
-# grouped by the migration stage that removes them. That list only shrinks.
+# LangChain is banned outright. The removal is complete -- no file in src, tests
+# or docs imports it, so there are no per-file-ignores left. The ban stays: it is
+# what stops one being reintroduced. tests/unit/test_langchain_boundary.py
+# asserts the same thing at runtime.
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
-"langchain".msg = "ragas is removing LangChain. Use ragas-native APIs (see plan/migrate_off_langchain)."
-"langchain_core".msg = "ragas is removing LangChain. Use ragas-native APIs (see plan/migrate_off_langchain)."
-"langchain_community".msg = "ragas is removing LangChain. Use ragas-native APIs (see plan/migrate_off_langchain)."
-"langchain_openai".msg = "ragas is removing LangChain. Use litellm/instructor providers instead."
-"langchain_text_splitters".msg = "ragas is removing LangChain. Use ragas-native splitters."
+"langchain".msg = "ragas does not depend on LangChain. See docs/howtos/migrations/migrate_off_langchain.md."
+"langchain_core".msg = "ragas does not depend on LangChain. See docs/howtos/migrations/migrate_off_langchain.md."
+"langchain_community".msg = "ragas does not depend on LangChain. See docs/howtos/migrations/migrate_off_langchain.md."
+"langchain_openai".msg = "ragas does not depend on LangChain. Use litellm/instructor providers instead."
+"langchain_text_splitters".msg = "ragas does not depend on LangChain. Use ragas-native splitters."
 
 
 
 
 
 
-[tool.ruff.lint.per-file-ignores]
-# LangChain removal ratchet. Every entry is a file that still imports langchain.
-# Entries are DELETED as each migration stage lands - this list must only shrink.
-# When it is empty, delete it along with the banned-api block above.
-# --- Stage 10 - docs rewrite (notebook content) (9 files)
-"docs/howtos/applications/cost.ipynb" = ["TID251"]
-"docs/howtos/customizations/caching.ipynb" = ["TID251"]
-"docs/howtos/customizations/metrics/cost.ipynb" = ["TID251"]
-"docs/howtos/customizations/testgenerator/language_adaptation.ipynb" = ["TID251"]
-"docs/howtos/customizations/testgenerator/testgen-customisation.ipynb" = ["TID251"]
-"docs/howtos/customizations/testgenerator/testgen-custom-single-hop.ipynb" = ["TID251"]
-"docs/howtos/integrations/arize.ipynb" = ["TID251"]
-"docs/howtos/integrations/haystack.ipynb" = ["TID251"]
-"docs/howtos/integrations/langfuse.ipynb" = ["TID251"]
 
 [tool.ruff.lint.isort]
 # Import sorting configuration

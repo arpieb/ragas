@@ -86,14 +86,14 @@ run_config = RunConfig(
 ### Usage with Evaluate
 
 ```python
-from langchain_openai import ChatOpenAI
-from ragas.llms import LangchainLLMWrapper
+from openai import OpenAI
+from ragas.llms import llm_factory
 from ragas import EvaluationDataset, SingleTurnSample, evaluate
 from ragas.metrics import Faithfulness
 from ragas.run_config import RunConfig
 
 # Legacy LLM setup
-llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o"))
+llm = llm_factory("gpt-4o", client=OpenAI())
 
 # Configure run settings
 run_config = RunConfig(max_workers=64, timeout=60)

@@ -115,20 +115,19 @@ def init_ragas_metrics(metrics, llm, embedding):
 
 
 ```python
-from langchain_openai.chat_models import ChatOpenAI
-from langchain_openai.embeddings import OpenAIEmbeddings
+from openai import OpenAI
 
-# wrappers
-from ragas.llms import LangchainLLMWrapper
-from ragas.embeddings import LangchainEmbeddingsWrapper
+from ragas.embeddings import embedding_factory
+from ragas.llms import llm_factory
 
-llm = ChatOpenAI()
-emb = OpenAIEmbeddings()
+client = OpenAI()
 
 init_ragas_metrics(
     metrics,
-    llm=LangchainLLMWrapper(llm),
-    embedding=LangchainEmbeddingsWrapper(emb),
+    llm=llm_factory("gpt-4o-mini", client=client),
+    embedding=embedding_factory(
+        "openai", model="text-embedding-3-small", client=client
+    ),
 )
 ```
 
