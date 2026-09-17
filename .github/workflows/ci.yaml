@@ -61,7 +61,7 @@ jobs:
         include:
           # Critical path: Latest + oldest Python on Ubuntu (full test suite)
           - os: ubuntu-latest
-            python-version: "3.10"
+            python-version: "3.11"
             test-type: "full"
           - os: ubuntu-latest
             python-version: "3.12"
@@ -71,10 +71,10 @@ jobs:
             test-type: "full"
           # Cross-platform validation (essential tests only)
           - os: macos-latest
-            python-version: "3.11"
+            python-version: "3.12"
             test-type: "essential"
           - os: windows-latest
-            python-version: "3.10"
+            python-version: "3.11"
             test-type: "essential"
 
     if: ${{ (github.event_name == 'pull_request' && needs.diff.outputs.ragas == 'true') || github.event_name == 'push' }}

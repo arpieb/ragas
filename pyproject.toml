@@ -1,7 +1,7 @@
 [project]
 name = "ragas"
 description = "Evaluation framework for RAG and LLM applications"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = {file = "LICENSE"}
 dependencies = [
     # Core dependencies
@@ -23,12 +23,7 @@ dependencies = [
 
     # Provider-neutral LLM/embedding access. llm_factory()/embedding_factory()
     # route client-less calls here.
-    #
-    # Upper-bounded on 3.10: litellm 1.98 imports `NotRequired` from `typing`
-    # (llms/anthropic/.../editors/compact.py), which only exists from 3.11, so
-    # `import litellm` fails outright on 3.10 despite litellm claiming support.
-    "litellm; python_version >= '3.11'",
-    "litellm<1.98; python_version < '3.11'",
+    "litellm",
     # Tracing. The API package only -- spans are a no-op unless the user
     # configures an SDK, which is how a library should behave. EvaluationResult
     # .traces comes from the native run tree, so it works without one.
@@ -90,7 +85,7 @@ readme = {file = ["README.md"], content-type = "text/markdown"}
 
 [tool.ruff]
 line-length = 88
-target-version = "py310"
+target-version = "py311"
 exclude = ["*.ipynb", "*/_version.py"]  # Exclude Jupyter notebooks and auto-generated version files from linting
 
 [tool.ruff.lint]
@@ -130,7 +125,7 @@ preview = false
 [tool.pyright]
 include = ["src/ragas"]
 exclude = ["@types/*"]
-pythonVersion = "3.10"
+pythonVersion = "3.11"
 pythonPlatform = "All"
 typeCheckingMode = "basic"
 reportMissingImports = false
@@ -219,7 +214,7 @@ docs = [
     "mkdocs-git-committers-plugin-2",
     "mkdocs-git-revision-date-localized-plugin",
     "mkdocs-copy-to-llm",
-    "mkdocs-llmstxt",  # Requires Python 3.10+, only used in docs CI
+    "mkdocs-llmstxt",  # only used in docs CI
 ]
 
 docs-pdf = [
