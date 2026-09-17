@@ -1,163 +1,217 @@
----
-search:
-  exclude: true
----
+# Compare Embeddings for a Retriever
 
-# Compare Embeddings for retriever
+The retriever is usually the limiting factor in a RAG system, and the embedding
+model is the biggest lever you have over it. Swapping embeddings is cheap to try
+and hard to reason about in the abstract — the only reliable way to choose is to
+measure both on *your* corpus.
 
-!!! warning "This page is out of date"
-    It uses `ragas.testset.evolutions` and `ragas.testset.generator`, which were
-    removed several releases ago, so the code here will not run as written. The
-    LangChain references have been updated, but the page needs a fuller rewrite.
-    For current usage see [testset generation](../../getstarted/rag_testset_generation.md).
-
-
-The performance of the retriever is a critical and influential factor that determines the overall effectiveness of a Retrieval Augmented Generation (RAG) system. In particular, the quality of the embeddings used plays a pivotal role in determining the quality of the retrieved content.
-
-This tutorial notebook provides a step-by-step guide on how to compare and choose the most suitable embeddings for your own data using the Ragas library.
+This guide builds one testset, runs two embedding models through an identical
+retrieval pipeline, and scores them with the same retrieval metrics.
 
 <figure markdown="span">
 ![Compare Embeddings](../../_static/imgs/compare-embeddings.jpeg){width="600"}
 <figcaption>Compare Embeddings</figcaption>
 </figure>
 
-## Create synthetic test data 
+!!! important "Change one thing at a time"
+    Chunk size, chunk overlap and `top_k` all affect retrieval scores as much as
+    the embedding model does. Hold them fixed across both runs, and reuse the
+    *same* testset — otherwise you are not measuring the embeddings.
 
+## Load your documents
 
-!!! tip
-    Ragas can also work with your dataset. Refer to [data preparation](../customizations/testgenerator/index.md) to see how you can use your dataset with ragas. 
-
-Ragas offers a unique test generation paradigm that enables the creation of evaluation datasets specifically tailored to your retrieval and generation tasks. Unlike traditional QA generators, Ragas can generate a wide variety of challenging test cases from your document corpus.
-
-!!! tip
-    Refer to [testset generation](../../getstarted/rag_testset_generation.md) to know more on how it works.
-
-For this tutorial notebook, I am using papers from Semantic Scholar that is related to large language models to build RAG.
+Any object exposing `page_content` and `metadata` works, so LangChain and
+LlamaIndex loaders are both fine. Here we build ragas `Document` objects
+directly, which needs no extra dependency.
 
 ```python
-from llama_index.core import download_loader
-from ragas.testset.evolutions import simple, reasoning, multi_context
-from ragas.testset.generator import TestsetGenerator
-from ragas.llms import llm_factory
-from ragas.embeddings import OpenAIEmbeddings
-import openai
+from pathlib import Path
 
-SemanticScholarReader = download_loader("SemanticScholarReader")
-loader = SemanticScholarReader()
-query_space = "large language models"
-documents = loader.load_data(query=query_space, limit=100)
+from ragas.testset.document import Document
 
-# generator with openai models
-openai_client = openai.OpenAI()
-generator_llm = llm_factory("gpt-4o-mini", client=openai_client)
-openai_client = openai.OpenAI()
-embeddings = OpenAIEmbeddings(client=openai_client)
-
-generator = TestsetGenerator(llm=generator_llm, embedding_model=embeddings)
-
-
-distributions = {simple: 0.5, multi_context: 0.4, reasoning: 0.1}
-
-# generate testset
-testset = generator.generate_with_llamaindex_docs(documents, 100, distributions)
-test_df = testset.to_pandas()
-```
-
-<figure markdown="span">
-![testset-output](../../_static/imgs/testset_output.png){width="800"}
-<figcaption>Test Outputs</figcaption>
-</figure>
-
-```python
-test_questions = test_df["question"].values.tolist()
-test_answers = [[item] for item in test_df["answer"].values.tolist()]
-```
-
-
-## Build your RAG
-
-Here I am using llama-index to build a basic RAG pipeline with my documents. The goal here is to collect retrieved contexts and generated answer for each of the test questions from your pipeline. Ragas has integrations with various RAG frameworks which makes evaluating them easier using ragas.
-
-!!! note
-
-```python
-import nest_asyncio
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, ServiceContext
-from langchain.embeddings import HuggingFaceEmbeddings
-from ragas.embeddings import OpenAIEmbeddings
-import openai
-import pandas as pd
-
-nest_asyncio.apply()
-
-
-def build_query_engine(embed_model):
-    vector_index = VectorStoreIndex.from_documents(
-        documents,
-        service_context=ServiceContext.from_defaults(chunk_size=512),
-        embed_model=embed_model,
-    )
-
-    query_engine = vector_index.as_query_engine(similarity_top_k=2)
-    return query_engine
-```
-
-## Import metrics from ragas
-
-Here we are importing metrics that are required to evaluate retriever component.
-
-```python
-from ragas.metrics import (
-    context_precision,
-    context_recall,
-)
-
-metrics = [
-    context_precision,
-    context_recall,
+docs = [
+    Document(page_content=p.read_text(), metadata={"source": str(p)})
+    for p in Path("./my-corpus").rglob("*.md")
 ]
 ```
 
-## Evaluate OpenAI embeddings
+## Generate a testset
+
+Ragas generates evaluation data from your own corpus, so the questions reflect
+what your documents actually contain. See
+[testset generation](../../getstarted/rag_testset_generation.md) for the details,
+or [customizing test data generation](../customizations/testgenerator/index.md)
+if you want to bring your own dataset instead.
 
 ```python
-from ragas.llama_index import evaluate
+from openai import OpenAI
 
-openai_model = OpenAIEmbedding()
-query_engine1 = build_query_engine(openai_model)
-result = evaluate(query_engine1, metrics, test_questions, test_answers)
+from ragas.embeddings import embedding_factory
+from ragas.llms import llm_factory
+from ragas.testset import TestsetGenerator
+
+openai_client = OpenAI()
+generator_llm = llm_factory("gpt-4o-mini", client=openai_client)
+generator_embeddings = embedding_factory(
+    "openai", model="text-embedding-3-small", client=openai_client
+)
+
+generator = TestsetGenerator(llm=generator_llm, embedding_model=generator_embeddings)
+testset = generator.generate_with_docs(docs, testset_size=50)
 ```
+
+Generate this **once** and reuse it for every embedding model you compare.
+
+## Build a retriever you can swap embeddings into
+
+The pipeline below is deliberately minimal — an in-memory cosine-similarity
+index over fixed-size chunks — so that the embedding model is the only thing
+that varies between runs. Substitute your own vector store if you would rather
+measure the stack you actually ship.
 
 ```python
-{"context_precision": 0.2378, "context_recall": 0.7159}
+import numpy as np
+
+
+def chunk(docs, size=800, overlap=100):
+    chunks = []
+    for doc in docs:
+        text = doc.page_content
+        for start in range(0, len(text), size - overlap):
+            piece = text[start : start + size].strip()
+            if piece:
+                chunks.append(piece)
+    return chunks
+
+
+class EmbeddingIndex:
+    """In-memory cosine-similarity index over a fixed set of chunks."""
+
+    def __init__(self, chunks, embedding):
+        self.chunks = chunks
+        self.embedding = embedding
+        matrix = np.asarray(embedding.embed_texts(chunks), dtype=np.float32)
+        self.matrix = matrix / np.linalg.norm(matrix, axis=1, keepdims=True)
+
+    def retrieve(self, query, top_k=3):
+        q = np.asarray(self.embedding.embed_text(query), dtype=np.float32)
+        q = q / np.linalg.norm(q)
+        scores = self.matrix @ q
+        return [self.chunks[i] for i in np.argsort(-scores)[:top_k]]
+
+
+chunks = chunk(docs)
 ```
 
-## Evaluate Bge embeddings
+## Choose the metrics
+
+These two isolate the retriever: neither one looks at a generated answer, so a
+change in score is attributable to retrieval alone.
+
+- **Context precision** — of the contexts retrieved, how many were relevant.
+- **Context recall** — of the information needed to answer, how much was retrieved.
 
 ```python
-from ragas.llama_index import evaluate
+from openai import AsyncOpenAI
 
-flag_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
-query_engine2 = build_query_engine(flag_model)
-result = evaluate(query_engine2, metrics, test_questions, test_answers)
+from ragas.metrics.collections import ContextPrecisionWithReference, ContextRecall
+
+evaluator_llm = llm_factory("gpt-4o-mini", client=AsyncOpenAI())
+metrics = [
+    ContextPrecisionWithReference(llm=evaluator_llm),
+    ContextRecall(llm=evaluator_llm),
+]
 ```
+
+## Score each embedding model
+
+Both metrics take the same three fields, so one loop scores every question
+against whichever embedding model you hand it:
 
 ```python
-{"context_precision": 0.2655, "context_recall": 0.7227}
+import asyncio
+
+import pandas as pd
+
+
+async def score(embedding, top_k=3):
+    index = EmbeddingIndex(chunks, embedding)
+    rows = []
+    for sample in testset.samples:
+        question = sample.eval_sample.user_input
+        reference = sample.eval_sample.reference
+        contexts = index.retrieve(question, top_k)
+        scores = await asyncio.gather(
+            *(
+                metric.ascore(
+                    user_input=question,
+                    retrieved_contexts=contexts,
+                    reference=reference,
+                )
+                for metric in metrics
+            )
+        )
+        rows.append({m.name: s.value for m, s in zip(metrics, scores)})
+    return pd.DataFrame(rows)
 ```
 
-## Compare Scores
-
-Based on the evaluation results, it is apparent that the `context_precision` and `context_recall` metrics of the BGE model slightly outperform the OpenAI-Ada model in my RAG pipeline when applied to my own dataset. 
-
-For any further analysis of the scores you can export the results to pandas
+Now run it for each contender. `embedding_factory` reaches both hosted and local
+models, so you are not restricted to one vendor:
 
 ```python
-result_df = result.to_pandas()
-result_df.head()
+results = {
+    "text-embedding-3-small": await score(
+        embedding_factory(
+            "openai", model="text-embedding-3-small", client=openai_client
+        )
+    ),
+    "bge-small-en-v1.5": await score(
+        embedding_factory("huggingface", model="BAAI/bge-small-en-v1.5")
+    ),
+}
 ```
 
-<figure markdown="span">
-![compare-embeddings-results](../../_static/imgs/compare-emb-results.png){width="800"}
-<figcaption>Compare Embeddings Results</figcaption>
-</figure>
+!!! note "Running outside a notebook"
+    `await` at the top level works in Jupyter. In a script, wrap the calls in an
+    `async def main()` and run it with `asyncio.run(main())`. Every metric also
+    has a synchronous `.score()` if you would rather avoid async entirely.
+
+The HuggingFace provider runs locally and needs `sentence-transformers`
+installed. To reach a provider through LiteLLM instead, omit the client —
+`embedding_factory()` resolves credentials from the environment. See
+[customizing models](../customizations/customize_models.md) for the provider
+options, including Azure and Vertex AI.
+
+## Compare the scores
+
+```python
+summary = pd.DataFrame({name: df.mean() for name, df in results.items()}).T
+summary
+```
+
+|  | context_precision_with_reference | context_recall |
+|---|---|---|
+| text-embedding-3-small | 0.7421 | 0.8033 |
+| bge-small-en-v1.5 | 0.7108 | 0.8194 |
+
+!!! note "Illustrative numbers"
+    The values above are an example of the shape of the output, not a benchmark
+    result. Which model wins depends entirely on your corpus — that is the whole
+    reason to run this.
+
+Read the two metrics together. A model can win on recall while losing on
+precision, which usually means it is retrieving more broadly: often a good trade
+at a larger `top_k`, and a bad one when your generator is sensitive to
+distracting context.
+
+Each `results[...]` entry is a per-question DataFrame, so the rows where the two
+models disagree are one filter away:
+
+```python
+a, b = results["text-embedding-3-small"], results["bge-small-en-v1.5"]
+gap = (a["context_recall"] - b["context_recall"]).abs()
+gap.sort_values(ascending=False).head()
+```
+
+Those questions tell you what kind of query each model is failing on, which no
+aggregate score will.
