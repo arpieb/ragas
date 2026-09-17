@@ -36,13 +36,13 @@ docs = loader.load()
 
 
 ```python
-from ragas.llms import LangchainLLMWrapper
+from ragas.llms import llm_factory
 from ragas.embeddings import OpenAIEmbeddings
-from langchain_openai import ChatOpenAI
+from openai import OpenAI
 import openai
 
 
-generator_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o-mini"))
+generator_llm = llm_factory("gpt-4o-mini", client=OpenAI())
 openai_client = openai.OpenAI()
 generator_embeddings = OpenAIEmbeddings(client=openai_client, model="text-embedding-3-small")
 ```

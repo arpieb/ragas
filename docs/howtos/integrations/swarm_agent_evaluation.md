@@ -314,7 +314,7 @@ load_dotenv()
 
 ```python
 from pprint import pprint
-from langchain_openai import ChatOpenAI
+from openai import OpenAI
 from ragas.messages import ToolCall
 from ragas.metrics import ToolCallAccuracy
 from ragas.dataset_schema import MultiTurnSample
@@ -418,7 +418,7 @@ Exiting the loop. Goodbye!
 ```python
 from ragas.dataset_schema import MultiTurnSample
 from ragas.metrics import AgentGoalAccuracyWithReference
-from ragas.llms import LangchainLLMWrapper
+from ragas.llms import llm_factory
 
 
 invalid_return_ragas_trace = convert_to_ragas_messages(invalid_return_interaction)
@@ -430,7 +430,7 @@ sample = MultiTurnSample(
 
 scorer = AgentGoalAccuracyWithReference()
 
-evaluator_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o-mini"))
+evaluator_llm = llm_factory("gpt-4o-mini", client=OpenAI())
 scorer.llm = evaluator_llm
 await scorer.multi_turn_ascore(sample)
 ```

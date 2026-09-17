@@ -26,12 +26,12 @@ After conducting [error analysis](https://hamel.dev/notes/llm/officehours/errora
 
 ```python
 from dotenv import load_dotenv
-from ragas.llms import LangchainLLMWrapper
-from langchain_openai import ChatOpenAI
+from ragas.llms import llm_factory
+from openai import OpenAI
 
 load_dotenv()
 
-evaluator_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o-mini"))
+evaluator_llm = llm_factory("gpt-4o-mini", client=OpenAI())
 ```
 
 

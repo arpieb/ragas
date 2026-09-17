@@ -5,6 +5,13 @@ search:
 
 # Compare Embeddings for retriever
 
+!!! warning "This page is out of date"
+    It uses `ragas.testset.evolutions` and `ragas.testset.generator`, which were
+    removed several releases ago, so the code here will not run as written. The
+    LangChain references have been updated, but the page needs a fuller rewrite.
+    For current usage see [testset generation](../../getstarted/rag_testset_generation.md).
+
+
 The performance of the retriever is a critical and influential factor that determines the overall effectiveness of a Retrieval Augmented Generation (RAG) system. In particular, the quality of the embeddings used plays a pivotal role in determining the quality of the retrieved content.
 
 This tutorial notebook provides a step-by-step guide on how to compare and choose the most suitable embeddings for your own data using the Ragas library.
@@ -31,7 +38,7 @@ For this tutorial notebook, I am using papers from Semantic Scholar that is rela
 from llama_index.core import download_loader
 from ragas.testset.evolutions import simple, reasoning, multi_context
 from ragas.testset.generator import TestsetGenerator
-from langchain_openai import ChatOpenAI
+from ragas.llms import llm_factory
 from ragas.embeddings import OpenAIEmbeddings
 import openai
 
@@ -41,16 +48,12 @@ query_space = "large language models"
 documents = loader.load_data(query=query_space, limit=100)
 
 # generator with openai models
-generator_llm = ChatOpenAI(model="gpt-4o-mini")
-critic_llm = ChatOpenAI(model="gpt-4o")
+openai_client = openai.OpenAI()
+generator_llm = llm_factory("gpt-4o-mini", client=openai_client)
 openai_client = openai.OpenAI()
 embeddings = OpenAIEmbeddings(client=openai_client)
 
-generator = TestsetGenerator.from_langchain(
-    generator_llm,
-    critic_llm,
-    embeddings
-)
+generator = TestsetGenerator(llm=generator_llm, embedding_model=embeddings)
 
 
 distributions = {

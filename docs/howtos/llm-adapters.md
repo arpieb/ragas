@@ -424,7 +424,7 @@ llm = llm_factory(
 If you're upgrading from text-only LLM usage:
 
 ```python
-# Before (deprecated)
+# Before (removed in the LangChain removal)
 # from ragas.llms import LangchainLLMWrapper
 # llm = LangchainLLMWrapper(langchain_llm)
 

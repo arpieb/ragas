@@ -261,13 +261,16 @@ ragas_eval_dataset.to_pandas()
 
 ```python
 from ragas.metrics import AnswerAccuracy, Faithfulness, ResponseGroundedness
-from langchain_together import ChatTogether
-from ragas.llms import LangchainLLMWrapper
+import instructor
+import litellm
+from ragas.llms import llm_factory
 
-llm = ChatTogether(
-    model="meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+client = instructor.from_litellm(litellm.completion)
+evaluator_llm = llm_factory(
+    "together_ai/meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+    provider="litellm",
+    client=client,
 )
-evaluator_llm = LangchainLLMWrapper(llm)
 
 ragas_metrics = [
     AnswerAccuracy(llm=evaluator_llm),

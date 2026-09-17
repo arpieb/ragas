@@ -565,14 +565,20 @@ Ragas includes metrics suited to such evaluations, and we will explore some of t
 
 
 ```python
-from langchain_aws import ChatBedrock
-from ragas.llms import LangchainLLMWrapper
+import instructor
+import litellm
+from ragas.llms import llm_factory
 
 model_id = "us.amazon.nova-pro-v1:0"   # Choose your desired model
 region_name = "us-east-1"              # Choose your desired AWS region
 
-bedrock_llm = ChatBedrock(model_id=model_id, region_name=region_name)
-evaluator_llm = LangchainLLMWrapper(bedrock_llm)
+client = instructor.from_litellm(litellm.completion)
+evaluator_llm = llm_factory(
+    f"bedrock/{model_id}",
+    provider="litellm",
+    client=client,
+    aws_region_name=region_name,
+)
 ```
 
 
