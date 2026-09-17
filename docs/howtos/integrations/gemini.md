@@ -491,4 +491,4 @@ llm = llm_factory(
 - [Google GenAI SDK Documentation](https://googleapis.github.io/python-genai/)
 - [Google Gemini API Docs](https://ai.google.dev/gemini-api/docs)
 - [Ragas Metrics Documentation](../../concepts/metrics/index.md)
-- [Ragas LLM Factory Guide](../llm-factory.md)
+- [Ragas LLM Factory Guide](../llm-adapters.md)

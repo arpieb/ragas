@@ -32,11 +32,17 @@ else:
             def search_spans(self, name: str) -> t.List["Span"]:  # type: ignore
                 return []
 
-        def get_last_active_trace_id() -> t.Optional[str]:  # type: ignore
+        # Bound indirectly: defining these under the imported names makes griffe
+        # resolve the name to the (unresolvable) `mlflow` alias above and fail
+        # the docs build, since mlflow is not installed for `mkdocs build`.
+        def _no_last_active_trace_id() -> t.Optional[str]:
             return None
 
-        def get_trace(trace_id: str) -> t.Optional["Trace"]:  # type: ignore
+        def _no_trace(trace_id: str) -> t.Optional["Trace"]:
             return None
+
+        get_last_active_trace_id = _no_last_active_trace_id  # type: ignore
+        get_trace = _no_trace  # type: ignore
 
 
 class MLflowTrace:

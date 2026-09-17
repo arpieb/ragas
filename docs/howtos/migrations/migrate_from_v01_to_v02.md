@@ -45,7 +45,7 @@ from ragas.metrics import Faithfulness
 # preffered way
 faithfulness_metric = Faithfulness(llm=your_evaluator_llm)
 ```
-Second is that [`metrics.ascore`][ragas.metrics.base.Metric.ascore] is now being deprecated in favor of [`metrics.single_score`][ragas.metrics.base.SingleTurnMetric.single_turn_ascore] . You can make the transition as such
+Second is that `metrics.ascore` is now being deprecated in favor of [`metrics.single_score`][ragas.metrics.base.SingleTurnMetric.single_turn_ascore] . You can make the transition as such
 
 ```python
 # create a Single Turn Sample
@@ -85,7 +85,7 @@ This might be a bit rough but if you do need help here, feel free to chat or men
 
 All the prompts have been rewritten to use [`PydanticPrompts`][ragas.prompt.pydantic_prompt.PydanticPrompt] which is based on [`BasePrompt`][ragas.prompt.base.BasePrompt] object. If you are using the old `Prompt` object you will have to upgrade it to the new one, check the docs to learn more on how to do it
 
-- [How to Guide on how to create new prompts](./../customizations/metrics/_modifying-prompts-metrics.md)
+- [How to Guide on how to create new prompts](../customizations/metrics/modifying-prompts-metrics.md)
 - [GitHub PR for the changes](https://github.com/vibrantlabsai/ragas/pull/1462)
 
 !!! note "Need Further Assistance?"

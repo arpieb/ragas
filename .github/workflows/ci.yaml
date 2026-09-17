@@ -177,10 +177,9 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
 
-      - name: Build docs and fail on new warnings
-        # Not `mkdocs build --strict`: the tree has 75 pre-existing warnings, so
-        # --strict would be red on arrival. This builds the docs and fails only on
-        # warnings absent from docs/.mkdocs_warnings_baseline.txt, which may only
-        # shrink. A plain non-strict build would NOT catch a deleted page that is
-        # still referenced in nav -- mkdocs reports that as a warning, not an error.
+      - name: Build docs and fail on any warning
+        # --strict promotes every mkdocs warning to an error. This is what catches
+        # a deleted page that is still referenced in nav, or a link to a file that
+        # no longer exists -- mkdocs reports both as warnings, not errors, so a
+        # plain build passes while the site quietly breaks.
         run: make check-docs

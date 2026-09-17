@@ -311,20 +311,17 @@ class HuggingfaceEmbeddings(BaseRagasEmbeddings):
     This class provides functionality to load and use Hugging Face models for
     generating embeddings of text inputs.
 
-    Parameters
+    Attributes
     ----------
-    model_name : str, optional
+    model_name : str
         Name of the pre-trained model to use, by default DEFAULT_MODEL_NAME.
     cache_folder : str, optional
         Path to store downloaded models. Can also be set by SENTENCE_TRANSFORMERS_HOME
         environment variable.
-    model_kwargs : dict, optional
+    model_kwargs : dict
         Additional keyword arguments to pass to the model.
-    encode_kwargs : dict, optional
+    encode_kwargs : dict
         Additional keyword arguments to pass to the encoding method.
-
-    Attributes
-    ----------
     model : Union[SentenceTransformer, CrossEncoder]
         The loaded Hugging Face model.
     is_cross_encoder : bool

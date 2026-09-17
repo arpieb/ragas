@@ -195,7 +195,7 @@ BookSQL is released under CC BY-NC-SA (non‑commercial only). See details and c
     }
     ```
 
-For advice on how to create your own evaluation dataset, refer to [Datasets - Core Concepts](/concepts/datasets/).
+For advice on how to create your own evaluation dataset, refer to [Datasets - Core Concepts](../../concepts/datasets.md).
 
 ## Set up your text-to-SQL system
 
@@ -272,7 +272,7 @@ The evaluation system classifies results as:
 
 ### Setting up metric functions
 
-Create your evaluation metrics using [Ragas discrete metrics](/concepts/metrics/overview). 
+Create your evaluation metrics using [Ragas discrete metrics](../../concepts/metrics/overview/index.md). 
 
 ```python
 # File: examples/ragas_examples/text2sql/evals.py
@@ -346,7 +346,7 @@ def execution_accuracy(expected_sql: str, predicted_success: bool, predicted_res
 
 ### The experiment function
 
-The [experiment function](/concepts/experimentation) orchestrates the complete evaluation pipeline - running the text-to-SQL agent and computing metrics for each query:
+The [experiment function](../../concepts/experimentation.md) orchestrates the complete evaluation pipeline - running the text-to-SQL agent and computing metrics for each query:
 
 ```python
 # File: examples/ragas_examples/text2sql/evals.py
@@ -398,7 +398,7 @@ async def text2sql_experiment(
 
 ### Dataset loader
 
-Load your evaluation dataset into a [Ragas Dataset](/concepts/datasets) object for experiment execution:
+Load your evaluation dataset into a [Ragas Dataset](../../concepts/datasets.md) object for experiment execution:
 
 ```python
 # File: examples/ragas_examples/text2sql/evals.py

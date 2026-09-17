@@ -125,11 +125,6 @@ class StringPrompt(BasePrompt):
     This prompt is a simpler alternative to PydanticPrompt for those who prefer a more
     flexible approach without the need for a Pydantic model.
 
-    Parameters
-    ----------
-    instruction : str
-        The instruction string that can be formatted with additional data.
-
     Examples
     --------
     >>> from ragas.prompt import string_prompt
@@ -151,10 +146,8 @@ class StringPrompt(BasePrompt):
         ----------
         llm : BaseRagasLLM
             The language model to use for text generation.
-        data : Optional[Dict[str, Any]], optional
-            The data to format the instruction with, by default None.
-        n : int, optional
-            The number of completions to generate, by default 1.
+        data : str
+            The prompt text to generate from.
         temperature : Optional[float], optional
             The temperature for text generation, by default None.
         stop : Optional[List[str]], optional

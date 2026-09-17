@@ -453,5 +453,5 @@ llm = llm_factory("gemini-2.0-flash", provider="google", client=client)
 ## See Also
 
 - [Gemini Integration Guide](./integrations/gemini.md) - Detailed Gemini setup
-- [LLM Factory Reference](./llm-factory.md) - Complete API reference
+- LLM Factory Reference - Complete API reference
 - [Metrics Documentation](../concepts/metrics/index.md) - Using metrics with LLMs

@@ -19,7 +19,7 @@ You can easily write a Pytest test as follows
     This dataset that is already populated with outputs from a reference RAG
     When testing your own system make sure you use outputs from RAG pipeline
     you want to test. For more information on how to build your datasets check
-    [Building HF `Dataset` with your own Data](./data_preparation.md) docs.
+    Building HF `Dataset` with your own Data docs.
 
 ```python
 import pytest
