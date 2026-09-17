@@ -358,6 +358,19 @@ def _get_instructor_client(
         return _patch_client_for_provider(client, provider_lower, mode=mode)
 
 
+DEFAULT_LLM_MODEL = "gpt-4o-mini"
+
+
+def default_llm() -> "InstructorBaseRagasLLM":
+    """The evaluator LLM used when the caller does not supply one.
+
+    Routed through LiteLLM rather than a hard-coded ``openai.OpenAI()`` client,
+    so ragas does not import a specific vendor SDK just to pick a default.
+    Credentials are resolved from the environment.
+    """
+    return llm_factory(DEFAULT_LLM_MODEL)
+
+
 def llm_factory(
     model: str,
     provider: str = "openai",
