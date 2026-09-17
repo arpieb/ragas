@@ -14,7 +14,6 @@ dependencies = [
     "diskcache>=5.6.3",
     "typer",
     "rich",
-    "openai>=1.0.0",
     "tqdm",
     "instructor",
     "pillow>=10.4.0",
@@ -180,6 +179,10 @@ dev-minimal = [
 # unconditionally, so the test suite cannot pass without them.
 test = [
     "scipy",
+    # ragas no longer declares openai -- it arrives via litellm/instructor -- but
+    # the suite imports it directly (tests/utils/llm_setup.py and friends), so it
+    # is declared here rather than relied on transitively.
+    "openai>=1.0.0",
     "sacrebleu",   # tests/unit/test_chrf_score.py
     "GitPython",   # tests/unit/test_experiment.py
     "haystack-ai<3.0.0", # tests/unit/test_import.py

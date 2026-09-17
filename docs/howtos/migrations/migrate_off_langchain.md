@@ -253,3 +253,13 @@ the class name the way `HumanMessage`/`AIMessage`/`SystemMessage` did.
 | `generate_with_langchain_docs()` | `generate_with_docs()` (alias kept) |
 | `CostCallbackHandler` | `TokenUsageCollector` (alias kept) |
 | `LANGCHAIN_TRACING_V2` auto-tracing | configure an OTel SDK |
+
+!!! note "`openai` is no longer a declared dependency"
+    ragas used to list `openai` in its own dependencies, and hard-coded an
+    `openai.OpenAI()` client as the default whenever you did not pass an LLM.
+    Both are gone — the default now routes through LiteLLM, which resolves
+    credentials from the environment.
+
+    In practice `openai` is still installed, because LiteLLM and instructor both
+    depend on it. But if your own code does `import openai`, declare it yourself
+    rather than relying on ragas to supply it.

@@ -20,13 +20,23 @@ pip install -e .
 ```
 
 !!! note "Choosing a provider"
-    ragas does not ship a provider SDK for you. Install the one you intend to use:
+    ragas reaches providers through **LiteLLM**, which is installed with it — so
+    100+ providers, including Bedrock, Ollama and vLLM, work out of the box with
+    credentials read from the environment:
+
+    ```python
+    from ragas.llms import llm_factory
+
+    evaluator_llm = llm_factory("ollama/llama3")
+    ```
+
+    ragas ships no vendor SDK of its own. To hand `llm_factory` a provider client
+    directly instead, install that SDK yourself:
 
     ```bash
     pip install openai        # OpenAI / Azure OpenAI
     pip install anthropic     # Anthropic
     pip install google-genai  # Google
-    pip install litellm       # 100+ providers, incl. Bedrock, Ollama, vLLM
     ```
 
     ragas no longer depends on LangChain. If you are coming from a version that

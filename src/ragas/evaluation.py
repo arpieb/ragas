@@ -30,7 +30,7 @@ from ragas.embeddings.base import (
 from ragas.exceptions import ExceptionInRunner
 from ragas.executor import Executor
 from ragas.integrations.helicone import helicone_config
-from ragas.llms import llm_factory
+from ragas.llms import default_llm
 from ragas.llms.base import BaseRagasLLM, InstructorBaseRagasLLM
 from ragas.metrics._answer_correctness import AnswerCorrectness
 from ragas.metrics._aspect_critic import AspectCritic
@@ -165,23 +165,25 @@ async def aevaluate(
             binary_metrics.append(metric.name)
         if isinstance(metric, MetricWithLLM) and metric.llm is None:
             if llm is None:
-                from openai import OpenAI
-
-                client = OpenAI()
-                llm = llm_factory("gpt-4o-mini", client=client)
+                llm = default_llm()
             metric.llm = t.cast(t.Optional[BaseRagasLLM], llm)
             llm_changed.append(i)
         if isinstance(metric, MetricWithEmbeddings) and metric.embeddings is None:
             if embeddings is None:
-                # Infer embedding provider from LLM if available
+                # Reuse the LLM's provider and client where that makes sense, so
+                # an OpenAI evaluator LLM gets OpenAI embeddings.
                 inferred_provider = _infer_embedding_provider_from_llm(llm)
-                # Extract client from LLM if available for modern embeddings
-                embedding_client = None
-                if hasattr(llm, "client"):
-                    embedding_client = getattr(llm, "client")
-                embeddings = embedding_factory(
-                    provider=inferred_provider, client=embedding_client
-                )
+                if inferred_provider == "litellm":
+                    # A litellm-backed LLM's `.client` is an instructor-wrapped
+                    # completion function, not an embeddings client, and litellm
+                    # needs an embedding model name that the LLM cannot supply.
+                    # Fall back to the provider-neutral default.
+                    embeddings = embedding_factory()
+                else:
+                    embeddings = embedding_factory(
+                        provider=inferred_provider,
+                        client=getattr(llm, "client", None),
+                    )
             metric.embeddings = embeddings
             embeddings_changed.append(i)
         if isinstance(metric, AnswerCorrectness):

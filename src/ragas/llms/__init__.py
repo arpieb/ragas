@@ -4,6 +4,7 @@ from ragas.llms.base import (
     InstructorLLM,
     InstructorTypeVar,
     LlamaIndexLLMWrapper as _LlamaIndexLLMWrapper,
+    default_llm,
     llm_factory,
 )
 from ragas.llms.haystack_wrapper import HaystackLLMWrapper
@@ -30,6 +31,7 @@ __all__ = [
     "LiteLLMStructuredLLM",
     "OCIGenAIWrapper",
     "InstructorTypeVar",
+    "default_llm",
     "llm_factory",
     "oci_genai_factory",
 ]
