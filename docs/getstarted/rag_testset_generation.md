@@ -15,18 +15,22 @@ git clone https://huggingface.co/datasets/vibrantlabsai/Sample_Docs_Markdown
 
 ### Load documents
 
-Now we will load the documents from the sample dataset using `DirectoryLoader`, which is one of the document loaders from [langchain_community](https://python.langchain.com/docs/concepts/document_loaders/). You may also use any loaders from [llama_index](https://docs.llamaindex.ai/en/stable/understanding/loading/llamahub/)
+Now we will load the documents from the sample dataset. Any object exposing `page_content` and `metadata` works, so LangChain and LlamaIndex loaders are both fine -- here we build ragas `Document` objects directly, with no extra dependency.
 
 ```shell
-pip install langchain-community
+# no extra dependency needed
 ```
 
 ```python
-from langchain_community.document_loaders import DirectoryLoader
+from pathlib import Path
+
+from ragas.testset.document import Document
 
 path = "Sample_Docs_Markdown/"
-loader = DirectoryLoader(path, glob="**/*.md")
-docs = loader.load()
+docs = [
+    Document(page_content=p.read_text(), metadata={"source": str(p)})
+    for p in Path(path).rglob("*.md")
+]
 ```
 
 ### Choose your LLM
@@ -44,7 +48,7 @@ Now we will run the test generation using the loaded documents and the LLM setup
 from ragas.testset import TestsetGenerator
 
 generator = TestsetGenerator(llm=generator_llm, embedding_model=generator_embeddings)
-dataset = generator.generate_with_langchain_docs(docs, testset_size=10)
+dataset = generator.generate_with_docs(docs, testset_size=10)
 ```
 
 ### Analyzing the testset

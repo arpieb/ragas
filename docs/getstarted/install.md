@@ -19,8 +19,15 @@ git clone https://github.com/vibrantlabsai/ragas.git
 pip install -e .
 ```
 
-!!! note on "LangChain OpenAI dependency versions"
-    If you use `langchain_openai` (e.g., `ChatOpenAI`), install `langchain-core` and `langchain-openai` explicitly to avoid version mismatches. You can adjust bounds to match your environment, but installing both explicitly helps prevent strict dependency conflicts.
+!!! note "Choosing a provider"
+    ragas does not ship a provider SDK for you. Install the one you intend to use:
+
     ```bash
-    pip install -U "langchain-core>=0.2,<0.3" "langchain-openai>=0.1,<0.2" openai
+    pip install openai        # OpenAI / Azure OpenAI
+    pip install anthropic     # Anthropic
+    pip install google-genai  # Google
+    pip install litellm       # 100+ providers, incl. Bedrock, Ollama, vLLM
     ```
+
+    ragas no longer depends on LangChain. If you are coming from a version that
+    did, see the [migration guide](../howtos/migrations/migrate_off_langchain.md).

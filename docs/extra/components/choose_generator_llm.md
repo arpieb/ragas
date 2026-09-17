@@ -1,258 +1,205 @@
 === "OpenAI"
-    Install the langchain-openai package
+    Install the OpenAI SDK:
 
     ```bash
-    pip install langchain-openai
+    pip install openai
     ```
 
-    Then ensure you have your OpenAI key ready and available in your environment
+    Set your API key:
 
     ```python
     import os
     os.environ["OPENAI_API_KEY"] = "your-openai-key"
     ```
 
-    Wrap the LLMs in `LangchainLLMWrapper` so that it can be used with ragas.
+    Build the evaluator LLM with `llm_factory`:
 
     ```python
-    from ragas.llms import LangchainLLMWrapper
-    from langchain_openai import ChatOpenAI
-    from ragas.embeddings import OpenAIEmbeddings
-    import openai
-    
-    generator_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o"))
-    openai_client = openai.OpenAI()
-    generator_embeddings = OpenAIEmbeddings(client=openai_client)
+    from openai import OpenAI
+    from ragas.embeddings import embedding_factory
+    from ragas.llms import llm_factory
+
+    client = OpenAI()
+    generator_llm = llm_factory("gpt-4o", client=client)
+    generator_embeddings = embedding_factory(
+        "openai", model="text-embedding-3-small", client=client
+    )
     ```
 
-
-=== "AWS"
-    Install the langchain-aws package
+=== "Anthropic"
+    Install the Anthropic SDK:
 
     ```bash
-    pip install langchain-aws
+    pip install anthropic
     ```
 
-    Then you have to set your AWS credentials and configurations
-
-    ```python
-    config = {
-        "credentials_profile_name": "your-profile-name",  # E.g "default"
-        "region_name": "your-region-name",  # E.g. "us-east-1"
-        "llm": "your-llm-model-id",  # E.g "anthropic.claude-3-5-sonnet-20241022-v2:0"
-        "embeddings": "your-embedding-model-id",  # E.g "amazon.titan-embed-text-v2:0"
-        "temperature": 0.4,
-    }
-    ```
-
-    Define your LLMs and wrap them in `LangchainLLMWrapper` so that it can be used with ragas.
-
-    ```python
-    from langchain_aws import ChatBedrockConverse
-    from langchain_aws import BedrockEmbeddings
-    from ragas.llms import LangchainLLMWrapper
-    from ragas.embeddings import LangchainEmbeddingsWrapper
-
-    generator_llm = LangchainLLMWrapper(ChatBedrockConverse(
-        credentials_profile_name=config["credentials_profile_name"],
-        region_name=config["region_name"],
-        base_url=f"https://bedrock-runtime.{config['region_name']}.amazonaws.com",
-        model=config["llm"],
-        temperature=config["temperature"],
-    ))
-    generator_embeddings = LangchainEmbeddingsWrapper(BedrockEmbeddings(
-        credentials_profile_name=config["credentials_profile_name"],
-        region_name=config["region_name"],
-        model_id=config["embeddings"],
-    ))
-    ```
-
-    If you want more information on how to use other AWS services, please refer to the [langchain-aws](https://python.langchain.com/docs/integrations/providers/aws/) documentation.
-
-=== "Google Cloud"
-    Google offers two ways to access their models: Google AI and Google Cloud Vertex AI. Google AI requires just a Google account and API key, while Vertex AI requires a Google Cloud account with enterprise features.
-
-    First, install the required packages:
-
-    ```bash
-    pip install langchain-google-genai langchain-google-vertexai
-    ```
-
-    Then set up your credentials based on your chosen API:
-
-    For Google AI:
+    Set your API key:
 
     ```python
     import os
-    os.environ["GOOGLE_API_KEY"] = "your-google-ai-key"  # From https://ai.google.dev/
-    ```
-
-    For Vertex AI:
-
-    ```python
-    # Ensure you have credentials configured (gcloud, workload identity, etc.)
-    # Or set service account JSON path:
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "path/to/service-account.json"
-    ```
-
-    Define your configuration:
-
-    ```python
-    config = {
-        "model": "gemini-1.5-pro",  # or other model IDs
-        "temperature": 0.4,
-        "max_tokens": None,
-        "top_p": 0.8,
-        # For Vertex AI only:
-        "project": "your-project-id",  # Required for Vertex AI
-        "location": "us-central1",     # Required for Vertex AI
-    }
-    ```
-
-    Initialize the LLM and wrap it for use with ragas:
-
-    ```python
-    from ragas.llms import LangchainLLMWrapper
-    from ragas.embeddings import LangchainEmbeddingsWrapper
-
-    # Choose the appropriate import based on your API:
-    from langchain_google_genai import ChatGoogleGenerativeAI
-    from langchain_google_vertexai import ChatVertexAI
-
-    # Initialize with Google AI Studio
-    generator_llm = LangchainLLMWrapper(ChatGoogleGenerativeAI(
-        model=config["model"],
-        temperature=config["temperature"],
-        max_tokens=config["max_tokens"],
-        top_p=config["top_p"],
-    ))
-
-    # Or initialize with Vertex AI
-    generator_llm = LangchainLLMWrapper(ChatVertexAI(
-        model=config["model"],
-        temperature=config["temperature"],
-        max_tokens=config["max_tokens"],
-        top_p=config["top_p"],
-        project=config["project"],
-        location=config["location"],
-    ))
-    ```
-
-
-    You can optionally configure safety settings:
-
-    ```python
-    from langchain_google_genai import HarmCategory, HarmBlockThreshold
-
-    safety_settings = {
-        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-        # Add other safety settings as needed
-    }
-
-    # Apply to your LLM initialization
-    generator_llm = LangchainLLMWrapper(ChatGoogleGenerativeAI(
-        model=config["model"],
-        temperature=config["temperature"],
-        safety_settings=safety_settings,
-    ))
-    ```
-
-    Initialize the embeddings and wrap them for use with ragas:
-
-    ```python
-    # Google AI Studio Embeddings
-    from langchain_google_genai import GoogleGenerativeAIEmbeddings
-
-    generator_embeddings = LangchainEmbeddingsWrapper(GoogleGenerativeAIEmbeddings(
-        model="models/embedding-001",  # Google's text embedding model
-        task_type="retrieval_document"  # Optional: specify the task type
-    ))
+    os.environ["ANTHROPIC_API_KEY"] = "your-anthropic-key"
     ```
 
     ```python
-    # Vertex AI Embeddings
-    from langchain_google_vertexai import VertexAIEmbeddings
+    import anthropic
+    from ragas.llms import llm_factory
 
-    generator_embeddings = LangchainEmbeddingsWrapper(VertexAIEmbeddings(
-        model_name="textembedding-gecko@001",  # or other available model
-        project=config["project"],  # Your GCP project ID
-        location=config["location"]  # Your GCP location
-    ))
+    generator_llm = llm_factory(
+        "claude-sonnet-4-5",
+        provider="anthropic",
+        client=anthropic.Anthropic(),
+    )
     ```
 
-    For more information on available models, features, and configurations, refer to: [Google AI documentation](https://ai.google.dev/docs)
-    - [Vertex AI documentation](https://cloud.google.com/vertex-ai/docs)
-    - [LangChain Google AI integration](https://python.langchain.com/docs/integrations/chat/google_generative_ai)
-    - [LangChain Vertex AI integration](https://python.langchain.com/docs/integrations/chat/google_vertex_ai)
+    Embeddings default to LiteLLM, which resolves credentials from the
+    environment:
 
+    ```python
+    from ragas.embeddings import embedding_factory
+
+    generator_embeddings = embedding_factory()  # LiteLLM, provider-neutral
+    ```
+
+=== "Google"
+    Install the Google GenAI SDK:
+
+    ```bash
+    pip install google-genai
+    ```
+
+    ```python
+    import os
+    os.environ["GOOGLE_API_KEY"] = "your-google-key"
+    ```
+
+    ```python
+    from google import genai
+    from ragas.llms import llm_factory
+
+    generator_llm = llm_factory(
+        "gemini-2.0-flash",
+        provider="google",
+        client=genai.Client(),
+    )
+    ```
+
+    For Vertex AI, or to avoid the Google SDK entirely, use the LiteLLM tab.
+
+    Embeddings default to LiteLLM, which resolves credentials from the
+    environment:
+
+    ```python
+    from ragas.embeddings import embedding_factory
+
+    generator_embeddings = embedding_factory()  # LiteLLM, provider-neutral
+    ```
 
 === "Azure"
-    Install the langchain-openai package
+    Install the OpenAI SDK, which ships the Azure client:
 
     ```bash
-    pip install langchain-openai
+    pip install openai
     ```
-
-    Ensure you have your Azure OpenAI key ready and available in your environment.
 
     ```python
     import os
-    os.environ["AZURE_OPENAI_API_KEY"] = "your-azure-openai-key"
-
-    # other configuration
-    azure_config = {
-        "base_url": "",  # your endpoint
-        "model_deployment": "",  # your model deployment name
-        "model_name": "",  # your model name
-        "embedding_deployment": "",  # your embedding deployment name
-        "embedding_name": "",  # your embedding name
-    }
-
+    os.environ["AZURE_OPENAI_API_KEY"] = "your-azure-key"
     ```
-
-    Define your LLMs and wrap them in `LangchainLLMWrapper` so that it can be used with ragas.
 
     ```python
-    from langchain_openai import AzureChatOpenAI
-    from langchain_openai import AzureOpenAIEmbeddings
-    from ragas.llms import LangchainLLMWrapper
-    from ragas.embeddings import LangchainEmbeddingsWrapper
-    generator_llm = LangchainLLMWrapper(AzureChatOpenAI(
-        openai_api_version="2023-05-15",
-        azure_endpoint=azure_configs["base_url"],
-        azure_deployment=azure_configs["model_deployment"],
-        model=azure_configs["model_name"],
-        validate_base_url=False,
-    ))
+    from openai import AzureOpenAI
+    from ragas.llms import llm_factory
 
-    # init the embeddings for answer_relevancy, answer_correctness and answer_similarity
-    generator_embeddings = LangchainEmbeddingsWrapper(AzureOpenAIEmbeddings(
-        openai_api_version="2023-05-15",
-        azure_endpoint=azure_configs["base_url"],
-        azure_deployment=azure_configs["embedding_deployment"],
-        model=azure_configs["embedding_name"],
-    ))
+    client = AzureOpenAI(
+        api_version="2024-02-01",
+        azure_endpoint="https://<your-resource>.openai.azure.com",
+    )
+    generator_llm = llm_factory("gpt-4o", provider="azure", client=client)
     ```
 
-    If you want more information on how to use other Azure services, please refer to the [langchain-azure](https://python.langchain.com/docs/integrations/chat/azure_chat_openai/) documentation.
+    `gpt-4o` here is your **deployment name**, which need not match the model name.
 
-=== "Others"
-    If you are using a different LLM provider and using LangChain to interact with it, you can wrap your LLM in `LangchainLLMWrapper` so that it can be used with ragas.
+    Embeddings default to LiteLLM, which resolves credentials from the
+    environment:
 
     ```python
-    from ragas.llms import LangchainLLMWrapper
-    generator_llm = LangchainLLMWrapper(your_llm_instance)
+    from ragas.embeddings import embedding_factory
+
+    generator_embeddings = embedding_factory()  # LiteLLM, provider-neutral
     ```
 
-    For a more detailed guide, checkout [the guide on customizing models](../../howtos/customizations/customize_models.md).
+=== "AWS Bedrock"
+    Bedrock is reached through LiteLLM:
 
-    If you using LlamaIndex, you can use the `LlamaIndexLLMWrapper` to wrap your LLM so that it can be used with ragas.
+    ```bash
+    pip install litellm boto3
+    ```
+
+    Credentials come from the usual AWS chain — environment, profile or instance role:
 
     ```python
-    from ragas.llms import LlamaIndexLLMWrapper
-    generator_llm = LlamaIndexLLMWrapper(your_llm_instance)
+    import os
+    os.environ["AWS_REGION_NAME"] = "us-east-1"
     ```
 
-    For more information on how to use LlamaIndex, please refer to the [LlamaIndex Integration guide](./../../howtos/integrations/_llamaindex.md).
+    ```python
+    import instructor
+    import litellm
+    from ragas.llms import llm_factory
 
-    If your still not able use Ragas with your favorite LLM provider, please let us know by by commenting on this [issue](https://github.com/vibrantlabsai/ragas/issues/1617) and we'll add support for it 🙂.
+    client = instructor.from_litellm(litellm.completion)
+    generator_llm = llm_factory(
+        "bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0",
+        provider="litellm",
+        client=client,
+    )
+    ```
+
+    Embeddings default to LiteLLM, which resolves credentials from the
+    environment:
+
+    ```python
+    from ragas.embeddings import embedding_factory
+
+    generator_embeddings = embedding_factory()  # LiteLLM, provider-neutral
+    ```
+
+=== "Others (LiteLLM)"
+    LiteLLM reaches 100+ providers — Ollama, vLLM, Groq, Mistral, Cohere, Together,
+    Vertex AI and more — behind one interface, so ragas is not tied to any single
+    vendor's SDK.
+
+    ```bash
+    pip install litellm
+    ```
+
+    ```python
+    import instructor
+    import litellm
+    from ragas.llms import llm_factory
+
+    client = instructor.from_litellm(litellm.completion)
+
+    # any model string LiteLLM understands
+    generator_llm = llm_factory("ollama/llama3", provider="litellm", client=client)
+    ```
+
+    See the [LiteLLM provider list](https://docs.litellm.ai/docs/providers) for the
+    model string to use. Credentials are read from the environment variables each
+    provider expects.
+
+    Embeddings default to LiteLLM, which resolves credentials from the
+    environment:
+
+    ```python
+    from ragas.embeddings import embedding_factory
+
+    generator_embeddings = embedding_factory()  # LiteLLM, provider-neutral
+    ```
+
+!!! note "Migrating from `LangchainLLMWrapper`"
+    ragas no longer depends on LangChain, and `LangchainLLMWrapper` has been
+    removed. Replace `LangchainLLMWrapper(ChatOpenAI(model="gpt-4o"))` with
+    `llm_factory("gpt-4o", client=OpenAI())` as above, and
+    `LangchainEmbeddingsWrapper(...)` with `embedding_factory(...)`. See the
+    **Migrating off LangChain** guide under How-to Guides > Migrations.
