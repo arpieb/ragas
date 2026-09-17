@@ -181,17 +181,87 @@ _DEPRECATED_METRICS = {
     "AgentGoalAccuracyWithReference": _AgentGoalAccuracyWithReference,
 }
 
-_DEPRECATION_MESSAGE = (
-    "Importing {name} from 'ragas.metrics' is deprecated and will be removed in v1.0. "
-    "Please use 'ragas.metrics.collections' instead. "
-    "Example: from ragas.metrics.collections import {name}"
+# Names that exist in ragas.metrics.collections under a *different* name. Pointing
+# at the old name produced an ImportError, so the deprecation warning -- the main
+# migration signal there is -- sent people nowhere.
+_COLLECTIONS_RENAMES = {
+    "AnswerSimilarity": "SemanticSimilarity",
+    "ChrfScore": "CHRFScore",
+    "InstanceRubrics": "InstanceSpecificRubrics",
+    "LLMContextPrecisionWithReference": "ContextPrecisionWithReference",
+    "LLMContextPrecisionWithoutReference": "ContextPrecisionWithoutReference",
+    "LLMContextRecall": "ContextRecall",
+    "LLMSQLEquivalence": "SQLSemanticEquivalence",
+    "ResponseRelevancy": "AnswerRelevancy",
+    "RubricsScore": "DomainSpecificRubrics",
+    "SummarizationScore": "SummaryScore",
+    "TopicAdherenceScore": "TopicAdherence",
+}
+
+# The pre-built singletons (``from ragas.metrics import faithfulness``) have no
+# counterpart: a collections metric takes its LLM at construction, so there is
+# nothing to pre-build. The matching lowercase name in collections is a *module*,
+# which meant the suggested import silently returned the wrong kind of object
+# rather than failing.
+_COLLECTIONS_CLASS_FOR_INSTANCE = {
+    "answer_correctness": "AnswerCorrectness",
+    "answer_relevancy": "AnswerRelevancy",
+    "answer_similarity": "SemanticSimilarity",
+    "context_entity_recall": "ContextEntityRecall",
+    "context_precision": "ContextPrecision",
+    "context_recall": "ContextRecall",
+    "faithfulness": "Faithfulness",
+    "multimodal_faithness": "MultiModalFaithfulness",
+    "multimodal_relevance": "MultiModalRelevance",
+    "summarization_score": "SummaryScore",
+}
+
+# Metrics with no collections port yet. Telling people to migrate to something
+# that was never written is worse than saying nothing, so these say so plainly.
+_NO_COLLECTIONS_EQUIVALENT = frozenset(
+    {
+        "AspectCritic",
+        "FaithfulnesswithHHEM",
+        "IDBasedContextPrecision",
+        "IDBasedContextRecall",
+        "NonLLMContextPrecisionWithReference",
+        "NonLLMContextRecall",
+        "SimpleCriteriaScore",
+    }
 )
+
+
+def _deprecation_message(name: str) -> str:
+    """The migration hint for ``name``, naming a symbol that actually exists."""
+    prefix = f"Importing {name} from 'ragas.metrics' is deprecated"
+
+    if name in _NO_COLLECTIONS_EQUIVALENT:
+        return (
+            f"{prefix}. It has no equivalent in 'ragas.metrics.collections' yet, "
+            f"so there is no migration target for it."
+        )
+
+    if name in _COLLECTIONS_CLASS_FOR_INSTANCE:
+        cls = _COLLECTIONS_CLASS_FOR_INSTANCE[name]
+        return (
+            f"{prefix} and will be removed in v1.0. Collections metrics take their "
+            f"LLM at construction rather than being pre-built, so there is no "
+            f"drop-in singleton. Example: "
+            f"from ragas.metrics.collections import {cls}; metric = {cls}(llm=llm)"
+        )
+
+    target = _COLLECTIONS_RENAMES.get(name, name)
+    return (
+        f"{prefix} and will be removed in v1.0. "
+        f"Please use 'ragas.metrics.collections' instead. "
+        f"Example: from ragas.metrics.collections import {target}"
+    )
 
 
 def __getattr__(name: str):
     if name in _DEPRECATED_METRICS:
         warnings.warn(
-            _DEPRECATION_MESSAGE.format(name=name),
+            _deprecation_message(name),
             DeprecationWarning,
             stacklevel=2,
         )
