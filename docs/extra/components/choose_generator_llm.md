@@ -9,6 +9,7 @@
 
     ```python
     import os
+
     os.environ["OPENAI_API_KEY"] = "your-openai-key"
     ```
 
@@ -37,6 +38,7 @@
 
     ```python
     import os
+
     os.environ["ANTHROPIC_API_KEY"] = "your-anthropic-key"
     ```
 
@@ -69,6 +71,7 @@
 
     ```python
     import os
+
     os.environ["GOOGLE_API_KEY"] = "your-google-key"
     ```
 
@@ -103,6 +106,7 @@
 
     ```python
     import os
+
     os.environ["AZURE_OPENAI_API_KEY"] = "your-azure-key"
     ```
 
@@ -139,6 +143,7 @@
 
     ```python
     import os
+
     os.environ["AWS_REGION_NAME"] = "us-east-1"
     ```
 

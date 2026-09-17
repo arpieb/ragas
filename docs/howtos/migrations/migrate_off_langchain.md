@@ -108,9 +108,11 @@ Implement **either** pair — the other is bridged automatically:
 ```python
 from ragas.embeddings import BaseRagasEmbeddings
 
+
 class MyEmbeddings(BaseRagasEmbeddings):
     def embed_query(self, text): ...
     def embed_documents(self, texts): ...
+
     # aembed_query / aembed_documents are provided, via an executor
 ```
 
