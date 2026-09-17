@@ -24,3 +24,7 @@
     options:
         show_root_heading: True
         show_root_full_path: False
+
+::: ragas.testset.persona
+    options:
+        show_root_heading: true

@@ -1630,7 +1630,7 @@ v0.4 introduces several new capabilities beyond the migration requirements. Whil
 - **Enhanced Metric Save/Load** - Easy serialization of metric configurations
 - **Better Embeddings Support** - Both sync and async embedding operations
 
-For detailed information on new features, see the [v0.4 Release Notes](../../releases/v0.4.0.md).
+For detailed information on new features, see the v0.4 Release Notes.
 
 ---
 
@@ -1771,7 +1771,7 @@ If you encounter issues during migration:
 1. **Check the Documentation**
     - [Metrics Documentation](../../concepts/metrics/available_metrics/index.md)
     - [Collections API](../../concepts/metrics/overview/index.md)
-    - [LLM Configuration](../../concepts/llms/index.md)
+    - [LLM Configuration](../../references/llms.md)
 
 2. **GitHub Issues**
     - Search [existing issues](https://github.com/explodinggradients/ragas/issues)

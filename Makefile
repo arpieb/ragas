@@ -157,9 +157,9 @@ test-e2e: ## Run all end-to-end tests
 # DOCUMENTATION
 # =============================================================================
 
-check-docs: ## Build docs and fail on any NEW mkdocs warning
-	@echo "Building docs and checking for new warnings..."
-	$(Q)uv run --group docs python scripts/check_docs.py
+check-docs: ## Build docs and fail on any mkdocs warning
+	@echo "Building docs in strict mode..."
+	$(Q)MKDOCS_CI=false uv run --group docs mkdocs build --strict
 
 build-docs: ## Build all documentation
 	@echo "Building all documentation..."

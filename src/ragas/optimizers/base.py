@@ -40,12 +40,22 @@ class Optimizer(ABC):
 
         Parameters
         ----------
-        metric : MetricWithLLM
-            The metric to optimize.
-        train_data : Any
-            The training data.
-        config : InstructionConfig
-            The training configuration.
+        dataset : SingleMetricAnnotation
+            The annotated samples to optimize against.
+        loss : Loss
+            The loss used to score candidate prompts.
+        config : Dict[Any, Any]
+            The optimizer configuration.
+        run_config : Optional[RunConfig], optional
+            Execution limits for the underlying runs, by default None.
+        batch_size : Optional[int], optional
+            The number of samples per batch, by default None.
+        callbacks : Optional[Callbacks], optional
+            The callbacks to use during optimization, by default None.
+        with_debugging_logs : bool, optional
+            Whether to emit debugging logs, by default False.
+        raise_exceptions : bool, optional
+            Whether to raise instead of swallowing errors, by default True.
 
         Returns
         -------

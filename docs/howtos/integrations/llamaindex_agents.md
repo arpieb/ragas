@@ -668,7 +668,7 @@ The resulting dataset will not include reference answers by default, so we’ll 
 
 ### Evaluating using Ragas RAG Metrics
 
-Let's assess the effectiveness of query engines, particularly regarding retrieval quality and hallucination prevention. To accomplish this evaluation, We will employ two key Ragas metrics: faithfulness and context relevance. For more you can visit [here](../../concepts/metrics/available_metrics/).
+Let's assess the effectiveness of query engines, particularly regarding retrieval quality and hallucination prevention. To accomplish this evaluation, We will employ two key Ragas metrics: faithfulness and context relevance. For more you can visit [here](../../concepts/metrics/available_metrics/index.md).
 
 This evaluation approach allows us to identify potential issues with either retrieval quality or response generation that could impact overall system performance.
 - [Faithfulness](../../concepts/metrics/available_metrics/faithfulness.md) - Measures how accurately the generated response adheres to the facts presented in the retrieved context, ensuring claims made by the system can be directly supported by the information provided.

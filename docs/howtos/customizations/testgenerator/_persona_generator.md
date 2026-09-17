@@ -40,7 +40,7 @@ personas
 
 
 
-And then you can use these personas in the testset generation process by passing them to the [TestsetGenerator][ragas.testset.generator.TestsetGenerator] class.
+And then you can use these personas in the testset generation process by passing them to the [TestsetGenerator][ragas.testset.synthesizers.generate.TestsetGenerator] class.
 
 
 ```python

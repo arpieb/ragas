@@ -75,7 +75,7 @@ def load_dataset():
     return EvaluationDataset(samples=data_samples)
 ```
 
-You can extend this with [metrics](../concepts/metrics/available_metrics/index.md) and more sophisticated evaluation logic. Learn more about [evaluation in Ragas](../concepts/evaluation/index.md).
+You can extend this with [metrics](../concepts/metrics/available_metrics/index.md) and more sophisticated evaluation logic. Learn more about [evaluation in Ragas](../concepts/metrics/index.md).
 
 ### Choosing Your LLM Provider
 

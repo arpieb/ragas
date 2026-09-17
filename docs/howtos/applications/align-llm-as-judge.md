@@ -141,7 +141,7 @@ def judge_alignment(judge_label: str, human_label: str) -> MetricResult:
 
 ## The experiment function
 
-The [experiment function](/concepts/experimentation) orchestrates the complete evaluation pipeline - evaluating responses with the judge and measuring alignment:
+The [experiment function](../../concepts/experimentation.md) orchestrates the complete evaluation pipeline - evaluating responses with the judge and measuring alignment:
 
 ```python
 from typing import Dict, Any

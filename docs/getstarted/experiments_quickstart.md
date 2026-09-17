@@ -9,7 +9,7 @@ This tutorial walks you through running your first experiment with Ragas using t
 
 ## Hello World 👋
 
-![](/_static/imgs/experiments_quickstart/hello_world.gif)
+![](../_static/imgs/experiments_quickstart/hello_world.gif)
 
 ### 1. Install (if you haven’t already)
 
@@ -99,7 +99,7 @@ open experiments/first_experiment.csv
 
 Output preview:
 
-![](/_static/imgs/experiments_quickstart/output_first_experiment.png)
+![](../_static/imgs/experiments_quickstart/output_first_experiment.png)
 
 ## Next steps
 
