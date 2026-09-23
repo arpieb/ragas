@@ -1,6 +1,14 @@
 """Collections of metrics using modern component architecture."""
 
 from ragas.metrics.collections._bleu_score import BleuScore
+from ragas.metrics.collections._context_ids import (
+    IDBasedContextPrecision,
+    IDBasedContextRecall,
+)
+from ragas.metrics.collections._non_llm_context import (
+    NonLLMContextPrecisionWithReference,
+    NonLLMContextRecall,
+)
 from ragas.metrics.collections._rouge_score import RougeScore
 from ragas.metrics.collections._semantic_similarity import SemanticSimilarity
 from ragas.metrics.collections._string import (
@@ -55,6 +63,10 @@ __all__ = [
     "AnswerCorrectness",
     "AnswerRelevancy",
     "BleuScore",
+    "IDBasedContextPrecision",
+    "IDBasedContextRecall",
+    "NonLLMContextPrecisionWithReference",
+    "NonLLMContextRecall",
     "CHRFScore",
     "ContextEntityRecall",
     "ContextRecall",
