@@ -218,7 +218,7 @@ _COLLECTIONS_CLASS_FOR_INSTANCE = {
 
 # Metrics with no collections port yet. Telling people to migrate to something
 # that was never written is worse than saying nothing, so these say so plainly.
-_NO_COLLECTIONS_EQUIVALENT = frozenset({"FaithfulnesswithHHEM"})
+_NO_COLLECTIONS_EQUIVALENT: frozenset = frozenset()
 
 
 def _deprecation_message(name: str) -> str:
