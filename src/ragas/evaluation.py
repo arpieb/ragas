@@ -34,12 +34,14 @@ from ragas.llms import default_llm
 from ragas.llms.base import BaseRagasLLM, InstructorBaseRagasLLM
 from ragas.metrics._answer_correctness import AnswerCorrectness
 from ragas.metrics._aspect_critic import AspectCritic
+from ragas.metrics._collections_bridge import adapt_collections_metric
 from ragas.metrics.base import (
     Metric,
     MetricWithEmbeddings,
     MetricWithLLM,
     ModeMetric,
     MultiTurnMetric,
+    SimpleBaseMetric,
     SingleTurnMetric,
 )
 from ragas.run_config import RunConfig
@@ -126,6 +128,19 @@ async def aevaluate(
         raise TypeError(
             "Metrics should be provided in a list, e.g: metrics=[BleuScore()]"
         )
+
+    # Collections metrics (ragas.metrics.collections) implement SimpleBaseMetric,
+    # not the legacy Metric protocol evaluate() drives, so they used to be
+    # rejected by the type check below. Wrap them instead: every legacy metric
+    # now warns that it moves to collections in v1.0, so the replacement has to
+    # work with the main entry point.
+    if isinstance(metrics, list):
+        metrics = [
+            adapt_collections_metric(m)
+            if isinstance(m, SimpleBaseMetric) and not isinstance(m, Metric)
+            else m
+            for m in metrics
+        ]
 
     if isinstance(metrics, list) and any(not isinstance(m, Metric) for m in metrics):
         raise TypeError(
