@@ -9,7 +9,6 @@ import typing as t
 
 from pydantic import BaseModel, ValidationError
 
-from ragas._analytics import PromptUsageEvent, track
 from ragas._version import __version__
 from ragas.callbacks import ChainType, new_group
 from ragas.exceptions import RagasOutputParserException
@@ -274,17 +273,6 @@ class PydanticPrompt(BasePrompt, t.Generic[InputModel, OutputModel]):
                 raise e
 
         prompt_rm.on_chain_end({"output": output_models})
-
-        # Track prompt usage
-        track(
-            PromptUsageEvent(
-                prompt_type="pydantic",
-                has_examples=len(self.examples) > 0,
-                num_examples=len(self.examples),
-                has_response_model=True,  # PydanticPrompt always has response model
-                language=self.language,
-            )
-        )
 
         return output_models
 

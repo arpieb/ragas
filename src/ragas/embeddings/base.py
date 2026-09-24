@@ -11,7 +11,6 @@ import numpy as np
 from pydantic.dataclasses import dataclass
 from pydantic_core import CoreSchema, core_schema
 
-from ragas._analytics import EmbeddingUsageEvent, track
 from ragas.cache import CacheInterface, cacher
 from ragas.embeddings.utils import run_async_in_current_loop, validate_texts
 from ragas.run_config import RunConfig, add_async_retry, add_retry
@@ -652,15 +651,6 @@ def embedding_factory(
             kwargs["api_base"] = base_url
         result = LiteLLMEmbeddings(model=model_name, cache=cache, **kwargs)
 
-        track(
-            EmbeddingUsageEvent(
-                provider="litellm",
-                model=model_name,
-                embedding_type="factory_litellm",
-                num_requests=1,
-                is_async=False,
-            )
-        )
         return result
 
     # Modern interface - pass base_url and cache through kwargs for modern providers
@@ -670,16 +660,6 @@ def embedding_factory(
         kwargs["cache"] = cache
     result = _create_modern_embedding(provider, model, client, **kwargs)
 
-    # Track factory usage (modern)
-    track(
-        EmbeddingUsageEvent(
-            provider=provider,
-            model=model,
-            embedding_type="factory_modern",
-            num_requests=1,
-            is_async=False,
-        )
-    )
     return result
 
 

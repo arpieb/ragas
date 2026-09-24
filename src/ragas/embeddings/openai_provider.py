@@ -1,6 +1,5 @@
 import typing as t
 
-from ragas._analytics import EmbeddingUsageEvent, track
 from ragas.cache import CacheInterface
 
 from .base import BaseRagasEmbedding
@@ -42,16 +41,6 @@ class OpenAIEmbeddings(BaseRagasEmbedding):
             )
             result = response.data[0].embedding
 
-        # Track usage
-        track(
-            EmbeddingUsageEvent(
-                provider="openai",
-                model=self.model,
-                embedding_type="modern",
-                num_requests=1,
-                is_async=self.is_async,
-            )
-        )
         return result
 
     async def aembed_text(self, text: str, **kwargs: t.Any) -> t.List[float]:
@@ -66,16 +55,6 @@ class OpenAIEmbeddings(BaseRagasEmbedding):
         )
         result = response.data[0].embedding
 
-        # Track usage
-        track(
-            EmbeddingUsageEvent(
-                provider="openai",
-                model=self.model,
-                embedding_type="modern",
-                num_requests=1,
-                is_async=True,
-            )
-        )
         return result
 
     def embed_texts(self, texts: t.List[str], **kwargs: t.Any) -> t.List[t.List[float]]:
@@ -93,16 +72,6 @@ class OpenAIEmbeddings(BaseRagasEmbedding):
             )
             result = [item.embedding for item in response.data]
 
-        # Track usage
-        track(
-            EmbeddingUsageEvent(
-                provider="openai",
-                model=self.model,
-                embedding_type="modern",
-                num_requests=len(texts),
-                is_async=self.is_async,
-            )
-        )
         return result
 
     async def aembed_texts(
@@ -123,16 +92,6 @@ class OpenAIEmbeddings(BaseRagasEmbedding):
         )
         result = [item.embedding for item in response.data]
 
-        # Track usage
-        track(
-            EmbeddingUsageEvent(
-                provider="openai",
-                model=self.model,
-                embedding_type="modern",
-                num_requests=len(texts),
-                is_async=True,
-            )
-        )
         return result
 
     def _get_client_info(self) -> str:

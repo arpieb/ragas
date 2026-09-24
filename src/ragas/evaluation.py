@@ -7,7 +7,6 @@ from uuid import UUID
 from datasets import Dataset
 from tqdm.auto import tqdm
 
-from ragas._analytics import track_was_completed  # type: ignore
 from ragas.callbacks import (
     ChainCallback,
     ChainType,
@@ -360,15 +359,9 @@ async def aevaluate(
                 AnswerCorrectness, metrics[answer_correctness_is_set]
             ).answer_similarity = None
 
-        # flush the analytics batcher
-        from ragas._analytics import _analytics_batcher
-
-        _analytics_batcher.flush()
-
     return result
 
 
-@track_was_completed
 def evaluate(
     dataset: t.Union[Dataset, EvaluationDataset],
     metrics: t.Optional[t.Sequence[Metric]] = None,

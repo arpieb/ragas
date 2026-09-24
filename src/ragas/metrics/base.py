@@ -11,7 +11,6 @@ from enum import Enum
 from pydantic import ValidationError
 from tqdm import tqdm
 
-from ragas._analytics import EvaluationEvent, _analytics_batcher
 from ragas.async_utils import apply_nest_asyncio, run
 from ragas.callbacks import ChainType, new_group
 from ragas.dataset_schema import MetricAnnotation, MultiTurnSample, SingleTurnSample
@@ -20,7 +19,7 @@ from ragas.losses import BinaryMetricLoss, MSELoss
 from ragas.metrics.validators import AllowedValuesType
 from ragas.prompt import FewShotPydanticPrompt, PromptMixin
 from ragas.run_config import RunConfig
-from ragas.utils import camel_to_snake, get_metric_language
+from ragas.utils import camel_to_snake
 
 if t.TYPE_CHECKING:
     from pydantic import BaseModel
@@ -446,15 +445,6 @@ class SingleTurnMetric(Metric):
         apply_nest_asyncio()
         score = run(_async_wrapper)
 
-        # track the evaluation event
-        _analytics_batcher.add_evaluation(
-            EvaluationEvent(
-                metrics=[self.name],
-                num_rows=1,
-                evaluation_type=MetricType.SINGLE_TURN.name,
-                language=get_metric_language(self),
-            )
-        )
         return score
 
     async def single_turn_ascore(
@@ -490,15 +480,6 @@ class SingleTurnMetric(Metric):
             if not group_cm.ended:
                 rm.on_chain_end({"output": score})
 
-        # track the evaluation event
-        _analytics_batcher.add_evaluation(
-            EvaluationEvent(
-                metrics=[self.name],
-                num_rows=1,
-                evaluation_type=MetricType.SINGLE_TURN.name,
-                language=get_metric_language(self),
-            )
-        )
         return score
 
     @abstractmethod
@@ -570,15 +551,6 @@ class MultiTurnMetric(Metric):
         apply_nest_asyncio()
         score = run(_async_wrapper)
 
-        # track the evaluation event
-        _analytics_batcher.add_evaluation(
-            EvaluationEvent(
-                metrics=[self.name],
-                num_rows=1,
-                evaluation_type=MetricType.SINGLE_TURN.name,
-                language=get_metric_language(self),
-            )
-        )
         return score
 
     async def multi_turn_ascore(
@@ -613,16 +585,6 @@ class MultiTurnMetric(Metric):
         else:
             if not group_cm.ended:
                 rm.on_chain_end({"output": score})
-
-        # track the evaluation event
-        _analytics_batcher.add_evaluation(
-            EvaluationEvent(
-                metrics=[self.name],
-                num_rows=1,
-                evaluation_type=MetricType.SINGLE_TURN.name,
-                language=get_metric_language(self),
-            )
-        )
 
         return score
 

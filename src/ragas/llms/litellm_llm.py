@@ -4,7 +4,6 @@ import logging
 import threading
 import typing as t
 
-from ragas._analytics import LLMUsageEvent, track
 from ragas.cache import CacheInterface, cacher
 from ragas.llms.base import InstructorBaseRagasLLM, InstructorTypeVar
 
@@ -205,16 +204,6 @@ class LiteLLMStructuredLLM(InstructorBaseRagasLLM):
                 **self.model_args,
             )
 
-        # Track the usage
-        track(
-            LLMUsageEvent(
-                provider=self.provider,
-                model=self.model,
-                llm_type="litellm",
-                num_requests=1,
-                is_async=self.is_async,
-            )
-        )
         return result
 
     async def agenerate(
@@ -250,16 +239,6 @@ class LiteLLMStructuredLLM(InstructorBaseRagasLLM):
             **self.model_args,
         )
 
-        # Track the usage
-        track(
-            LLMUsageEvent(
-                provider=self.provider,
-                model=self.model,
-                llm_type="litellm",
-                num_requests=1,
-                is_async=True,
-            )
-        )
         return result
 
     def __repr__(self) -> str:

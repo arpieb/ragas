@@ -204,9 +204,9 @@ To view debug logs for any module:
 ```python
 import logging
 
-# Configure logging for a specific module (example with analytics)
-analytics_logger = logging.getLogger('ragas._analytics')
-analytics_logger.setLevel(logging.DEBUG)
+# Configure logging for a specific module (example with evaluation)
+eval_logger = logging.getLogger('ragas.evaluation')
+eval_logger.setLevel(logging.DEBUG)
 
 # Create a console handler and set its level
 console_handler = logging.StreamHandler()
@@ -217,7 +217,7 @@ formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
 console_handler.setFormatter(formatter)
 
 # Add the handler to the logger
-analytics_logger.addHandler(console_handler)
+eval_logger.addHandler(console_handler)
 ```
 
 ## Memories
