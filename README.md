@@ -42,6 +42,12 @@
     <p>
 </h4>
 
+**Hard forked from `vibrantlabsai/ragas` after no updates or activity for seven months**
+
+This repo is planned to remove all frontier lab vendor lockin where humanly+agenticly possible, as well as address open functional issues reported in the original repo.
+
+<hr />
+
 Objective metrics, intelligent test generation, and data-driven insights for LLM apps
 
 Ragas is your ultimate toolkit for evaluating and optimizing Large Language Model (LLM) applications. Say goodbye to time-consuming, subjective assessments and hello to data-driven, efficient evaluation workflows.
