@@ -222,10 +222,6 @@ _NO_COLLECTIONS_EQUIVALENT = frozenset(
     {
         "AspectCritic",
         "FaithfulnesswithHHEM",
-        "IDBasedContextPrecision",
-        "IDBasedContextRecall",
-        "NonLLMContextPrecisionWithReference",
-        "NonLLMContextRecall",
         "SimpleCriteriaScore",
     }
 )
