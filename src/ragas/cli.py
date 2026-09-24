@@ -23,6 +23,11 @@ from ragas.utils import console
 
 app = typer.Typer(help="Ragas CLI for running LLM evaluations")
 
+# Where `ragas quickstart` downloads templates from when ragas_examples is not
+# installed and the CLI is not running from a source checkout.
+QUICKSTART_GITHUB_REPO = "arpieb/ragas-ng"
+QUICKSTART_GITHUB_BRANCH = "main"
+
 
 # Create a callback for the main app to make it a group
 @app.callback()
@@ -605,8 +610,8 @@ def quickstart(
         import urllib.request
         import zipfile
 
-        github_repo = "vibrantlabsai/ragas"
-        branch = "main"
+        github_repo = QUICKSTART_GITHUB_REPO
+        branch = QUICKSTART_GITHUB_BRANCH
 
         # Create temporary directory for download
         temp_dir = Path(tempfile.mkdtemp())
@@ -644,8 +649,9 @@ def quickstart(
             error(f"Failed to download template from GitHub: {e}")
             console.print("\nYou can also manually clone the repository:")
             console.print(f"  git clone https://github.com/{github_repo}.git")
+            clone_dir = github_repo.split("/")[-1]
             console.print(
-                f"  cp -r ragas/examples/ragas_examples/{template_path} ./{template}"
+                f"  cp -r {clone_dir}/examples/ragas_examples/{template_path} ./{template}"
             )
             raise typer.Exit(1)
 
