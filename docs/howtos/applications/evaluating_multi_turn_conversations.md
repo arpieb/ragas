@@ -6,7 +6,7 @@ This tutorial is inspired by Hamel’s notes on evaluating multi-turn conversati
 
 Ragas offers **AspectCritic**, a powerful evaluation metric for assessing multi-turn conversations with binary outcomes. It helps determine whether a conversation meets predefined success criteria.
 
-**[AspectCritic](https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/general_purpose/#aspect-critic)**
+**[AspectCritic](../../concepts/metrics/available_metrics/general_purpose.md#aspect-critic)**
 AspectCritic evaluates responses based on predefined aspects written in free-form natural language. It returns a binary output indicating whether the response aligns with the defined aspect.
 
 This metric aligns with Hamel's [suggestion](https://hamel.dev/notes/llm/officehours/evalmultiturn.html#focus-on-binary-decisions) to focus on binary decisions, which eliminate ambiguity and provide a clear, actionable approach to improving conversation quality.
@@ -148,7 +148,7 @@ Evaluating: 100%|██████████| 2/2 [00:00<?, ?it/s]
 
 
 
-When evaluating with LLM-based metrics, each metric may involve one or more calls to the LLM. The traces of evaluation can provide insights for understanding the results and diagnosing any issues. You can find more details on this process by visiting [this page](https://docs.ragas.io/en/stable/howtos/applications/_metrics_llm_calls/).
+When evaluating with LLM-based metrics, each metric may involve one or more calls to the LLM. The traces of evaluation can provide insights for understanding the results and diagnosing any issues. You can find more details on this process by visiting [this page](../migrations/migrate_off_langchain.md#tracing).
 
 Another pattern identified during error analysis is that your banking chatbot occasionally drifts from discussing basic account services into offering unauthorized investment advice. To maintain user trust and ensure regulatory compliance, you want the system to implement **graceful transitions** when conversations approach these boundaries. You can achieve this by defining a metric like the one below.
 

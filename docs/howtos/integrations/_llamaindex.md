@@ -175,7 +175,7 @@ Now that we have a `QueryEngine` for the `VectorStoreIndex` we can use the llama
 In order to run an evaluation with Ragas and LlamaIndex you need 3 things
 
 1. LlamaIndex `QueryEngine`: what we will be evaluating
-2. Metrics: Ragas defines a set of metrics that can measure different aspects of the `QueryEngine`. The available metrics and their meaning can be found [here](https://docs.ragas.io/en/latest/concepts/metrics/available_metrics/)
+2. Metrics: Ragas defines a set of metrics that can measure different aspects of the `QueryEngine`. The available metrics and their meaning can be found [here](../../concepts/metrics/available_metrics/index.md)
 3. Questions: A list of questions that ragas will test the `QueryEngine` against.
 
 first let's generate the questions. Ideally you should use that you see in production so that the distribution of question with which we evaluate matches the distribution of questions seen in production. This ensures that the scores reflect the performance seen in production but to start off we'll be using a few example questions.

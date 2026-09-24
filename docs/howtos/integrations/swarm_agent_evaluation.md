@@ -10,7 +10,7 @@ Install Ragas with pip and set up Swarm locally:
 
 ## Building the Customer Support Agent using Swarm
 
-In this tutorial, we will create an intelligent customer support agent using [swarm](https://github.com/openai/swarm) and evaluate its performance using [ragas](https://docs.ragas.io/en/stable/) metrics. The agent will focus on two key tasks:
+In this tutorial, we will create an intelligent customer support agent using [swarm](https://github.com/openai/swarm) and evaluate its performance using [ragas](../../index.md) metrics. The agent will focus on two key tasks:
 - Managing product returns
 - Providing order tracking information.
 
@@ -303,9 +303,9 @@ AIMessage(content="You're welcome! 🎈 Your case is all wrapped up, and I'm thr
 
 In this tutorial, we will evaluate the Agent using the following metrics:
 
-1. **[Tool Call Accuracy](https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/agents/#tool-call-accuracy)**: This metric measures how accurately the Agent identifies and uses the correct tools to complete a task.
+1. **[Tool Call Accuracy](../../concepts/metrics/available_metrics/agents.md#tool-call-accuracy)**: This metric measures how accurately the Agent identifies and uses the correct tools to complete a task.
 
-2. **[Agent Goal Accuracy](https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/agents/#agent-goal-accuracy)**: This binary metric evaluates whether the Agent successfully identifies and achieves the user’s goals. A score of 1 means the goal was achieved, while 0 means it was not.
+2. **[Agent Goal Accuracy](../../concepts/metrics/available_metrics/agents.md#agent-goal-accuracy)**: This binary metric evaluates whether the Agent successfully identifies and achieves the user’s goals. A score of 1 means the goal was achieved, while 0 means it was not.
 
 To begin, we will run the Agent with a few sample queries and ensure we have the ground truth labels for these queries. This will allow us to accurately evaluate the Agent’s performance.
 

@@ -13,7 +13,7 @@ Building a baseline for a RAG pipeline is not usually difficult, but enhancing i
 
 This article covers how to evaluate, visualize and analyze your RAG using a combination of open-source libraries.  We will be using:
 
-- [Ragas](https://docs.ragas.io/en/stable/) for synthetic test data generation and evaluation
+- [Ragas](../../index.md) for synthetic test data generation and evaluation
 - Arize AI’s [Phoenix](https://docs.arize.com/phoenix) for tracing, visualization, and cluster analysis
 - [LlamaIndex](https://docs.llamaindex.ai/en/stable/) for building RAG pipelines
 
@@ -363,7 +363,7 @@ Congrats! You built and evaluated a LlamaIndex query engine using Ragas and Phoe
 - With OpenInference, you instrumented your query engine, so you could observe the inner workings of both LlamaIndex and Ragas.
 - With Phoenix, you collected your spans and traces, imported your evaluations for easy inspection, and visualized your embedded queries and retrieved documents to identify pockets of poor performance.
 
-This notebook is just an introduction to the capabilities of Ragas and Phoenix. To learn more, see the [Ragas](https://docs.ragas.io/en/stable/) and [Phoenix docs](https://docs.arize.com/phoenix/).
+This notebook is just an introduction to the capabilities of Ragas and Phoenix. To learn more, see the [Ragas](../../index.md) and [Phoenix docs](https://docs.arize.com/phoenix/).
 
 If you enjoyed this tutorial, please leave a ⭐ on GitHub:
 

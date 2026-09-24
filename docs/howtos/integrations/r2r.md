@@ -102,7 +102,7 @@ The `R2RClient` and `/rag` configurations specifying RAG settings.
 You need a Ragas `EvaluationDataset` that includes all necessary inputs required by Ragas metrics.
 
 - **3. Ragas Metrics**
-Ragas provides various evaluation metrics to assess different aspects of the RAG, such as faithfulness, answer relevance, and context recall. You can explore the full list of available metrics in the [Ragas documentation](https://docs.ragas.io/en/latest/concepts/metrics/available_metrics/).
+Ragas provides various evaluation metrics to assess different aspects of the RAG, such as faithfulness, answer relevance, and context recall. You can explore the full list of available metrics in the [Ragas documentation](../../concepts/metrics/available_metrics/index.md).
 
 
 #### Constructing a Ragas EvaluationDataset
@@ -153,9 +153,9 @@ EvaluationDataset(features=['user_input', 'retrieved_contexts', 'response', 'ref
 
 To evaluate our RAG endpoint, we will use the following metrics:
 
-- [Response Relevancy](https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/answer_relevance/#response-relevancy): Measures how relevant a response is to the user’s input (query).
-- [Context Precision](https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/context_precision/): Measures how many of the relevant documents (or pieces of information) were successfully retrieved.
-- [Faithfulness](https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/faithfulness/): Measures how factually consistent a response is with the retrieved context.
+- [Response Relevancy](../../concepts/metrics/available_metrics/answer_relevance.md#answer-relevancy): Measures how relevant a response is to the user’s input (query).
+- [Context Precision](../../concepts/metrics/available_metrics/context_precision.md): Measures how many of the relevant documents (or pieces of information) were successfully retrieved.
+- [Faithfulness](../../concepts/metrics/available_metrics/faithfulness.md): Measures how factually consistent a response is with the retrieved context.
 
 
 ```python
