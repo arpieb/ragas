@@ -1,5 +1,8 @@
 """Tests for the Ragas CLI module."""
 
+import sys
+import zipfile
+
 from typer.testing import CliRunner
 
 from ragas.cli import app
@@ -80,6 +83,65 @@ def test_quickstart_creates_project(tmp_path):
     assert (evals_dir / "datasets").exists(), "evals/datasets/ should exist"
     assert (evals_dir / "experiments").exists(), "evals/experiments/ should exist"
     assert (evals_dir / "logs").exists(), "evals/logs/ should exist"
+
+
+def _force_github_fallback(monkeypatch, tmp_path):
+    """Make both local template lookups miss so quickstart downloads from GitHub."""
+    import ragas.cli
+
+    # `import ragas_examples` raises ImportError when its sys.modules entry is None
+    monkeypatch.setitem(sys.modules, "ragas_examples", None)
+    # the dev-checkout lookup walks up from cli.py's own path
+    fake_cli = tmp_path / "nowhere" / "src" / "ragas" / "cli.py"
+    monkeypatch.setattr(ragas.cli, "__file__", str(fake_cli))
+
+
+def test_quickstart_github_fallback_downloads_from_fork(monkeypatch, tmp_path):
+    """Without local examples, quickstart downloads the template from the fork."""
+    import urllib.request
+
+    _force_github_fallback(monkeypatch, tmp_path)
+    requested = []
+
+    def fake_urlretrieve(url, filename):
+        requested.append(url)
+        # GitHub archives unpack to <repo>-<branch>/
+        with zipfile.ZipFile(filename, "w") as zf:
+            zf.writestr(
+                "ragas-ng-main/examples/ragas_examples/rag_eval/rag.py",
+                "# from the fork",
+            )
+
+    monkeypatch.setattr(urllib.request, "urlretrieve", fake_urlretrieve)
+
+    out = tmp_path / "out"
+    result = CliRunner().invoke(app, ["quickstart", "rag_eval", "-o", str(out)])
+
+    assert result.exit_code == 0, result.stdout
+    assert requested == [
+        "https://github.com/arpieb/ragas-ng/archive/refs/heads/main.zip"
+    ]
+    assert (out / "rag_eval" / "rag.py").read_text() == "# from the fork"
+
+
+def test_quickstart_github_fallback_failure_hints_fork_clone(monkeypatch, tmp_path):
+    """A failed download tells the user how to clone the fork by hand."""
+    import urllib.request
+
+    _force_github_fallback(monkeypatch, tmp_path)
+
+    def failing_urlretrieve(url, filename):
+        raise OSError("network down")
+
+    monkeypatch.setattr(urllib.request, "urlretrieve", failing_urlretrieve)
+
+    result = CliRunner().invoke(
+        app, ["quickstart", "rag_eval", "-o", str(tmp_path / "out")]
+    )
+
+    assert result.exit_code == 1
+    assert "git clone https://github.com/arpieb/ragas-ng.git" in result.stdout
+    assert "cp -r ragas-ng/examples/ragas_examples/rag_eval ./rag_eval" in result.stdout
 
 
 if __name__ == "__main__":
