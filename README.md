@@ -1,120 +1,71 @@
 <h1 align="center">
-  <img style="vertical-align:middle" height="200"
-  src="https://raw.githubusercontent.com/vibrantlabsai/ragas/main/docs/_static/imgs/logo.png">
+  <img style="vertical-align:middle" height="200" src="docs/_static/imgs/logo.png">
 </h1>
 <p align="center">
-  <i>Supercharge Your LLM Application Evaluations 🚀</i>
+  <i>Objective, provider-neutral evaluation for LLM applications</i>
 </p>
 
 <p align="center">
-    <a href="https://github.com/vibrantlabsai/ragas/releases">
-        <img alt="Latest release" src="https://img.shields.io/github/release/vibrantlabsai/ragas.svg">
+    <a href="https://github.com/arpieb/ragas-ng/actions/workflows/ci.yaml">
+        <img alt="CI" src="https://github.com/arpieb/ragas-ng/actions/workflows/ci.yaml/badge.svg">
     </a>
     <a href="https://www.python.org/">
-        <img alt="Made with Python" src="https://img.shields.io/badge/Made%20with-Python-1f425f.svg?color=purple">
+        <img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-1f425f.svg?color=purple">
     </a>
-    <a href="https://github.com/vibrantlabsai/ragas/blob/master/LICENSE">
-        <img alt="License Apache-2.0" src="https://img.shields.io/github/license/vibrantlabsai/ragas.svg?color=green">
-    </a>
-    <a href="https://pypi.org/project/ragas/">
-        <img alt="Ragas Downloads per month" src="https://static.pepy.tech/badge/ragas/month">
-    </a>
-    <a href="https://discord.gg/5djav8GGNZ">
-        <img alt="Join Ragas community on Discord" src="https://img.shields.io/discord/1119637219561451644">
-    </a>
-    <a target="_blank" href="https://deepwiki.com/vibrantlabsai/ragas">
-      <img 
-        src="https://devin.ai/assets/deepwiki-badge.png" 
-        alt="Ask DeepWiki.com" 
-        height="20" 
-      />
+    <a href="./LICENSE">
+        <img alt="License Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-green.svg">
     </a>
 </p>
 
-<h4 align="center">
-    <p>
-        <a href="https://docs.ragas.io/">Documentation</a> |
-        <a href="#fire-quickstart">Quick start</a> |
-        <a href="https://discord.gg/5djav8GGNZ">Join Discord</a> |
-        <a href="https://blog.ragas.io/">Blog</a> |
-        <a href="https://newsletter.ragas.io/">NewsLetter</a> |
-        <a href="https://www.ragas.io/careers">Careers</a>
-    <p>
-</h4>
+## About this fork
 
-**Hard forked from `vibrantlabsai/ragas` after no updates or activity for seven months**
+**ragas-ng is a hard fork of [`vibrantlabsai/ragas`](https://github.com/vibrantlabsai/ragas)**, taken after the upstream repository went seven months without updates. It has two goals:
 
-This repo is planned to remove all frontier lab vendor lockin where humanly+agenticly possible, as well as address open functional issues reported in the original repo.
+1. Remove lock-in to any single frontier-lab vendor or framework wherever possible.
+2. Fix the functional issues reported against the original repository.
 
-<hr />
+Changes so far:
 
-Objective metrics, intelligent test generation, and data-driven insights for LLM apps
+- **No LangChain.** `import ragas` loads no LangChain modules, and nothing LangChain-related is installed as a dependency. The LangChain, LangSmith, LangGraph and Opik integrations are gone. See the [LangChain migration guide](docs/howtos/migrations/migrate_off_langchain.md).
+- **Provider-neutral by default.** `openai` is no longer a declared dependency. `llm_factory()` and `embedding_factory()` work without a client and route through [LiteLLM](https://github.com/BerriAI/litellm), so any provider LiteLLM supports works out of the box.
+- **Native tracing.** The LangChain callback system has been replaced by a native run tree plus the OpenTelemetry API. Spans cost nothing until you configure an OpenTelemetry SDK.
+- **Collections metrics everywhere.** Metrics have been ported to `ragas.metrics.collections`, including the non-LLM context metrics, AspectCritic, SimpleCriteriaScore and FaithfulnesswithHHEM, and `evaluate()` accepts them directly. The legacy metric singletons in `ragas.metrics` still work, but they are deprecated.
+- **Modern toolchain.** Requires Python 3.11+. Uses uv with a committed lockfile, and the docs build in CI with `mkdocs --strict`.
 
-Ragas is your ultimate toolkit for evaluating and optimizing Large Language Model (LLM) applications. Say goodbye to time-consuming, subjective assessments and hello to data-driven, efficient evaluation workflows.
-Don't have a test dataset ready? We also do production-aligned test set generation.
-
-## Key Features
-
-- 🎯 Objective Metrics: Evaluate your LLM applications with precision using both LLM-based and traditional metrics.
-- 🧪 Test Data Generation: Automatically create comprehensive test datasets covering a wide range of scenarios.
-- 🔗 Seamless Integrations: Works flawlessly with popular LLM frameworks like LangChain and major observability tools.
-- 📊 Build feedback loops: Leverage production data to continually improve your LLM applications.
+The Python package and import name are still `ragas`, so existing code keeps importing the same way.
 
 ## :shield: Installation
 
-Pypi:
+This fork is not published to PyPI: `pip install ragas` installs the **upstream** package. Install from GitHub instead:
 
 ```bash
-pip install ragas
+pip install git+https://github.com/arpieb/ragas-ng
+# or
+uv add git+https://github.com/arpieb/ragas-ng
 ```
 
-Alternatively, from source:
+Optional features ship as extras, for example `tracing`, `gdrive`, `oci`, `ag-ui`, `dspy`, or `all`:
 
 ```bash
-pip install git+https://github.com/vibrantlabsai/ragas
+pip install "ragas[all] @ git+https://github.com/arpieb/ragas-ng"
 ```
 
 ## :fire: Quickstart
 
-### Clone a Complete Example Project
+### Evaluate your LLM app
 
-The fastest way to get started is to use the `ragas quickstart` command:
-
-```bash
-# List available templates
-ragas quickstart
-
-# Create a RAG evaluation project
-ragas quickstart rag_eval
-
-# Specify where you want to create it.
-ragas quickstart rag_eval -o ./my-project
-```
-
-Available templates:
-- `rag_eval` - Evaluate RAG systems
-
-Coming Soon:
-- `agent_evals` - Evaluate AI agents
-- `benchmark_llm` - Benchmark and compare LLMs
-- `prompt_evals` - Evaluate prompt variations
-- `workflow_eval` - Evaluate complex workflows
-
-### Evaluate your LLM App
-
-`ragas` comes with pre-built metrics for common evaluation tasks. For example, Aspect Critique evaluates any aspect of your output using `DiscreteMetric`:
+`DiscreteMetric` lets you judge any aspect of an output with an LLM. This example needs no vendor SDK: `llm_factory` routes through LiteLLM and reads credentials from the environment.
 
 ```python
 import asyncio
-from openai import AsyncOpenAI
-from ragas.metrics import DiscreteMetric
+
 from ragas.llms import llm_factory
+from ragas.metrics import DiscreteMetric
 
-# Setup your LLM
-client = AsyncOpenAI()
-llm = llm_factory("gpt-4o", client=client)
+# Any LiteLLM model string works: "gpt-4o-mini", "anthropic/claude-sonnet-4-5",
+# "gemini/gemini-2.0-flash", "ollama/llama3.1", ...
+llm = llm_factory("gpt-4o-mini")
 
-# Create a custom aspect evaluator
 metric = DiscreteMetric(
     name="summary_accuracy",
     allowed_values=["accurate", "inaccurate"],
@@ -122,15 +73,12 @@ metric = DiscreteMetric(
 
 Response: {response}
 
-Answer with only 'accurate' or 'inaccurate'."""
+Answer with only 'accurate' or 'inaccurate'.""",
 )
 
-# Score your application's output
+
 async def main():
-    score = await metric.ascore(
-        llm=llm,
-        response="The summary of the text is..."
-    )
+    score = await metric.ascore(llm=llm, response="The summary of the text is...")
     print(f"Score: {score.value}")  # 'accurate' or 'inaccurate'
     print(f"Reason: {score.reason}")
 
@@ -139,56 +87,52 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-> **Note**: Make sure your `OPENAI_API_KEY` environment variable is set.
+> **Note**: Set the API key your provider needs, such as `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`. You can still pass an explicit client, such as `llm_factory("gpt-4o", client=AsyncOpenAI())`, if you prefer.
 
-Find the complete [Quickstart Guide](https://docs.ragas.io/en/latest/getstarted/quickstart)
+### Start from a template project
 
-## Want help in improving your AI application using evals?
+`ragas quickstart` copies a complete example project:
 
-In the past 2 years, we have seen and helped improve many AI applications using evals. If you want help with improving and scaling up your AI application using evals.
-
-🔗 Book a [slot](https://cal.com/team/vibrantlabs/app) or drop us a line: [founders@vibrantlabs.com](mailto:founders@vibrantlabs.com).
-
-## 🫂 Community
-
-If you want to get more involved with Ragas, check out our [discord server](https://discord.gg/5qGUJ6mh7C). It's a fun community where we geek out about LLM, Retrieval, Production issues, and more.
-
-## Contributors
-
-```yml
-+----------------------------------------------------------------------------+
-|     +----------------------------------------------------------------+     |
-|     | Developers: Those who built with `ragas`.                      |     |
-|     | (You have `import ragas` somewhere in your project)            |     |
-|     |     +----------------------------------------------------+     |     |
-|     |     | Contributors: Those who make `ragas` better.       |     |     |
-|     |     | (You make PR to this repo)                         |     |     |
-|     |     +----------------------------------------------------+     |     |
-|     +----------------------------------------------------------------+     |
-+----------------------------------------------------------------------------+
+```bash
+ragas quickstart                          # list available templates
+ragas quickstart rag_eval -o ./my-project # create a project
 ```
 
-We welcome contributions from the community! Whether it's bug fixes, feature additions, or documentation improvements, your input is valuable.
+Templates: `rag_eval`, `improve_rag`, `agent_evals`, `llamaIndex_agent_evals`, `text2sql`, `workflow_eval`, `prompt_evals`, `judge_alignment`, `benchmark_llm`. The template sources live in [`examples/ragas_examples`](examples/ragas_examples).
 
-1. Fork the repository
-2. Create your feature branch (git checkout -b feature/AmazingFeature)
-3. Commit your changes (git commit -m 'Add some AmazingFeature')
-4. Push to the branch (git push origin feature/AmazingFeature)
-5. Open a Pull Request
+## Documentation
 
-## 🔍 Open Analytics
+The documentation lives in [`docs/`](docs/) and is kept current with this fork. To build and browse it locally:
 
-At Ragas, we believe in transparency. We collect minimal, anonymized usage data to improve our product and guide our development efforts.
+```bash
+make serve-docs
+```
 
-✅ No personal or company-identifying information
+Upstream's hosted docs at docs.ragas.io describe the original project and will not match this fork on LangChain, provider setup or the metrics APIs.
 
-✅ Open-source data collection [code](./src/ragas/_analytics.py)
+## Development
 
-✅ Publicly available aggregated [data](https://github.com/vibrantlabsai/ragas/issues/49)
+```bash
+git clone https://github.com/arpieb/ragas-ng.git
+cd ragas-ng
+make install-minimal   # lint, type-check and the full unit test suite (what CI installs)
+make check             # format + type check
+make test              # unit tests
+```
 
-To opt-out, set the `RAGAS_DO_NOT_TRACK` environment variable to `true`.
+Run `make install` for the full ML stack, which the e2e tests need. Some e2e and docs tests also call real providers and need an API key, such as `OPENAI_API_KEY`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development guide.
 
-### Cite Us
+Contributions are welcome. Fork the repo, create a feature branch, and open a pull request against `main`.
+
+## 🔍 Usage analytics
+
+The analytics code inherited from upstream is still present. It sends minimal, anonymized usage events to the **upstream project's** endpoint, not to this fork. The code is in [`src/ragas/_analytics.py`](./src/ragas/_analytics.py).
+
+To opt out, set `RAGAS_DO_NOT_TRACK=true`.
+
+## Acknowledgements and citation
+
+ragas-ng is built on the work of the original Ragas authors and contributors at VibrantLabs, and is distributed under the same [Apache-2.0 license](./LICENSE). If you use Ragas in research, please cite the original project:
 
 ```
 @misc{ragas2024,
