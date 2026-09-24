@@ -23,7 +23,7 @@ export OPENAI_API_KEY="your-api-key-here"
 ```
 
 !!! note "Full code"
-    You can view the full code for the judge alignment evaluation pipeline [here](https://github.com/vibrantlabsai/ragas/tree/main/examples/ragas_examples/judge_alignment).
+    You can view the full code for the judge alignment evaluation pipeline [here](https://github.com/arpieb/ragas-ng/tree/main/examples/ragas_examples/judge_alignment).
 
 ## Understand the dataset
 
