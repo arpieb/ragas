@@ -141,7 +141,7 @@ Here are a few sample rows from the dataset:
 | What is the purpose of the BLIP-Diffusion model? | The BLIP-Diffusion model is designed for controllable text-to-image generation and editing. |
 | What is the purpose of the /healthcheck endpoint in the Datasets server API? | Ensure the app is running |
 
-The evaluation script downloads the dataset from [here](https://raw.githubusercontent.com/vibrantlabsai/ragas/main/examples/ragas_examples/improve_rag/datasets/hf_doc_qa_eval.csv) and converts it into Ragas Dataset format:
+The evaluation script downloads the dataset from [here](https://raw.githubusercontent.com/arpieb/ragas-ng/main/examples/ragas_examples/improve_rag/evals/datasets/hf_doc_qa_eval.csv) and converts it into Ragas Dataset format:
 
 ```python
 # examples/ragas_examples/improve_rag/evals.py
@@ -152,18 +152,18 @@ import pandas as pd
 
 
 def download_and_save_dataset() -> Path:
-    dataset_path = Path("datasets/hf_doc_qa_eval.csv")
-    dataset_path.parent.mkdir(exist_ok=True)
+    dataset_path = Path("evals/datasets/hf_doc_qa_eval.csv")
+    dataset_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not dataset_path.exists():
-        github_url = "https://raw.githubusercontent.com/vibrantlabsai/ragas/main/examples/ragas_examples/improve_rag/datasets/hf_doc_qa_eval.csv"
+        github_url = "https://raw.githubusercontent.com/arpieb/ragas-ng/main/examples/ragas_examples/improve_rag/evals/datasets/hf_doc_qa_eval.csv"
         urllib.request.urlretrieve(github_url, dataset_path)
 
     return dataset_path
 
 
 def create_ragas_dataset(dataset_path: Path) -> Dataset:
-    dataset = Dataset(name="hf_doc_qa_eval", backend="local/csv", root_dir=".")
+    dataset = Dataset(name="hf_doc_qa_eval", backend="local/csv", root_dir="evals")
     df = pd.read_csv(dataset_path)
 
     for _, row in df.iterrows():
