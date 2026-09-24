@@ -3,22 +3,20 @@ from __future__ import annotations
 import logging
 import random
 import typing as t
+import warnings
 from dataclasses import dataclass, field
-
-from langchain_core.callbacks import BaseCallbackManager
-from langchain_core.documents import Document as LCDocument
 
 from ragas._analytics import TestsetGenerationEvent, track
 from ragas.callbacks import new_group
 from ragas.cost import TokenUsageParser
 from ragas.embeddings.base import (
     BaseRagasEmbeddings,
-    LangchainEmbeddingsWrapper,
     LlamaIndexEmbeddingsWrapper,
 )
 from ragas.executor import Executor
-from ragas.llms import BaseRagasLLM, LangchainLLMWrapper, LlamaIndexLLMWrapper
+from ragas.llms import BaseRagasLLM, LlamaIndexLLMWrapper
 from ragas.run_config import RunConfig
+from ragas.testset.document import Document, DocumentLike
 from ragas.testset.graph import KnowledgeGraph, Node, NodeType
 from ragas.testset.persona import Persona, generate_personas_from_kg
 from ragas.testset.synthesizers import default_query_distribution
@@ -32,15 +30,13 @@ from ragas.testset.transforms import (
 )
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
-    from langchain_core.embeddings import Embeddings as LangchainEmbeddings
-    from langchain_core.language_models import BaseLanguageModel as LangchainLLM
     from llama_index.core.base.embeddings.base import (
         BaseEmbedding as LlamaIndexEmbedding,
     )
     from llama_index.core.base.llms.base import BaseLLM as LlamaIndexLLM
     from llama_index.core.schema import Document as LlamaIndexDocument
 
+    from ragas.callbacks import Callbacks
     from ragas.embeddings.base import BaseRagasEmbeddings
     from ragas.llms.base import BaseRagasLLM
     from ragas.testset.synthesizers import QueryDistribution
@@ -74,25 +70,6 @@ class TestsetGenerator:
     llm_context: t.Optional[str] = None
 
     @classmethod
-    def from_langchain(
-        cls,
-        llm: LangchainLLM,
-        embedding_model: LangchainEmbeddings,
-        knowledge_graph: t.Optional[KnowledgeGraph] = None,
-        llm_context: t.Optional[str] = None,
-    ) -> TestsetGenerator:
-        """
-        Creates a `TestsetGenerator` from a Langchain LLMs.
-        """
-        knowledge_graph = knowledge_graph or KnowledgeGraph()
-        return cls(
-            LangchainLLMWrapper(llm),
-            LangchainEmbeddingsWrapper(embedding_model),
-            knowledge_graph,
-            llm_context=llm_context,
-        )
-
-    @classmethod
     def from_llama_index(
         cls,
         llm: LlamaIndexLLM,
@@ -111,9 +88,9 @@ class TestsetGenerator:
             llm_context=llm_context,
         )
 
-    def generate_with_langchain_docs(
+    def generate_with_docs(
         self,
-        documents: t.Sequence[LCDocument],
+        documents: t.Sequence[DocumentLike],
         testset_size: int,
         transforms: t.Optional[Transforms] = None,
         transforms_llm: t.Optional[BaseRagasLLM] = None,
@@ -131,7 +108,7 @@ class TestsetGenerator:
 
         Parameters
         ----------
-        documents : Sequence[LCDocument]
+        documents : Sequence[DocumentLike]
             A sequence of Langchain documents to use as source material
         testset_size : int
             The number of test samples to generate
@@ -219,6 +196,23 @@ class TestsetGenerator:
             return_executor=return_executor,
         )
 
+    def generate_with_langchain_docs(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
+        """Deprecated alias for :meth:`generate_with_docs`.
+
+        The method no longer has anything to do with LangChain -- it accepts any
+        object exposing ``page_content`` and ``metadata``, which LangChain
+        ``Document`` objects still satisfy.
+        """
+        warnings.warn(
+            "generate_with_langchain_docs() is deprecated and will be removed in a "
+            "future version. Use generate_with_docs(), which accepts any object "
+            "with `page_content` and `metadata` attributes -- including LangChain "
+            "Document objects.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.generate_with_docs(*args, **kwargs)
+
     def generate_with_llamaindex_docs(
         self,
         documents: t.Sequence[LlamaIndexDocument],
@@ -264,7 +258,7 @@ class TestsetGenerator:
 
             # create the transforms
             transforms = default_transforms(
-                documents=[LCDocument(page_content=doc.text) for doc in documents],
+                documents=[Document(page_content=doc.text) for doc in documents],
                 llm=llm_for_transforms,
                 embedding_model=embedding_model_for_transforms,
             )
@@ -301,7 +295,7 @@ class TestsetGenerator:
 
     def generate_with_chunks(
         self,
-        chunks: t.Sequence[t.Union[LCDocument, str]],
+        chunks: t.Sequence[t.Union[DocumentLike, str]],
         testset_size: int,
         transforms: t.Optional[Transforms] = None,
         transforms_llm: t.Optional[BaseRagasLLM] = None,
@@ -323,7 +317,7 @@ class TestsetGenerator:
 
         Parameters
         ----------
-        chunks : Sequence[Union[LCDocument, str]]
+        chunks : Sequence[Union[DocumentLike, str]]
             A sequence of Langchain documents or strings to use as chunks.
             Strings will be automatically converted to Documents.
         testset_size : int
@@ -482,21 +476,25 @@ class TestsetGenerator:
 
         # dict to store any callbacks we define
         ragas_callbacks = {}
-        # set the token usage parser
+        # Token accounting. Not a callback handler any more -- it attaches to the
+        # generator's LLM and records the provider's raw completion directly.
+        cost_cb = None
         if token_usage_parser is not None:
-            from ragas.cost import CostCallbackHandler
+            from ragas.cost import TokenUsageCollector
 
-            cost_cb = CostCallbackHandler(token_usage_parser=token_usage_parser)
-            ragas_callbacks["cost_cb"] = cost_cb
-        else:
-            cost_cb = None
+            cost_cb = TokenUsageCollector(token_usage_parser=token_usage_parser)
+            # setattr rather than direct assignment: usage_collector lives on
+            # InstructorLLM, not the BaseRagasLLM ABC, and the hasattr guard does
+            # not narrow the declared type for assignment.
+            if self.llm is not None and hasattr(self.llm, "usage_collector"):
+                setattr(self.llm, "usage_collector", cost_cb)
 
-        # append all the ragas_callbacks to the callbacks
+        # `callbacks` may be a CallbackGroup or a plain list of handlers
         for cb in ragas_callbacks.values():
-            if isinstance(callbacks, BaseCallbackManager):
-                callbacks.add_handler(cb)
+            if hasattr(callbacks, "add_handler"):
+                callbacks.add_handler(cb)  # type: ignore[union-attr]
             else:
-                callbacks.append(cb)
+                callbacks.append(cb)  # type: ignore[union-attr]
 
         # new group for Testset Generation
         testset_generation_rm, testset_generation_grp = new_group(

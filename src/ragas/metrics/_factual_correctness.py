@@ -20,8 +20,7 @@ from ragas.metrics.utils import fbeta_score
 from ragas.prompt import PydanticPrompt
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
-
+    from ragas.callbacks import Callbacks
     from ragas.dataset_schema import SingleTurnSample
 
 T = t.TypeVar("T")

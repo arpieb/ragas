@@ -205,6 +205,7 @@ Replace HuggingFace docs with your own documents:
 class CustomRetriever:
     def __init__(self, documents: list[str]):
         from langchain_community.retrievers import BM25Retriever
+
         self.retriever = BM25Retriever.from_texts(documents)
 
     def retrieve(self, query: str, top_k: int = 3):
@@ -222,6 +223,7 @@ rag = RAG(llm_client=client, retriever=retriever, model="gpt-4o")
 
 # Or use a different provider
 from anthropic import Anthropic
+
 client = Anthropic()
 # Note: Would need to modify rag.py for non-OpenAI clients
 ```
@@ -266,7 +268,7 @@ def _setup_agent(self):
     self._agent = Agent(
         name="Custom RAG Assistant",
         instructions="Your custom instructions...",
-        tools=[retrieve]
+        tools=[retrieve],
     )
 ```
 
@@ -320,5 +322,5 @@ The first run downloads the HuggingFace documentation dataset (~300MB). Subseque
 ## Next Steps
 
 - [RAG Evaluation Guide](rag_eval.md) - Simpler evaluation setup
-- [Custom Metrics](../customizations/metrics/_write_your_own_metric.md) - Write your own metrics
+- Custom Metrics - Write your own metrics
 - [Evaluate and Improve RAG](../applications/evaluate-and-improve-rag.md) - Production RAG evaluation

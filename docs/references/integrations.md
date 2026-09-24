@@ -1,15 +1,4 @@
-::: ragas.integrations.langchain
-    options:
-        show_root_heading: true
-::: ragas.integrations.langsmith
-    options:
-        show_root_heading: true
-
 ::: ragas.integrations.llama_index
-    options:
-        show_root_heading: true
-
-::: ragas.integrations.opik
     options:
         show_root_heading: true
 
@@ -17,6 +6,10 @@
     options:
         show_root_heading: true
 
-::: ragas.integrations.langgraph
+::: ragas.integrations.amazon_bedrock
+    options:
+        show_root_heading: true
+
+::: ragas.integrations.swarm
     options:
         show_root_heading: true

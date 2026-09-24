@@ -6,11 +6,11 @@ import typing as t
 
 import numpy as np
 import pytest
-from langchain_core.outputs import Generation, LLMResult
-from langchain_core.prompt_values import StringPromptValue as PromptValue
 
 from ragas._analytics import EvaluationEvent
 from ragas.llms.base import BaseRagasLLM
+from ragas.llms.output import Generation, LLMResult
+from ragas.prompt.value import StringPromptValue as PromptValue
 
 
 class EchoLLM(BaseRagasLLM):

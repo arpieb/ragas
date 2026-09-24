@@ -20,7 +20,7 @@ from ragas.prompt import PydanticPrompt
 logger = logging.getLogger(__name__)
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
+    from ragas.callbacks import Callbacks
 
 
 class ResponseRelevanceOutput(BaseModel):

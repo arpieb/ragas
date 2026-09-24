@@ -71,9 +71,17 @@ class RagasDSPyLM:
         str
             Generated completion.
         """
-        from ragas.llms.prompt import PromptValue
+        from ragas.prompt.value import ChatPromptValue, Message, coerce_role
 
-        prompt_value = PromptValue(prompt_str="", messages=messages)
+        prompt_value = ChatPromptValue(
+            messages=[
+                Message(
+                    role=coerce_role(m.get("role", "user")),
+                    content=m.get("content", ""),
+                )
+                for m in messages
+            ]
+        )
 
         result = await self.ragas_llm.generate(prompt_value)
 

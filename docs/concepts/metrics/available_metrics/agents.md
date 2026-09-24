@@ -127,10 +127,10 @@ The legacy API can still be used but requires `MultiTurnSample`:
 from ragas.dataset_schema import MultiTurnSample
 from ragas.messages import HumanMessage, AIMessage, ToolMessage, ToolCall
 from ragas.metrics import TopicAdherenceScore  # Legacy import
-from ragas.llms import LangchainLLMWrapper
-from langchain_openai import ChatOpenAI
+from ragas.llms import llm_factory
+from openai import OpenAI
 
-evaluator_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o"))
+evaluator_llm = llm_factory("gpt-4o", client=OpenAI())
 
 sample = MultiTurnSample(
     user_input=[...],  # conversation messages
@@ -173,6 +173,7 @@ import asyncio
 from ragas.metrics.collections import ToolCallAccuracy
 from ragas.messages import AIMessage, HumanMessage, ToolCall
 
+
 async def evaluate_tool_call_accuracy():
     # Define the conversation with tool calls
     user_input = [
@@ -205,6 +206,7 @@ async def evaluate_tool_call_accuracy():
         reference_tool_calls=reference_tool_calls,
     )
     print(f"Tool Call Accuracy: {result.value}")
+
 
 if __name__ == "__main__":
     asyncio.run(evaluate_tool_call_accuracy())
@@ -251,7 +253,7 @@ print(f"Score: {result.value}")  # 1.0 (order doesn't matter)
 ```python
 # All tools called correctly with correct arguments
 Expected: [weather_check(location="Paris"), translate(text="hello")]
-Got:      [weather_check(location="Paris"), translate(text="hello")]
+Got: [weather_check(location="Paris"), translate(text="hello")]
 Score: 1.0
 ```
 
@@ -365,6 +367,7 @@ import asyncio
 from ragas.metrics.collections import ToolCallF1
 from ragas.messages import HumanMessage, AIMessage, ToolCall
 
+
 async def evaluate_tool_call_f1():
     # Define the conversation with tool calls
     user_input = [
@@ -393,6 +396,7 @@ async def evaluate_tool_call_f1():
         reference_tool_calls=reference_tool_calls,
     )
     print(f"Tool Call F1: {result.value}")
+
 
 if __name__ == "__main__":
     asyncio.run(evaluate_tool_call_f1())
@@ -538,9 +542,7 @@ async def evaluate_agent_goal_accuracy_with_reference():
                 )
             ],
         ),
-        ToolMessage(
-            content="Found a few options: 1. Golden Dragon, 2. Jade Palace"
-        ),
+        ToolMessage(content="Found a few options: 1. Golden Dragon, 2. Jade Palace"),
         AIMessage(
             content="I found some great options: Golden Dragon and Jade Palace. Which one would you prefer?"
         ),
@@ -607,9 +609,7 @@ async def evaluate_agent_goal_accuracy_without_reference():
                 )
             ],
         ),
-        ToolMessage(
-            content="Found a few options: 1. Golden Dragon, 2. Jade Palace"
-        ),
+        ToolMessage(content="Found a few options: 1. Golden Dragon, 2. Jade Palace"),
         AIMessage(
             content="I found some great options: Golden Dragon and Jade Palace. Which one would you prefer?"
         ),
@@ -654,10 +654,10 @@ The legacy API can still be used but requires `MultiTurnSample`:
 from ragas.dataset_schema import MultiTurnSample
 from ragas.messages import AIMessage, HumanMessage, ToolCall, ToolMessage
 from ragas.metrics import AgentGoalAccuracyWithReference  # Legacy import
-from ragas.llms import LangchainLLMWrapper
-from langchain_openai import ChatOpenAI
+from ragas.llms import llm_factory
+from openai import OpenAI
 
-evaluator_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o"))
+evaluator_llm = llm_factory("gpt-4o", client=OpenAI())
 
 sample = MultiTurnSample(
     user_input=[...],  # conversation messages

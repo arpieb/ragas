@@ -4,15 +4,16 @@ The purpose of this guide is to illustrate a simple workflow for testing and eva
 
 ## Basic Setup
 
-We will use `langchain_openai` to set the LLM and embedding model for building our simple RAG. You may choose any other LLM and embedding model of your choice, to do that please refer to [customizing models in langchain](https://python.langchain.com/docs/integrations/chat/).
+We will use the OpenAI SDK to set the LLM and embedding model for building our simple RAG. You may choose any other provider -- see [choosing an evaluator LLM](../extra/components/choose_evaluator_llm.md).
 
 
 ```python
-from langchain_openai import ChatOpenAI
+from openai import OpenAI
 from ragas.embeddings import OpenAIEmbeddings
 import openai
 
-llm = ChatOpenAI(model="gpt-4o")
+openai_client = OpenAI()
+llm = openai_client
 openai_client = openai.OpenAI()
 embeddings = OpenAIEmbeddings(client=openai_client)
 ```
@@ -31,13 +32,14 @@ To build a simple RAG system, we need to define the following components:
 ??? note "Click to View the Code"
 
     ```python
-
     import numpy as np
+
 
     class RAG:
         def __init__(self, model="gpt-4o"):
             import openai
-            self.llm = ChatOpenAI(model=model)
+
+            self.llm = openai_client
             openai_client = openai.OpenAI()
             self.embeddings = OpenAIEmbeddings(client=openai_client)
             self.doc_embeddings = None
@@ -52,7 +54,7 @@ To build a simple RAG system, we need to define the following components:
             """Find the most relevant document for a given query."""
             if not self.docs or not self.doc_embeddings:
                 raise ValueError("Documents and their embeddings are not loaded.")
-            
+
             query_embedding = self.embeddings.embed_text(query)
             similarities = [
                 np.dot(query_embedding, doc_emb)
@@ -66,7 +68,10 @@ To build a simple RAG system, we need to define the following components:
             """Generate an answer for a given query based on the most relevant document."""
             prompt = f"question: {query}\n\nDocuments: {relevant_doc}"
             messages = [
-                ("system", "You are a helpful assistant that answers questions based on given documents only."),
+                (
+                    "system",
+                    "You are a helpful assistant that answers questions based on given documents only.",
+                ),
                 ("human", prompt),
             ]
             ai_msg = self.llm.invoke(messages)
@@ -82,7 +87,7 @@ sample_docs = [
     "Marie Curie was a physicist and chemist who conducted pioneering research on radioactivity and won two Nobel Prizes.",
     "Isaac Newton formulated the laws of motion and universal gravitation, laying the foundation for classical mechanics.",
     "Charles Darwin introduced the theory of evolution by natural selection in his book 'On the Origin of Species'.",
-    "Ada Lovelace is regarded as the first computer programmer for her work on Charles Babbage's early mechanical computer, the Analytical Engine."
+    "Ada Lovelace is regarded as the first computer programmer for her work on Charles Babbage's early mechanical computer, the Analytical Engine.",
 ]
 ```
 
@@ -120,14 +125,12 @@ To collect evaluation data, we first need a set of queries to run against our RA
 
 
 ```python
-
-
 sample_queries = [
     "Who introduced the theory of relativity?",
     "Who was the first computer programmer?",
     "What did Isaac Newton contribute to science?",
     "Who won two Nobel Prizes for research on radioactivity?",
-    "What is the theory of evolution by natural selection?"
+    "What is the theory of evolution by natural selection?",
 ]
 
 expected_responses = [
@@ -135,23 +138,22 @@ expected_responses = [
     "Ada Lovelace is regarded as the first computer programmer for her work on Charles Babbage's early mechanical computer, the Analytical Engine.",
     "Isaac Newton formulated the laws of motion and universal gravitation, laying the foundation for classical mechanics.",
     "Marie Curie was a physicist and chemist who conducted pioneering research on radioactivity and won two Nobel Prizes.",
-    "Charles Darwin introduced the theory of evolution by natural selection in his book 'On the Origin of Species'."
+    "Charles Darwin introduced the theory of evolution by natural selection in his book 'On the Origin of Species'.",
 ]
 ```
 
 ```python
 dataset = []
 
-for query,reference in zip(sample_queries,expected_responses):
-    
+for query, reference in zip(sample_queries, expected_responses):
     relevant_docs = rag.get_most_relevant_docs(query)
     response = rag.generate_answer(query, relevant_docs)
     dataset.append(
         {
-            "user_input":query,
-            "retrieved_contexts":relevant_docs,
-            "response":response,
-            "reference":reference
+            "user_input": query,
+            "retrieved_contexts": relevant_docs,
+            "response": response,
+            "reference": reference,
         }
     )
 ```
@@ -160,6 +162,7 @@ Now, load the dataset into `EvaluationDataset` object.
 
 ```python
 from ragas import EvaluationDataset
+
 evaluation_dataset = EvaluationDataset.from_list(dataset)
 ```
 
@@ -169,13 +172,17 @@ We have successfully collected the evaluation data. Now, we can evaluate our RAG
 
 ```python
 from ragas import evaluate
-from ragas.llms import LangchainLLMWrapper
+from ragas.llms import llm_factory
 
 
-evaluator_llm = LangchainLLMWrapper(llm)
+evaluator_llm = llm_factory("gpt-4o", client=openai_client)
 from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness
 
-result = evaluate(dataset=evaluation_dataset,metrics=[LLMContextRecall(), Faithfulness(), FactualCorrectness()],llm=evaluator_llm)
+result = evaluate(
+    dataset=evaluation_dataset,
+    metrics=[LLMContextRecall(), Faithfulness(), FactualCorrectness()],
+    llm=evaluator_llm,
+)
 result
 ```
 

@@ -19,8 +19,25 @@ git clone https://github.com/vibrantlabsai/ragas.git
 pip install -e .
 ```
 
-!!! note on "LangChain OpenAI dependency versions"
-    If you use `langchain_openai` (e.g., `ChatOpenAI`), install `langchain-core` and `langchain-openai` explicitly to avoid version mismatches. You can adjust bounds to match your environment, but installing both explicitly helps prevent strict dependency conflicts.
-    ```bash
-    pip install -U "langchain-core>=0.2,<0.3" "langchain-openai>=0.1,<0.2" openai
+!!! note "Choosing a provider"
+    ragas reaches providers through **LiteLLM**, which is installed with it — so
+    100+ providers, including Bedrock, Ollama and vLLM, work out of the box with
+    credentials read from the environment:
+
+    ```python
+    from ragas.llms import llm_factory
+
+    evaluator_llm = llm_factory("ollama/llama3")
     ```
+
+    ragas ships no vendor SDK of its own. To hand `llm_factory` a provider client
+    directly instead, install that SDK yourself:
+
+    ```bash
+    pip install openai        # OpenAI / Azure OpenAI
+    pip install anthropic     # Anthropic
+    pip install google-genai  # Google
+    ```
+
+    ragas no longer depends on LangChain. If you are coming from a version that
+    did, see the [migration guide](../howtos/migrations/migrate_off_langchain.md).

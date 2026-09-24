@@ -8,7 +8,7 @@ from ragas.messages import AIMessage
 from ragas.metrics.base import MetricType, MultiTurnMetric
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks.base import Callbacks
+    from ragas.callbacks import Callbacks
 
 
 def _make_hashable(obj: t.Any) -> t.Any:

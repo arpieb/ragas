@@ -23,7 +23,7 @@ class ToolCall(BaseModel):
     """
     Represents a tool call with a name and arguments.
 
-    Parameters
+    Attributes
     ----------
     name : str
         The name of the tool being called.

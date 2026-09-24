@@ -9,48 +9,25 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 import instructor
-from langchain_community.chat_models.vertexai import ChatVertexAI
-from langchain_community.llms import VertexAI
-from langchain_core.language_models import BaseLanguageModel
-from langchain_core.outputs import ChatGeneration, Generation, LLMResult
-from langchain_openai.chat_models import AzureChatOpenAI, ChatOpenAI
-from langchain_openai.llms import AzureOpenAI, OpenAI
-from langchain_openai.llms.base import BaseOpenAI
 from pydantic import BaseModel
 
 from ragas._analytics import LLMUsageEvent, track
 from ragas.cache import CacheInterface, cacher
 from ragas.exceptions import LLMDidNotFinishException
+from ragas.llms.output import Generation, LLMResult
 from ragas.run_config import RunConfig, add_async_retry
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
-    from langchain_core.messages import BaseMessage
-    from langchain_core.prompt_values import PromptValue
     from llama_index.core.base.llms.base import BaseLLM
+
+    from ragas.callbacks import Callbacks
+    from ragas.prompt.value import PromptValue
 
 
 logger = logging.getLogger(__name__)
 
 # TypeVar for Instructor LLM response models
 InstructorTypeVar = t.TypeVar("T", bound=BaseModel)  # type: ignore
-
-MULTIPLE_COMPLETION_SUPPORTED = [
-    OpenAI,
-    ChatOpenAI,
-    AzureOpenAI,
-    AzureChatOpenAI,
-    ChatVertexAI,
-    VertexAI,
-]
-
-
-def is_multiple_completion_supported(llm: BaseLanguageModel) -> bool:
-    """Return whether the given LLM supports n-completion."""
-    for llm_type in MULTIPLE_COMPLETION_SUPPORTED:
-        if isinstance(llm, llm_type):
-            return True
-    return False
 
 
 @dataclass
@@ -125,228 +102,6 @@ class BaseRagasLLM(ABC):
         if not self.is_finished(result):
             raise LLMDidNotFinishException()
         return result
-
-
-class LangchainLLMWrapper(BaseRagasLLM):
-    """
-    A simple base class for RagasLLMs that is based on Langchain's BaseLanguageModel
-    interface. it implements 2 functions:
-    - generate_text: for generating text from a given PromptValue
-    - agenerate_text: for generating text from a given PromptValue asynchronously
-
-    # TODO: Revisit deprecation warning
-    # .. deprecated::
-    #     LangchainLLMWrapper is deprecated and will be removed in a future version.
-    #     Use llm_factory instead:
-    #     from openai import OpenAI
-    #     from ragas.llms import llm_factory
-    #     client = OpenAI(api_key="...")
-    #     llm = llm_factory("gpt-4o-mini", client=client)
-    """
-
-    def __init__(
-        self,
-        langchain_llm: BaseLanguageModel,
-        run_config: t.Optional[RunConfig] = None,
-        is_finished_parser: t.Optional[t.Callable[[LLMResult], bool]] = None,
-        cache: t.Optional[CacheInterface] = None,
-        bypass_temperature: bool = False,
-        bypass_n: bool = False,
-    ):
-        import warnings
-
-        warnings.warn(
-            "LangchainLLMWrapper is deprecated and will be removed in a future version. "
-            "Use llm_factory instead: "
-            "from openai import OpenAI; from ragas.llms import llm_factory; "
-            "client = OpenAI(api_key='...'); llm = llm_factory('gpt-4o-mini', client=client)",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        super().__init__(cache=cache)
-        self.langchain_llm = langchain_llm
-        if run_config is None:
-            run_config = RunConfig()
-        self.set_run_config(run_config)
-        self.is_finished_parser = is_finished_parser
-        # Certain LLMs (e.g., OpenAI o1 series) do not support temperature
-        self.bypass_temperature = bypass_temperature
-        # Certain reasoning LLMs (e.g., OpenAI o1 series) do not support n parameter for
-        self.bypass_n = bypass_n
-
-    def is_finished(self, response: LLMResult) -> bool:
-        """
-        Parse the response to check if the LLM finished by checking the finish_reason
-        or stop_reason. Supports OpenAI and Vertex AI models.
-        """
-        if self.is_finished_parser is not None:
-            return self.is_finished_parser(response)
-        # if no parser is provided default to our own
-
-        is_finished_list = []
-        for g in response.flatten():
-            resp = g.generations[0][0]
-            if resp.generation_info is not None:
-                # generation_info is provided - so we parse that
-                finish_reason = resp.generation_info.get("finish_reason")
-                if finish_reason is not None:
-                    # OpenAI uses "stop"
-                    # Vertex AI uses "STOP" or "MAX_TOKENS"
-                    # WatsonX AI uses "eos_token"
-                    is_finished_list.append(
-                        finish_reason in ["stop", "STOP", "MAX_TOKENS", "eos_token"]
-                    )
-
-                # provied more conditions here
-                # https://github.com/vibrantlabsai/ragas/issues/1548
-
-            # if generation_info is empty, we parse the response_metadata
-            # this is less reliable
-
-            elif (
-                isinstance(resp, ChatGeneration)
-                and t.cast(ChatGeneration, resp).message is not None
-            ):
-                resp_message: BaseMessage = t.cast(ChatGeneration, resp).message
-                if resp_message.response_metadata.get("finish_reason") is not None:
-                    finish_reason = resp_message.response_metadata.get("finish_reason")
-                    is_finished_list.append(
-                        finish_reason in ["stop", "STOP", "MAX_TOKENS", "eos_token"]
-                    )
-                elif resp_message.response_metadata.get("stop_reason") is not None:
-                    stop_reason = resp_message.response_metadata.get("stop_reason")
-                    is_finished_list.append(
-                        stop_reason
-                        in ["end_turn", "stop", "STOP", "MAX_TOKENS", "eos_token"]
-                    )
-            # default to True
-            else:
-                is_finished_list.append(True)
-        return all(is_finished_list)
-
-    def generate_text(
-        self,
-        prompt: PromptValue,
-        n: int = 1,
-        temperature: t.Optional[float] = 0.01,
-        stop: t.Optional[t.List[str]] = None,
-        callbacks: Callbacks = None,
-    ) -> LLMResult:
-        # figure out the temperature to set
-        old_temperature: float | None = None
-        if temperature is None:
-            temperature = self.get_temperature(n=n)
-        if hasattr(self.langchain_llm, "temperature"):
-            old_temperature = self.langchain_llm.temperature  # type: ignore
-            self.langchain_llm.temperature = temperature  # type: ignore
-
-        if is_multiple_completion_supported(self.langchain_llm) and not self.bypass_n:
-            result = self.langchain_llm.generate_prompt(
-                prompts=[prompt],
-                n=n,
-                stop=stop,
-                callbacks=callbacks,
-            )
-        else:
-            result = self.langchain_llm.generate_prompt(
-                prompts=[prompt] * n,
-                stop=stop,
-                callbacks=callbacks,
-            )
-            # make LLMResult.generation appear as if it was n_completions
-            # note that LLMResult.runs is still a list that represents each run
-            generations = [[g[0] for g in result.generations]]
-            result.generations = generations
-
-        # reset the temperature to the original value
-        if old_temperature is not None:
-            self.langchain_llm.temperature = old_temperature  # type: ignore
-
-        # Track the usage
-        track(
-            LLMUsageEvent(
-                provider="langchain",
-                model=getattr(self.langchain_llm, "model_name", None)
-                or getattr(self.langchain_llm, "model", None),
-                llm_type="langchain_wrapper",
-                num_requests=n,
-                is_async=False,
-            )
-        )
-
-        return result
-
-    async def agenerate_text(
-        self,
-        prompt: PromptValue,
-        n: int = 1,
-        temperature: t.Optional[float] = 0.01,
-        stop: t.Optional[t.List[str]] = None,
-        callbacks: Callbacks = None,
-    ) -> LLMResult:
-        # handle temperature
-        old_temperature: float | None = None
-        if temperature is None:
-            temperature = self.get_temperature(n=n)
-        if hasattr(self.langchain_llm, "temperature") and not self.bypass_temperature:
-            old_temperature = self.langchain_llm.temperature  # type: ignore
-            self.langchain_llm.temperature = temperature  # type: ignore
-
-        # handle n
-        if hasattr(self.langchain_llm, "n") and not self.bypass_n:
-            self.langchain_llm.n = n  # type: ignore
-            result = await self.langchain_llm.agenerate_prompt(
-                prompts=[prompt],
-                stop=stop,
-                callbacks=callbacks,
-            )
-        else:
-            result = await self.langchain_llm.agenerate_prompt(
-                prompts=[prompt] * n,
-                stop=stop,
-                callbacks=callbacks,
-            )
-            # make LLMResult.generation appear as if it was n_completions
-            # note that LLMResult.runs is still a list that represents each run
-            generations = [[g[0] for g in result.generations]]
-            result.generations = generations
-
-        # reset the temperature to the original value
-        if old_temperature is not None:
-            self.langchain_llm.temperature = old_temperature  # type: ignore
-
-        # Track the usage
-        track(
-            LLMUsageEvent(
-                provider="langchain",
-                model=getattr(self.langchain_llm, "model_name", None)
-                or getattr(self.langchain_llm, "model", None),
-                llm_type="langchain_wrapper",
-                num_requests=n,
-                is_async=True,
-            )
-        )
-
-        return result
-
-    def set_run_config(self, run_config: RunConfig):
-        self.run_config = run_config
-
-        # configure if using OpenAI API
-        if isinstance(self.langchain_llm, BaseOpenAI) or isinstance(
-            self.langchain_llm, ChatOpenAI
-        ):
-            try:
-                from openai import RateLimitError
-            except ImportError:
-                raise ImportError(
-                    "openai.error.RateLimitError not found. Please install openai package as `pip install openai`"
-                )
-            self.langchain_llm.request_timeout = run_config.timeout
-            self.run_config.exception_types = RateLimitError
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(langchain_llm={self.langchain_llm.__class__.__name__}(...))"
 
 
 class LlamaIndexLLMWrapper(BaseRagasLLM):
@@ -603,6 +358,19 @@ def _get_instructor_client(
         return _patch_client_for_provider(client, provider_lower, mode=mode)
 
 
+DEFAULT_LLM_MODEL = "gpt-4o-mini"
+
+
+def default_llm() -> "InstructorBaseRagasLLM":
+    """The evaluator LLM used when the caller does not supply one.
+
+    Routed through LiteLLM rather than a hard-coded ``openai.OpenAI()`` client,
+    so ragas does not import a specific vendor SDK just to pick a default.
+    Credentials are resolved from the environment.
+    """
+    return llm_factory(DEFAULT_LLM_MODEL)
+
+
 def llm_factory(
     model: str,
     provider: str = "openai",
@@ -687,19 +455,33 @@ def llm_factory(
         llm = llm_factory("gpt-4o-mini", client=client)
         response = await llm.agenerate(prompt, ResponseModel)
     """
-    if client is None:
-        raise ValueError(
-            "llm_factory() requires a client instance. "
-            "Text-only mode has been removed.\n\n"
-            "To migrate:\n"
-            "  from openai import OpenAI\n"
-            "  client = OpenAI(api_key='...')\n"
-            "  llm = llm_factory('gpt-4o-mini', client=client)\n\n"
-            "For more details: https://docs.ragas.io/en/latest/llm-factory"
-        )
-
     if not model:
         raise ValueError("model parameter is required")
+
+    if client is None:
+        # No client: route through LiteLLM, which resolves credentials from the
+        # environment. This mirrors embedding_factory(), which has worked this way
+        # since the LangChain adapters were removed -- the two factories used to
+        # disagree, with this one raising where the other succeeded.
+        try:
+            import instructor as _instructor
+            import litellm as _litellm
+        except ImportError as e:  # pragma: no cover - litellm is a core dependency
+            raise ImportError(
+                "llm_factory() without an explicit client requires litellm. "
+                "Install it, or pass a client: "
+                "llm_factory('gpt-4o-mini', client=OpenAI())"
+            ) from e
+
+        # Prefix the model with the provider when the caller named one and the
+        # model string does not already carry it, since LiteLLM routes on the
+        # "provider/model" form. "openai" needs no prefix.
+        if provider.lower() not in ("openai", "litellm") and "/" not in model:
+            model = f"{provider.lower()}/{model}"
+
+        client = _instructor.from_litellm(_litellm.completion)
+        provider = "litellm"
+        adapter = "litellm"
 
     provider_lower = provider.lower()
 
@@ -810,6 +592,12 @@ class InstructorLLM(InstructorBaseRagasLLM):
 
         # Extract system_prompt separately (not passed to LLM API)
         self.system_prompt = self.model_args.pop("system_prompt", None)
+
+        # Set by evaluate()/TestsetGenerator when a token_usage_parser is supplied.
+        # Attached to the instance rather than carried in a ContextVar because
+        # generate() may hop onto a bare threading.Thread (see
+        # _run_async_in_current_loop), which contextvars do not cross.
+        self.usage_collector: t.Optional[t.Any] = None
 
         self.cache = cache
 
@@ -1086,16 +874,24 @@ class InstructorLLM(InstructorBaseRagasLLM):
             # Map parameters based on provider requirements
             provider_kwargs = self._map_provider_params()
 
-            if self.provider.lower() == "google":
-                result = self.client.create(
+            target = (
+                self.client
+                if self.provider.lower() == "google"
+                else self.client.chat.completions
+            )
+            if self.usage_collector is not None:
+                # create_with_completion also returns the provider's raw response,
+                # which is the only place token counts are available. Gated so the
+                # default path is byte-identical to before.
+                result, raw = target.create_with_completion(
                     model=self.model,
                     messages=messages,
                     response_model=response_model,
                     **provider_kwargs,
                 )
+                self.usage_collector.record(raw)
             else:
-                # OpenAI, Anthropic, LiteLLM
-                result = self.client.chat.completions.create(
+                result = target.create(
                     model=self.model,
                     messages=messages,
                     response_model=response_model,
@@ -1134,16 +930,21 @@ class InstructorLLM(InstructorBaseRagasLLM):
         # Map parameters based on provider requirements
         provider_kwargs = self._map_provider_params()
 
-        if self.provider.lower() == "google":
-            result = await self.client.create(
+        target = (
+            self.client
+            if self.provider.lower() == "google"
+            else self.client.chat.completions
+        )
+        if self.usage_collector is not None:
+            result, raw = await target.create_with_completion(
                 model=self.model,
                 messages=messages,
                 response_model=response_model,
                 **provider_kwargs,
             )
+            self.usage_collector.record(raw)
         else:
-            # OpenAI, Anthropic, LiteLLM
-            result = await self.client.chat.completions.create(
+            result = await target.create(
                 model=self.model,
                 messages=messages,
                 response_model=response_model,

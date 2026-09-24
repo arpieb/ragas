@@ -17,17 +17,14 @@ def test_missing_haystack_llmwrapper(monkeypatch):
     # Replace the built-in import function with our mock
     monkeypatch.setattr(builtins, "__import__", mocked_import)
 
-    # Test: Non-Haystack wrappers still work fine
-    from langchain_openai.llms import OpenAI
+    # Test: non-Haystack LLM wrappers still work fine
+    from ragas.llms import LlamaIndexLLMWrapper
 
-    from ragas.llms import LangchainLLMWrapper
+    mocked_llm = MagicMock()
+    mocked_llm.model = "gpt-4o-mini"
+    wrapper = LlamaIndexLLMWrapper(llm=mocked_llm)
 
-    langchain_mocked_llm = MagicMock(spec=OpenAI)
-    langchain_mocked_llm.model_name = "gpt-3.5-turbo-instruct"
-
-    langchain_wrapper = LangchainLLMWrapper(langchain_llm=langchain_mocked_llm)
-
-    assert langchain_wrapper.langchain_llm.model_name == "gpt-3.5-turbo-instruct"  # type: ignore
+    assert wrapper.llm is mocked_llm
 
     # Test: Importing HaystackLLMWrapper fails
     with pytest.raises(ImportError, match="Haystack is not installed"):
@@ -36,9 +33,6 @@ def test_missing_haystack_llmwrapper(monkeypatch):
         HaystackLLMWrapper(haystack_generator=None)
 
 
-@pytest.mark.filterwarnings(
-    "ignore:LangchainEmbeddingsWrapper is deprecated:DeprecationWarning"
-)
 @pytest.mark.filterwarnings(
     "ignore:LlamaIndexEmbeddingsWrapper is deprecated:DeprecationWarning"
 )
@@ -60,25 +54,20 @@ def test_wrappers_with_missing_haystack(monkeypatch):
     # Replace the built-in import with our mock
     monkeypatch.setattr(builtins, "__import__", mocked_import)
 
-    # Test: Non-Haystack wrappers still work fine
-    from langchain_openai.embeddings import OpenAIEmbeddings
+    # Test: non-Haystack embedding wrappers still work fine
     from llama_index.core.base.embeddings.base import BaseEmbedding
 
-    from ragas.embeddings import LangchainEmbeddingsWrapper, LlamaIndexEmbeddingsWrapper
+    from ragas.embeddings import LlamaIndexEmbeddingsWrapper, OpenAIEmbeddings
 
-    langchain_mocked_embedding = MagicMock(spec=OpenAIEmbeddings)
-    langchain_mocked_embedding.model = "text-embedding-ada-002"
     llama_index_mocked_embedding = MagicMock(spec=BaseEmbedding)
-
-    langchain_wrapper = LangchainEmbeddingsWrapper(
-        embeddings=langchain_mocked_embedding
-    )
     llama_index_wrapper = LlamaIndexEmbeddingsWrapper(
         embeddings=llama_index_mocked_embedding
     )
-
-    assert langchain_wrapper.embeddings.model == "text-embedding-ada-002"  # type: ignore
     assert llama_index_wrapper.embeddings is llama_index_mocked_embedding
+
+    # ragas-native modern provider, no langchain involved
+    modern = OpenAIEmbeddings(client=MagicMock(), model="text-embedding-3-small")
+    assert modern.model == "text-embedding-3-small"
 
     # Test: Importing HaystackEmbeddingsWrapper fails
     with pytest.raises(ImportError, match="Haystack is not installed"):

@@ -67,10 +67,7 @@ pip install -e .
     from openai import OpenAI
     from ragas.llms import llm_factory
 
-    client = OpenAI(
-        api_key="ollama",
-        base_url="http://localhost:11434/v1"
-    )
+    client = OpenAI(api_key="ollama", base_url="http://localhost:11434/v1")
     llm = llm_factory("mistral", provider="openai", client=client)
     ```
 
@@ -237,6 +234,7 @@ from your_rag_module import YourRAGClient
 
 rag_client = YourRAGClient(...)
 
+
 @experiment()
 async def run_experiment(row):
     # Call your RAG system
@@ -278,6 +276,6 @@ print(f"Pass rate: {pass_rate:.1%}")
 ## Next Steps
 
 - [Improve RAG Guide](improve_rag.md) - Compare naive vs agentic RAG
-- [Custom Metrics](../customizations/metrics/_write_your_own_metric.md) - Write your own metrics
+- Custom Metrics - Write your own metrics
 - [Datasets](../../concepts/datasets.md) - Learn about dataset management
 - [Experimentation](../../concepts/experimentation.md) - Advanced experiment tracking

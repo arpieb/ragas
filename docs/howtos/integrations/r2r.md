@@ -76,14 +76,11 @@ The [`/rag`](https://r2r-docs.sciphi.ai/api-and-sdks/retrieval/rag-app) endpoint
 query = "What makes Meta AI’s LLaMA models stand out?"
 
 search_settings = {
-        "limit": 2,
-        "graph_settings": {"enabled": False, "limit": 2},
-    }
+    "limit": 2,
+    "graph_settings": {"enabled": False, "limit": 2},
+}
 
-response = client.retrieval.rag(
-    query=query,
-    search_settings=search_settings
-)
+response = client.retrieval.rag(query=query, search_settings=search_settings)
 
 print(response.results.generated_answer)
 ```
@@ -164,13 +161,16 @@ To evaluate our RAG endpoint, we will use the following metrics:
 ```python
 from ragas.metrics import AnswerRelevancy, ContextPrecision, Faithfulness
 from ragas import evaluate
-from langchain_openai import ChatOpenAI
-from ragas.llms import LangchainLLMWrapper
+from openai import OpenAI
+from ragas.llms import llm_factory
 
-llm = ChatOpenAI(model="gpt-4o-mini")
-evaluator_llm = LangchainLLMWrapper(llm)
+evaluator_llm = llm_factory("gpt-4o-mini", client=OpenAI())
 
-ragas_metrics = [AnswerRelevancy(llm=evaluator_llm), ContextPrecision(llm=evaluator_llm), Faithfulness(llm=evaluator_llm)]
+ragas_metrics = [
+    AnswerRelevancy(llm=evaluator_llm),
+    ContextPrecision(llm=evaluator_llm),
+    Faithfulness(llm=evaluator_llm),
+]
 
 results = evaluate(dataset=ragas_eval_dataset, metrics=ragas_metrics)
 ```

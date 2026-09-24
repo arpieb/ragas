@@ -5,12 +5,12 @@ import typing as t
 from dataclasses import dataclass, field
 
 import numpy as np
-from langchain_core.callbacks import Callbacks
-from langchain_core.prompt_values import StringPromptValue
 
+from ragas.callbacks import Callbacks
 from ragas.dataset_schema import SingleTurnSample
 from ragas.llms.base import BaseRagasLLM
 from ragas.metrics.base import MetricType, MetricWithLLM, SingleTurnMetric
+from ragas.prompt.value import StringPromptValue
 
 logger = logging.getLogger(__name__)
 

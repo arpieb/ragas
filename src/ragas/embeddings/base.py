@@ -8,8 +8,6 @@ from abc import ABC, abstractmethod
 from dataclasses import field
 
 import numpy as np
-from langchain_core.embeddings import Embeddings
-from langchain_openai.embeddings import OpenAIEmbeddings
 from pydantic.dataclasses import dataclass
 from pydantic_core import CoreSchema, core_schema
 
@@ -179,17 +177,53 @@ class BaseRagasEmbedding(ABC):
         return cls(**init_kwargs)
 
 
-class BaseRagasEmbeddings(Embeddings, ABC):
+def _overrides(cls: type, name: str) -> bool:
+    """Has ``cls`` supplied its own ``name``, rather than inheriting the default?"""
+    return getattr(cls, name, None) is not getattr(BaseRagasEmbeddings, name, None)
+
+
+class BaseRagasEmbeddings(ABC):
     """
     Abstract base class for Ragas embeddings.
 
-    This class extends the Embeddings class and provides methods for embedding
-    text and managing run configurations.
+    Implement **either** the sync pair (``embed_query``/``embed_documents``) or
+    the async pair (``aembed_query``/``aembed_documents``). Whichever you omit is
+    bridged automatically: sync calls run the coroutine, async calls hand the
+    sync method to an executor.
+
+    This used to subclass ``langchain_core.embeddings.Embeddings`` and declare
+    only the async pair abstract, which left ``HuggingfaceEmbeddings`` -- which
+    implements only the sync pair -- permanently abstract and impossible to
+    instantiate. Requiring one pair rather than a specific pair fixes that, and
+    is strictly more permissive than before for user subclasses.
 
     Attributes:
         run_config (RunConfig): Configuration for running the embedding operations.
 
     """
+
+    def __init_subclass__(cls, **kwargs: t.Any) -> None:
+        super().__init_subclass__(**kwargs)
+        if inspect.isabstract(cls):
+            return
+        # Neither pair is abstract any more, so Python cannot catch a subclass
+        # that implements nothing -- instead embed_query would call aembed_query
+        # which would call embed_query, recursing until the stack blew. Check at
+        # class-definition time so the failure is a clear message, not a
+        # RecursionError from deep inside an evaluation.
+        has_sync = _overrides(cls, "embed_query") and _overrides(cls, "embed_documents")
+        has_async = _overrides(cls, "aembed_query") and _overrides(
+            cls, "aembed_documents"
+        )
+        # Overriding the higher-level API instead is also fine: it short-circuits
+        # the chain before either pair is reached.
+        has_high_level = _overrides(cls, "embed_text") or _overrides(cls, "embed_texts")
+        if not (has_sync or has_async or has_high_level):
+            raise TypeError(
+                f"{cls.__name__} must implement either (embed_query, embed_documents), "
+                f"(aembed_query, aembed_documents), or embed_text/embed_texts. "
+                f"Without one of these, embedding calls would recurse indefinitely."
+            )
 
     run_config: RunConfig
     cache: t.Optional[CacheInterface] = None
@@ -232,11 +266,23 @@ class BaseRagasEmbeddings(Embeddings, ABC):
             )
             return await loop.run_in_executor(None, embed_documents_with_retry, texts)
 
-    @abstractmethod
-    async def aembed_query(self, text: str) -> t.List[float]: ...
+    def embed_query(self, text: str) -> t.List[float]:
+        """Embed one string. Bridges to ``aembed_query`` unless overridden."""
+        return run_async_in_current_loop(self.aembed_query(text))
 
-    @abstractmethod
-    async def aembed_documents(self, texts: t.List[str]) -> t.List[t.List[float]]: ...
+    def embed_documents(self, texts: t.List[str]) -> t.List[t.List[float]]:
+        """Embed many strings. Bridges to ``aembed_documents`` unless overridden."""
+        return run_async_in_current_loop(self.aembed_documents(texts))
+
+    async def aembed_query(self, text: str) -> t.List[float]:
+        """Embed one string. Bridges to ``embed_query`` unless overridden."""
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self.embed_query, text)
+
+    async def aembed_documents(self, texts: t.List[str]) -> t.List[t.List[float]]:
+        """Embed many strings. Bridges to ``embed_documents`` unless overridden."""
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self.embed_documents, texts)
 
     def set_run_config(self, run_config: RunConfig):
         """
@@ -257,137 +303,6 @@ class BaseRagasEmbeddings(Embeddings, ABC):
         )
 
 
-class LangchainEmbeddingsWrapper(BaseRagasEmbeddings):
-    """
-    Wrapper for any embeddings from langchain.
-
-    # TODO: Revisit deprecation warning
-    # .. deprecated::
-    #     LangchainEmbeddingsWrapper is deprecated and will be removed in a future version.
-    #     Use the modern embedding providers directly with embedding_factory() instead:
-    #
-    #     # Instead of:
-    #     # embedder = LangchainEmbeddingsWrapper(langchain_embeddings)
-    #
-    #     # Use:
-    #     # embedder = embedding_factory("openai", model="text-embedding-3-small", client=openai_client)
-    #     # embedder = embedding_factory("huggingface", model="sentence-transformers/all-MiniLM-L6-v2")
-    #     # embedder = embedding_factory("google", client=vertex_client)
-    """
-
-    def __init__(
-        self,
-        embeddings: Embeddings,
-        run_config: t.Optional[RunConfig] = None,
-        cache: t.Optional[CacheInterface] = None,
-    ):
-        warnings.warn(
-            "LangchainEmbeddingsWrapper is deprecated and will be removed in a future version. "
-            "Use the modern embedding providers instead: "
-            "embedding_factory('openai', model='text-embedding-3-small', client=openai_client) "
-            "or from ragas.embeddings import OpenAIEmbeddings, GoogleEmbeddings, HuggingFaceEmbeddings",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        super().__init__(cache=cache)
-        self.embeddings = embeddings
-        if run_config is None:
-            run_config = RunConfig()
-        self.set_run_config(run_config)
-
-    def embed_query(self, text: str) -> t.List[float]:
-        """
-        Embed a single query text.
-        """
-        result = self.embeddings.embed_query(text)
-
-        # Track usage
-        track(
-            EmbeddingUsageEvent(
-                provider="langchain",
-                model=getattr(self.embeddings, "model", None),
-                embedding_type="legacy",
-                num_requests=1,
-                is_async=False,
-            )
-        )
-        return result
-
-    def embed_documents(self, texts: t.List[str]) -> t.List[t.List[float]]:
-        """
-        Embed multiple documents.
-        """
-        result = self.embeddings.embed_documents(texts)
-
-        # Track usage
-        track(
-            EmbeddingUsageEvent(
-                provider="langchain",
-                model=getattr(self.embeddings, "model", None),
-                embedding_type="legacy",
-                num_requests=len(texts),
-                is_async=False,
-            )
-        )
-        return result
-
-    async def aembed_query(self, text: str) -> t.List[float]:
-        """
-        Asynchronously embed a single query text.
-        """
-        result = await self.embeddings.aembed_query(text)
-
-        # Track usage
-        track(
-            EmbeddingUsageEvent(
-                provider="langchain",
-                model=getattr(self.embeddings, "model", None),
-                embedding_type="legacy",
-                num_requests=1,
-                is_async=True,
-            )
-        )
-        return result
-
-    async def aembed_documents(self, texts: t.List[str]) -> t.List[t.List[float]]:
-        """
-        Asynchronously embed multiple documents.
-        """
-        result = await self.embeddings.aembed_documents(texts)
-
-        # Track usage
-        track(
-            EmbeddingUsageEvent(
-                provider="langchain",
-                model=getattr(self.embeddings, "model", None),
-                embedding_type="legacy",
-                num_requests=len(texts),
-                is_async=True,
-            )
-        )
-        return result
-
-    def set_run_config(self, run_config: RunConfig):
-        """
-        Set the run configuration for the embedding operations.
-        """
-        self.run_config = run_config
-
-        # run configurations specially for OpenAI
-        if isinstance(self.embeddings, OpenAIEmbeddings):
-            try:
-                from openai import RateLimitError
-            except ImportError:
-                raise ImportError(
-                    "openai.error.RateLimitError not found. Please install openai package as `pip install openai`"
-                )
-            self.embeddings.request_timeout = run_config.timeout
-            self.run_config.exception_types = RateLimitError
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(embeddings={self.embeddings.__class__.__name__}(...))"
-
-
 @dataclass
 class HuggingfaceEmbeddings(BaseRagasEmbeddings):
     """
@@ -396,20 +311,17 @@ class HuggingfaceEmbeddings(BaseRagasEmbeddings):
     This class provides functionality to load and use Hugging Face models for
     generating embeddings of text inputs.
 
-    Parameters
+    Attributes
     ----------
-    model_name : str, optional
+    model_name : str
         Name of the pre-trained model to use, by default DEFAULT_MODEL_NAME.
     cache_folder : str, optional
         Path to store downloaded models. Can also be set by SENTENCE_TRANSFORMERS_HOME
         environment variable.
-    model_kwargs : dict, optional
+    model_kwargs : dict
         Additional keyword arguments to pass to the model.
-    encode_kwargs : dict, optional
+    encode_kwargs : dict
         Additional keyword arguments to pass to the encoding method.
-
-    Attributes
-    ----------
     model : Union[SentenceTransformer, CrossEncoder]
         The loaded Hugging Face model.
     is_cross_encoder : bool
@@ -714,39 +626,37 @@ def embedding_factory(
     cache = DiskCacheBackend()
     embedder = embedding_factory("openai", client=openai_client, cache=cache)
     """
-    # Detect if this is a legacy call for backward compatibility
-    is_legacy_call = _is_legacy_embedding_call(provider, model, client, interface)
-
-    if is_legacy_call:
-        import warnings
-
-        warnings.warn(
-            "Legacy embedding_factory interface is deprecated and will be removed in a future version. "
-            "Use the modern interface with explicit provider and client parameters: "
-            "embedding_factory('openai', model='text-embedding-3-small', client=openai_client) "
-            "or import providers directly: from ragas.embeddings import OpenAIEmbeddings, GoogleEmbeddings, HuggingFaceEmbeddings",
-            DeprecationWarning,
-            stacklevel=2,
+    if interface == "legacy":
+        raise ValueError(
+            "The legacy embedding interface has been removed along with LangChain. "
+            "Either pass a client -- embedding_factory('openai', "
+            "model='text-embedding-3-small', client=openai_client) -- or omit it to "
+            "use litellm, which resolves credentials from the environment."
         )
-        # Legacy interface - treat provider as model name if it looks like a model
+
+    # OpenAI is the one provider that REQUIRES_CLIENT, so a client-less call to it
+    # has no modern home. Route it through litellm, which resolves credentials from
+    # the environment and is provider-neutral. This replaces the old LangChain path.
+    # google/huggingface/litellm already construct fine without a client.
+    if client is None and (
+        _looks_like_model_name(provider) or provider.lower() == "openai"
+    ):
+        from ragas.embeddings.litellm_provider import LiteLLMEmbeddings
+
         model_name = (
             provider
             if _looks_like_model_name(provider)
             else (model or "text-embedding-ada-002")
         )
-        openai_embeddings = OpenAIEmbeddings(model=model_name, base_url=base_url)
-        if run_config is not None:
-            openai_embeddings.request_timeout = run_config.timeout
-        else:
-            run_config = RunConfig()
-        result = LangchainEmbeddingsWrapper(openai_embeddings, run_config=run_config)
+        if base_url is not None:
+            kwargs["api_base"] = base_url
+        result = LiteLLMEmbeddings(model=model_name, cache=cache, **kwargs)
 
-        # Track factory usage (legacy)
         track(
             EmbeddingUsageEvent(
-                provider="openai",
+                provider="litellm",
                 model=model_name,
-                embedding_type="factory_legacy",
+                embedding_type="factory_litellm",
                 num_requests=1,
                 is_async=False,
             )
@@ -771,18 +681,6 @@ def embedding_factory(
         )
     )
     return result
-
-
-def _is_legacy_embedding_call(
-    provider: str, model: t.Optional[str], client: t.Optional[t.Any], interface: str
-) -> bool:
-    """Detect if this is a legacy embedding factory call for backward compatibility."""
-    # Explicit interface choice takes precedence
-    if interface in ("legacy", "modern"):
-        return interface == "legacy"
-
-    # Auto-detection: legacy if no client AND (looks like model name OR is openai)
-    return client is None and (_looks_like_model_name(provider) or provider == "openai")
 
 
 # Model name patterns for backward compatibility detection

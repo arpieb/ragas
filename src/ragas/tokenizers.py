@@ -52,6 +52,8 @@ class TiktokenWrapper(BaseTokenizer):
         encoding_name : str, optional
             Encoding name (e.g., "cl100k_base", "o200k_base").
 
+        Notes
+        -----
         If none provided, defaults to "o200k_base" encoding.
         """
         if encoding is not None:
@@ -93,6 +95,8 @@ class HuggingFaceTokenizer(BaseTokenizer):
         model_name : str, optional
             Model name or path to load tokenizer from (e.g., "meta-llama/Llama-2-7b").
 
+        Notes
+        -----
         One of tokenizer or model_name must be provided.
         """
         if tokenizer is not None:

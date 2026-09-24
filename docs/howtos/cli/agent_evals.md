@@ -71,10 +71,12 @@ Tests the agent on various math problems:
 @numeric_metric(name="correctness", allowed_values=(0.0, 1.0))
 def correctness_metric(prediction: float, actual: float):
     result = 1.0 if abs(prediction - actual) < 1e-5 else 0.0
-    return MetricResult(value=result, reason=f"Prediction: {prediction}, Actual: {actual}")
+    return MetricResult(
+        value=result, reason=f"Prediction: {prediction}, Actual: {actual}"
+    )
 ```
 
 ## Next Steps
 
 - [LlamaIndex Agent Evaluation](llamaIndex_agent_evals.md) - Evaluate LlamaIndex agents
-- [Custom Metrics](../customizations/metrics/_write_your_own_metric.md) - Write your own metrics
+- Custom Metrics - Write your own metrics

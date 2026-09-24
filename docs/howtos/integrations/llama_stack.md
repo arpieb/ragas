@@ -150,6 +150,7 @@ To perform evaluations using Ragas we will create a `EvaluationDataset`
 ```python
 import json
 
+
 # This function extracts the search results for the trace of each query
 def extract_retrieved_contexts(turn_object):
     results = []
@@ -261,13 +262,11 @@ ragas_eval_dataset.to_pandas()
 
 ```python
 from ragas.metrics import AnswerAccuracy, Faithfulness, ResponseGroundedness
-from langchain_together import ChatTogether
-from ragas.llms import LangchainLLMWrapper
+from ragas.llms import llm_factory
 
-llm = ChatTogether(
-    model="meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+evaluator_llm = llm_factory(
+    "together_ai/meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8"
 )
-evaluator_llm = LangchainLLMWrapper(llm)
 
 ragas_metrics = [
     AnswerAccuracy(llm=evaluator_llm),

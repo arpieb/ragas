@@ -144,8 +144,8 @@ Both optimizers are used with `InstructionConfig`:
 from ragas.config import InstructionConfig
 
 config = InstructionConfig(
-    llm=llm,                      # LLM for optimization
-    optimizer=optimizer_instance, # Optimizer to use
+    llm=llm,  # LLM for optimization
+    optimizer=optimizer_instance,  # Optimizer to use
 )
 
 # Use with metric
@@ -160,7 +160,7 @@ Optimizers require annotated datasets with ground truth scores:
 from ragas.dataset_schema import (
     PromptAnnotation,
     SampleAnnotation,
-    SingleMetricAnnotation
+    SingleMetricAnnotation,
 )
 
 # Create annotated sample
@@ -180,7 +180,7 @@ sample = SampleAnnotation(
 # Create dataset
 dataset = SingleMetricAnnotation(
     name="metric_name",
-    samples=[sample, ...]  # 20-50+ samples recommended
+    samples=[sample, ...],  # 20-50+ samples recommended
 )
 ```
 
@@ -214,8 +214,8 @@ config = InstructionConfig(llm=llm, optimizer=optimizer, loss=loss)
 
 ## See Also
 
-- [DSPy Optimizer Guide](../howtos/customizations/optimizers/dspy-optimizer.md) - Detailed usage
-- [Metric Customization](../howtos/customizations/metrics/custom-metrics.md) - Creating metrics
+- [DSPy Optimizer Guide](../howtos/customizations/optimizers/index.md) - Detailed usage
+- Metric Customization - Creating metrics
 - [Prompt API Reference](./prompt.md) - Understanding prompts
 
 ## Additional Resources

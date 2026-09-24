@@ -8,27 +8,20 @@ from enum import Enum
 from pydantic import BaseModel
 
 from ragas.callbacks import new_group
-from ragas.llms import BaseRagasLLM, llm_factory
+from ragas.llms import BaseRagasLLM, default_llm
 from ragas.prompt import PromptMixin
 from ragas.testset.graph import KnowledgeGraph, Node
 from ragas.testset.persona import Persona
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
-
+    from ragas.callbacks import Callbacks
     from ragas.dataset_schema import BaseSample
     from ragas.llms.base import InstructorBaseRagasLLM
 
 
 def _default_llm_factory() -> t.Union[BaseRagasLLM, "InstructorBaseRagasLLM"]:
-    """Create a default LLM instance with OpenAI gpt-4o-mini.
-
-    Returns InstructorBaseRagasLLM instance which satisfies BaseRagasLLM interface.
-    """
-    from openai import OpenAI
-
-    client = OpenAI()
-    return llm_factory("gpt-4o-mini", client=client)
+    """The default LLM, shared with ``evaluate()``. See ``ragas.llms.default_llm``."""
+    return default_llm()
 
 
 class QueryLength(str, Enum):

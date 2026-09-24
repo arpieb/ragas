@@ -1,7 +1,7 @@
 [project]
 name = "ragas"
 description = "Evaluation framework for RAG and LLM applications"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 license = {file = "LICENSE"}
 dependencies = [
     # Core dependencies
@@ -14,18 +14,19 @@ dependencies = [
     "diskcache>=5.6.3",
     "typer",
     "rich",
-    "openai>=1.0.0",
     "tqdm",
     "instructor",
     "pillow>=10.4.0",
     "networkx",
     "scikit-network",
 
-    # LangChain ecosystem
-    "langchain",
-    "langchain-core",
-    "langchain-community",
-    "langchain_openai",
+    # Provider-neutral LLM/embedding access. llm_factory()/embedding_factory()
+    # route client-less calls here.
+    "litellm",
+    # Tracing. The API package only -- spans are a no-op unless the user
+    # configures an SDK, which is how a library should behave. EvaluationResult
+    # .traces comes from the native run tree, so it works without one.
+    "opentelemetry-api",
 ]
 dynamic = ["version", "readme"]
 
@@ -59,27 +60,12 @@ gdrive = [
     "google-auth>=2.40.3",
     "google-auth-oauthlib>=1.2.2"
 ]
-ai-frameworks = ["haystack-ai"]
+# Bounded to haystack 2.x: 3.x moved `AsyncPipeline`, which
+# ragas.llms.haystack_wrapper imports at module scope.
+ai-frameworks = ["haystack-ai<3.0.0"]
 oci = ["oci>=2.160.1"]
 ag-ui = ["ag-ui-protocol>=0.1.9", "httpx>=0.27.0"]
 dspy = ["dspy-ai>=2.4.0"]
-
-# Minimal dev dependencies for fast development setup (used by make install-minimal)
-dev-minimal = [
-    "ruff",
-    "pyright>=1.1.403",
-    "pre-commit>=4.3.0",
-    "pytest",
-    "pytest-xdist[psutil]",
-    "pytest-asyncio",
-    "nbmake",
-    "build>=1.3.0",
-]
-
-# Test only dependencies
-test = [
-    "scipy",
-]
 
 [project.entry-points."ragas.backends"]
 "local/csv" = "ragas.backends.local_csv:LocalCSVBackend"
@@ -98,12 +84,29 @@ readme = {file = ["README.md"], content-type = "text/markdown"}
 
 [tool.ruff]
 line-length = 88
-target-version = "py39"
+target-version = "py311"
 exclude = ["*.ipynb", "*/_version.py"]  # Exclude Jupyter notebooks and auto-generated version files from linting
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+select = ["E", "F", "I", "TID251"]
 ignore = ["E501"]  # Line length handled by formatter
+
+# LangChain is banned outright. The removal is complete -- no file in src, tests
+# or docs imports it, so there are no per-file-ignores left. The ban stays: it is
+# what stops one being reintroduced. tests/unit/test_langchain_boundary.py
+# asserts the same thing at runtime.
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"langchain".msg = "ragas does not depend on LangChain. See docs/howtos/migrations/migrate_off_langchain.md."
+"langchain_core".msg = "ragas does not depend on LangChain. See docs/howtos/migrations/migrate_off_langchain.md."
+"langchain_community".msg = "ragas does not depend on LangChain. See docs/howtos/migrations/migrate_off_langchain.md."
+"langchain_openai".msg = "ragas does not depend on LangChain. Use litellm/instructor providers instead."
+"langchain_text_splitters".msg = "ragas does not depend on LangChain. Use ragas-native splitters."
+
+
+
+
+
+
 
 [tool.ruff.lint.isort]
 # Import sorting configuration
@@ -121,7 +124,7 @@ preview = false
 [tool.pyright]
 include = ["src/ragas"]
 exclude = ["@types/*"]
-pythonVersion = "3.9"
+pythonVersion = "3.11"
 pythonPlatform = "All"
 typeCheckingMode = "basic"
 reportMissingImports = false
@@ -138,6 +141,12 @@ build-backend = "setuptools.build_meta"
 # Path to version file relative to this pyproject.toml
 version_file = "src/ragas/_version.py"
 
+# UV Configuration
+[tool.uv]
+# `uv sync` / `uv run` install the fast minimal dev set by default.
+# The full ML stack is opt-in via `uv sync --group dev` (see `make install`).
+default-groups = ["dev-minimal"]
+
 # UV Workspace Configuration
 [tool.uv.workspace]
 members = [".", "examples"]
@@ -152,22 +161,46 @@ asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 
 [dependency-groups]
-# Full dev dependencies with all features (used by make install)
-dev = [
-    # Core dev tools (shared with minimal)
-    "ruff",
+# Minimal dev dependencies for fast development setup (used by `make install-minimal`)
+dev-minimal = [
+    {include-group = "test"},
+    "ruff>=0.16",
     "pyright>=1.1.403",
     "pre-commit>=4.3.0",
     "pytest",
     "pytest-xdist[psutil]",
     "pytest-asyncio",
-    "build>=1.3.0",
-    # Additional tools for full dev
     "nbmake",
+    "build>=1.3.0",
+]
+
+# Dependencies required to run tests/unit. These are optional at runtime (they
+# live in the `all`/`git`/`ai-frameworks` extras) but tests/unit imports them
+# unconditionally, so the test suite cannot pass without them.
+test = [
+    "scipy",
+    # ragas no longer declares openai -- it arrives via litellm/instructor -- but
+    # the suite imports it directly (tests/utils/llm_setup.py and friends), so it
+    # is declared here rather than relied on transitively.
+    "openai>=1.0.0",
+    "sacrebleu",   # tests/unit/test_chrf_score.py
+    "GitPython",   # tests/unit/test_experiment.py
+    "haystack-ai<3.0.0", # tests/unit/test_import.py
+    "llama_index", # tests/unit/test_import.py
+    "rapidfuzz",   # tests/unit/test_prechunked_generation.py
+    # SDK is test-only: ragas itself depends on opentelemetry-api alone, so spans
+    # are a no-op in production unless the user configures a provider. Tests need
+    # a real provider + InMemorySpanExporter to assert the span tree.
+    "opentelemetry-sdk",
+]
+
+# Full dev dependencies with all features (used by `make install`)
+dev = [
+    {include-group = "dev-minimal"},
+    # Additional tools for full dev
     "notebook",
     "unstructured[md]",
     "arize-phoenix>=6.1.0",
-    "openinference-instrumentation-langchain>=0.1.29",
     # Include all optional features
     "ragas[all,tracing,gdrive,ai-frameworks]",
 ]
@@ -184,7 +217,7 @@ docs = [
     "mkdocs-git-committers-plugin-2",
     "mkdocs-git-revision-date-localized-plugin",
     "mkdocs-copy-to-llm",
-    "mkdocs-llmstxt",  # Requires Python 3.10+, only used in docs CI
+    "mkdocs-llmstxt",  # only used in docs CI
 ]
 
 docs-pdf = [

@@ -5,13 +5,16 @@ import warnings
 from uuid import UUID
 
 from datasets import Dataset
-from langchain_core.callbacks import BaseCallbackHandler, BaseCallbackManager
-from langchain_core.embeddings import Embeddings as LangchainEmbeddings
-from langchain_core.language_models import BaseLanguageModel as LangchainLLM
 from tqdm.auto import tqdm
 
 from ragas._analytics import track_was_completed  # type: ignore
-from ragas.callbacks import ChainType, RagasTracer, new_group
+from ragas.callbacks import (
+    ChainCallback,
+    ChainType,
+    RagasTracer,
+    _as_group,
+    new_group,
+)
 from ragas.dataset_schema import (
     EvaluationDataset,
     EvaluationResult,
@@ -21,23 +24,23 @@ from ragas.dataset_schema import (
 from ragas.embeddings.base import (
     BaseRagasEmbedding,
     BaseRagasEmbeddings,
-    LangchainEmbeddingsWrapper,
     _infer_embedding_provider_from_llm,
     embedding_factory,
 )
 from ragas.exceptions import ExceptionInRunner
 from ragas.executor import Executor
 from ragas.integrations.helicone import helicone_config
-from ragas.llms import llm_factory
-from ragas.llms.base import BaseRagasLLM, InstructorBaseRagasLLM, LangchainLLMWrapper
+from ragas.llms import default_llm
+from ragas.llms.base import BaseRagasLLM, InstructorBaseRagasLLM
 from ragas.metrics._answer_correctness import AnswerCorrectness
-from ragas.metrics._aspect_critic import AspectCritic
+from ragas.metrics._collections_bridge import adapt_collections_metric
 from ragas.metrics.base import (
     Metric,
     MetricWithEmbeddings,
     MetricWithLLM,
     ModeMetric,
     MultiTurnMetric,
+    SimpleBaseMetric,
     SingleTurnMetric,
 )
 from ragas.run_config import RunConfig
@@ -49,9 +52,8 @@ from ragas.validation import (
 )
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
-
-    from ragas.cost import CostCallbackHandler, TokenUsageParser
+    from ragas.callbacks import Callbacks
+    from ragas.cost import TokenUsageCollector, TokenUsageParser
 
 RAGAS_EVALUATION_CHAIN_NAME = "ragas evaluation"
 
@@ -59,12 +61,9 @@ RAGAS_EVALUATION_CHAIN_NAME = "ragas evaluation"
 async def aevaluate(
     dataset: t.Union[Dataset, EvaluationDataset],
     metrics: t.Optional[t.Sequence[Metric]] = None,
-    llm: t.Optional[BaseRagasLLM | InstructorBaseRagasLLM | LangchainLLM] = None,
-    embeddings: t.Optional[
-        BaseRagasEmbeddings | BaseRagasEmbedding | LangchainEmbeddings
-    ] = None,
+    llm: t.Optional[BaseRagasLLM | InstructorBaseRagasLLM] = None,
+    embeddings: t.Optional[BaseRagasEmbeddings | BaseRagasEmbedding] = None,
     experiment_name: t.Optional[str] = None,
-    callbacks: Callbacks = None,
     run_config: t.Optional[RunConfig] = None,
     token_usage_parser: t.Optional[TokenUsageParser] = None,
     raise_exceptions: bool = False,
@@ -73,6 +72,7 @@ async def aevaluate(
     batch_size: t.Optional[int] = None,
     _run_id: t.Optional[UUID] = None,
     _pbar: t.Optional[tqdm] = None,
+    _callbacks: Callbacks = None,
     return_executor: bool = False,
 ) -> t.Union[EvaluationResult, Executor]:
     """
@@ -111,7 +111,6 @@ async def aevaluate(
     )
 
     column_map = column_map or {}
-    callbacks = callbacks or []
     run_config = run_config or RunConfig()
 
     if helicone_config.is_enabled:
@@ -128,6 +127,19 @@ async def aevaluate(
         raise TypeError(
             "Metrics should be provided in a list, e.g: metrics=[BleuScore()]"
         )
+
+    # Collections metrics (ragas.metrics.collections) implement SimpleBaseMetric,
+    # not the legacy Metric protocol evaluate() drives, so they used to be
+    # rejected by the type check below. Wrap them instead: every legacy metric
+    # now warns that it moves to collections in v1.0, so the replacement has to
+    # work with the main entry point.
+    if isinstance(metrics, list):
+        metrics = [
+            adapt_collections_metric(m)
+            if isinstance(m, SimpleBaseMetric) and not isinstance(m, Metric)
+            else m
+            for m in metrics
+        ]
 
     if isinstance(metrics, list) and any(not isinstance(m, Metric) for m in metrics):
         raise TypeError(
@@ -154,14 +166,7 @@ async def aevaluate(
         validate_required_columns(dataset, metrics)
         validate_supported_metrics(dataset, metrics)
 
-    # set the llm and embeddings
-    if isinstance(llm, LangchainLLM):
-        llm = LangchainLLMWrapper(llm, run_config=run_config)
-    if isinstance(embeddings, LangchainEmbeddings):
-        embeddings = LangchainEmbeddingsWrapper(embeddings)
-
     # init llms and embeddings
-    binary_metrics = []
     llm_changed: t.List[int] = []
     embeddings_changed: t.List[int] = []
     answer_correctness_is_set = -1
@@ -169,27 +174,27 @@ async def aevaluate(
     # loop through the metrics and perform initializations
     for i, metric in enumerate(metrics):
         # set llm and embeddings if not set
-        if isinstance(metric, AspectCritic):
-            binary_metrics.append(metric.name)
         if isinstance(metric, MetricWithLLM) and metric.llm is None:
             if llm is None:
-                from openai import OpenAI
-
-                client = OpenAI()
-                llm = llm_factory("gpt-4o-mini", client=client)
+                llm = default_llm()
             metric.llm = t.cast(t.Optional[BaseRagasLLM], llm)
             llm_changed.append(i)
         if isinstance(metric, MetricWithEmbeddings) and metric.embeddings is None:
             if embeddings is None:
-                # Infer embedding provider from LLM if available
+                # Reuse the LLM's provider and client where that makes sense, so
+                # an OpenAI evaluator LLM gets OpenAI embeddings.
                 inferred_provider = _infer_embedding_provider_from_llm(llm)
-                # Extract client from LLM if available for modern embeddings
-                embedding_client = None
-                if hasattr(llm, "client"):
-                    embedding_client = getattr(llm, "client")
-                embeddings = embedding_factory(
-                    provider=inferred_provider, client=embedding_client
-                )
+                if inferred_provider == "litellm":
+                    # A litellm-backed LLM's `.client` is an instructor-wrapped
+                    # completion function, not an embeddings client, and litellm
+                    # needs an embedding model name that the LLM cannot supply.
+                    # Fall back to the provider-neutral default.
+                    embeddings = embedding_factory()
+                else:
+                    embeddings = embedding_factory(
+                        provider=inferred_provider,
+                        client=getattr(llm, "client", None),
+                    )
             metric.embeddings = embeddings
             embeddings_changed.append(i)
         if isinstance(metric, AnswerCorrectness):
@@ -211,25 +216,38 @@ async def aevaluate(
 
     # Ragas Callbacks
     # init the callbacks we need for various tasks
-    ragas_callbacks: t.Dict[str, BaseCallbackHandler] = {}
+    ragas_callbacks: t.Dict[str, ChainCallback] = {}
 
     # Ragas Tracer which traces the run
     tracer = RagasTracer()
     ragas_callbacks["tracer"] = tracer
 
-    # check if cost needs to be calculated
+    # Token accounting. No longer a callback handler: ragas never fired on_llm_end,
+    # so that path only ever worked for LangChain LLMs. The collector is attached to
+    # each metric's LLM below and records the provider's raw completion directly.
+    cost_cb = None
     if token_usage_parser is not None:
-        from ragas.cost import CostCallbackHandler
+        from ragas.cost import TokenUsageCollector
 
-        cost_cb = CostCallbackHandler(token_usage_parser=token_usage_parser)
-        ragas_callbacks["cost_cb"] = cost_cb
+        cost_cb = TokenUsageCollector(token_usage_parser=token_usage_parser)
+        # Attach to every metric's LLM, not just ones we assigned -- a user-supplied
+        # metric.llm must be counted too. LLMs that predate the collector attribute
+        # (Haystack, OCI, LlamaIndex wrappers) are skipped rather than patched.
+        for metric in metrics:
+            metric_llm = getattr(metric, "llm", None)
+            if metric_llm is not None and hasattr(metric_llm, "usage_collector"):
+                metric_llm.usage_collector = cost_cb
 
-    # append all the ragas_callbacks to the callbacks
+    # The public `callbacks=` parameter was removed along with LangChain; external
+    # observability now goes through OpenTelemetry. `_callbacks` remains as private
+    # plumbing (like _run_id/_pbar) so an internal caller -- the genetic optimizer,
+    # the llama-index integration -- can nest this evaluation inside its own run
+    # tree. Without it, traces would start a fresh root and parse_run_traces(
+    # traces, _run_id) would find nothing.
+    group = _as_group(_callbacks)
     for cb in ragas_callbacks.values():
-        if isinstance(callbacks, BaseCallbackManager):
-            callbacks.add_handler(cb)
-        else:
-            callbacks.append(cb)
+        group.add_handler(cb)
+    callbacks = group
 
     # new evaluation chain
     row_run_managers = []
@@ -312,13 +330,11 @@ async def aevaluate(
     else:
         # evalution run was successful
         # now lets process the results
-        cost_cb = ragas_callbacks["cost_cb"] if "cost_cb" in ragas_callbacks else None
         result = EvaluationResult(
             scores=scores,
             dataset=dataset,
-            binary_columns=binary_metrics,
             cost_cb=t.cast(
-                t.Union["CostCallbackHandler", None],
+                t.Union["TokenUsageCollector", None],
                 cost_cb,
             ),
             ragas_traces=tracer.traces,
@@ -327,6 +343,13 @@ async def aevaluate(
         if not evaluation_group_cm.ended:
             evaluation_rm.on_chain_end({"scores": result.scores})
     finally:
+        # detach the usage collector from any LLM it was attached to
+        if cost_cb is not None:
+            for metric in metrics:
+                metric_llm = getattr(metric, "llm", None)
+                if metric_llm is not None and hasattr(metric_llm, "usage_collector"):
+                    metric_llm.usage_collector = None
+
         # reset llms and embeddings if changed
         for i in llm_changed:
             t.cast(MetricWithLLM, metrics[i]).llm = None
@@ -349,12 +372,9 @@ async def aevaluate(
 def evaluate(
     dataset: t.Union[Dataset, EvaluationDataset],
     metrics: t.Optional[t.Sequence[Metric]] = None,
-    llm: t.Optional[BaseRagasLLM | LangchainLLM] = None,
-    embeddings: t.Optional[
-        BaseRagasEmbeddings | BaseRagasEmbedding | LangchainEmbeddings
-    ] = None,
+    llm: t.Optional[BaseRagasLLM] = None,
+    embeddings: t.Optional[BaseRagasEmbeddings | BaseRagasEmbedding] = None,
     experiment_name: t.Optional[str] = None,
-    callbacks: Callbacks = None,
     run_config: t.Optional[RunConfig] = None,
     token_usage_parser: t.Optional[TokenUsageParser] = None,
     raise_exceptions: bool = False,
@@ -363,6 +383,7 @@ def evaluate(
     batch_size: t.Optional[int] = None,
     _run_id: t.Optional[UUID] = None,
     _pbar: t.Optional[tqdm] = None,
+    _callbacks: Callbacks = None,
     return_executor: bool = False,
     allow_nest_asyncio: bool = True,
 ) -> t.Union[EvaluationResult, Executor]:
@@ -387,9 +408,6 @@ def evaluate(
         This can be overridden by the embeddings specified in the metric level with `metric.embeddings`.
     experiment_name : str, optional
         The name of the experiment to track. This is used to track the evaluation in the tracing tool.
-    callbacks : Callbacks, optional
-        Lifecycle Langchain Callbacks to run during evaluation.
-        Check the [Langchain documentation](https://python.langchain.com/docs/modules/callbacks/) for more information.
     run_config : RunConfig, optional
         Configuration for runtime settings like timeout and retries. If not provided, default values are used.
     token_usage_parser : TokenUsageParser, optional
@@ -460,7 +478,6 @@ def evaluate(
             llm=llm,
             embeddings=embeddings,
             experiment_name=experiment_name,
-            callbacks=callbacks,
             run_config=run_config,
             token_usage_parser=token_usage_parser,
             raise_exceptions=raise_exceptions,
@@ -469,6 +486,7 @@ def evaluate(
             batch_size=batch_size,
             _run_id=_run_id,
             _pbar=_pbar,
+            _callbacks=_callbacks,
             return_executor=return_executor,
         )
 

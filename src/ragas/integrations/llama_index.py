@@ -14,7 +14,6 @@ from ragas.metrics.base import Metric
 from ragas.run_config import RunConfig
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
     from llama_index.core.base.embeddings.base import (
         BaseEmbedding as LlamaIndexEmbeddings,
     )
@@ -22,6 +21,7 @@ if t.TYPE_CHECKING:
     from llama_index.core.base.response.schema import Response as LlamaIndexResponse
     from llama_index.core.workflow import Event
 
+    from ragas.callbacks import Callbacks
     from ragas.cost import TokenUsageParser
 
 
@@ -106,7 +106,7 @@ def evaluate(
         llm=li_llm,
         embeddings=li_embeddings,
         raise_exceptions=raise_exceptions,
-        callbacks=callbacks,
+        _callbacks=callbacks,
         show_progress=show_progress,
         run_config=run_config or RunConfig(),
         token_usage_parser=token_usage_parser,

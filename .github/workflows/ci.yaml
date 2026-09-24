@@ -34,6 +34,8 @@ jobs:
               - .github/workflows/ci.yaml
               - codecov.yml
               - pyproject.toml
+              - uv.lock
+              - .python-version
               - Makefile
             ragas:
               - *related
@@ -43,6 +45,11 @@ jobs:
             docs:
               - *related
               - "docs/**"
+              - "mkdocs.yml"
+              - "scripts/**"
+              # docstrings are rendered by mkdocstrings, and deleting a module
+              # breaks the pages in docs/references/ that autodoc it
+              - "src/ragas/**"
 
   unit_tests:
     needs:
@@ -54,7 +61,7 @@ jobs:
         include:
           # Critical path: Latest + oldest Python on Ubuntu (full test suite)
           - os: ubuntu-latest
-            python-version: "3.9"
+            python-version: "3.11"
             test-type: "full"
           - os: ubuntu-latest
             python-version: "3.12"
@@ -64,10 +71,10 @@ jobs:
             test-type: "full"
           # Cross-platform validation (essential tests only)
           - os: macos-latest
-            python-version: "3.11"
+            python-version: "3.12"
             test-type: "essential"
           - os: windows-latest
-            python-version: "3.10"
+            python-version: "3.11"
             test-type: "essential"
 
     if: ${{ (github.event_name == 'pull_request' && needs.diff.outputs.ragas == 'true') || github.event_name == 'push' }}
@@ -79,37 +86,20 @@ jobs:
         with:
           fetch-depth: 0 # fetch all tags and branches
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Install uv (and the matrix Python)
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: ${{ matrix.os == 'macos-latest' && 'arm64' || 'x64' }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-
-      - name: Get pip cache dir
-        id: cache-dir
-        run: |
-          echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache dependencies (UV cache)
-        uses: actions/cache@v4
-        id: cache-deps
-        with:
-          path: |
-            ${{ steps.cache-dir.outputs.dir }}
-            ~/.cache/uv
-          key: deps-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('pyproject.toml') }}
-          restore-keys: |
-            deps-${{ runner.os }}-py${{ matrix.python-version }}-
-            deps-${{ runner.os }}-py3.11-
-            deps-${{ runner.os }}-
+      - name: Verify uv.lock is up to date with pyproject.toml
+        run: uv lock --check
 
       - name: Install dependencies
         run: |
-          # Use minimal install for fast CI runs (79 packages vs 383)
-          # This uses make install-minimal for consistency with local development
+          # Locked minimal install for fast, reproducible CI runs.
+          # Mirrors local development exactly (see `make install-minimal`).
           make install-minimal
 
       - name: Run unit tests
@@ -142,37 +132,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Install uv (and Python)
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.11"
-          architecture: x64
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-
-      - name: Get pip cache dir
-        id: cache-dir
-        run: |
-          echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache dependencies (UV cache)
-        uses: actions/cache@v4
-        id: cache-deps
-        with:
-          path: |
-            ${{ steps.cache-dir.outputs.dir }}
-            ~/.cache/uv
-          key: deps-ubuntu-py3.11-codestyle-${{ hashFiles('pyproject.toml') }}
-          restore-keys: |
-            deps-ubuntu-py3.11-codestyle-
-            deps-ubuntu-py3.11-
-            deps-ubuntu-
+      - name: Verify uv.lock is up to date with pyproject.toml
+        run: uv lock --check
 
       - name: Install dependencies
         run: |
-          # Use minimal install for fast CI runs (79 packages vs 383)
-          # This uses make install-minimal for consistency with local development
+          # Locked minimal install for fast, reproducible CI runs.
+          # Mirrors local development exactly (see `make install-minimal`).
           make install-minimal
 
       - name: Format check (dry run)
@@ -186,3 +159,27 @@ jobs:
 
       - name: Type check
         run: make type
+
+  docs_build:
+    runs-on: ubuntu-latest
+    needs:
+      - diff
+
+    if: ${{ (github.event_name == 'pull_request' && needs.diff.outputs.docs == 'true') || github.event_name == 'push' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv (and Python)
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Build docs and fail on any warning
+        # --strict promotes every mkdocs warning to an error. This is what catches
+        # a deleted page that is still referenced in nav, or a link to a file that
+        # no longer exists -- mkdocs reports both as warnings, not errors, so a
+        # plain build passes while the site quietly breaks.
+        run: make check-docs

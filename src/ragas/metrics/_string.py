@@ -1,12 +1,15 @@
+from __future__ import annotations
+
 import typing as t
 from dataclasses import dataclass, field
 from enum import Enum
 
-from langchain_core.callbacks import Callbacks
-
 from ragas.dataset_schema import SingleTurnSample
 from ragas.metrics.base import MetricType, SingleTurnMetric
 from ragas.run_config import RunConfig
+
+if t.TYPE_CHECKING:
+    from ragas.callbacks import Callbacks
 
 
 class DistanceMeasure(Enum):

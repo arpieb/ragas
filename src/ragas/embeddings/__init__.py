@@ -4,7 +4,6 @@ from ragas.embeddings.base import (
     BaseRagasEmbedding,
     BaseRagasEmbeddings,
     HuggingfaceEmbeddings,
-    LangchainEmbeddingsWrapper as _LangchainEmbeddingsWrapper,
     LlamaIndexEmbeddingsWrapper as _LlamaIndexEmbeddingsWrapper,
     embedding_factory as _embedding_factory,
 )
@@ -19,14 +18,6 @@ from ragas.embeddings.utils import batch_texts, get_optimal_batch_size, validate
 from ragas.utils import DeprecationHelper
 
 # Create deprecation wrappers for legacy classes
-LangchainEmbeddingsWrapper = DeprecationHelper(
-    _LangchainEmbeddingsWrapper,
-    "LangchainEmbeddingsWrapper is deprecated and will be removed in a future version. "
-    "Use the modern embedding providers instead: "
-    "embedding_factory('openai', model='text-embedding-3-small', client=openai_client) "
-    "or from ragas.embeddings import OpenAIEmbeddings, GoogleEmbeddings, HuggingFaceEmbeddings",
-)
-
 LlamaIndexEmbeddingsWrapper = DeprecationHelper(
     _LlamaIndexEmbeddingsWrapper,
     "LlamaIndexEmbeddingsWrapper is deprecated and will be removed in a future version. "
@@ -55,7 +46,6 @@ __all__ = [
     "BaseRagasEmbeddings",
     "HaystackEmbeddingsWrapper",
     "HuggingfaceEmbeddings",
-    "LangchainEmbeddingsWrapper",
     "LlamaIndexEmbeddingsWrapper",
     "embedding_factory",
     # Modern interface

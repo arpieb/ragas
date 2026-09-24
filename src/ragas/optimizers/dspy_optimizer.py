@@ -1,10 +1,10 @@
+from __future__ import annotations
+
 import hashlib
 import json
 import logging
 import typing as t
 from dataclasses import dataclass, field
-
-from langchain_core.callbacks import Callbacks
 
 from ragas.cache import CacheInterface
 from ragas.dataset_schema import SingleMetricAnnotation
@@ -12,6 +12,8 @@ from ragas.losses import Loss
 from ragas.optimizers.base import Optimizer
 from ragas.run_config import RunConfig
 
+if t.TYPE_CHECKING:
+    from ragas.callbacks import Callbacks
 logger = logging.getLogger(__name__)
 
 

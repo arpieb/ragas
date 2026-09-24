@@ -5,6 +5,7 @@ from typing import List
 
 import numpy as np
 
+from ragas.metrics.collections._average_precision import average_precision
 from ragas.metrics.collections.base import BaseMetric
 from ragas.metrics.result import MetricResult
 
@@ -117,15 +118,7 @@ class ContextPrecisionWithReference(BaseMetric):
 
     def _calculate_average_precision(self, verdicts: List[int]) -> float:
         """Calculate average precision from binary verdicts."""
-        cumsum = 0
-        numerator = 0.0
-        for i, v in enumerate(verdicts):
-            cumsum += v
-            if v:
-                numerator += cumsum / (i + 1)
-
-        denominator = cumsum + 1e-10
-        score = numerator / denominator
+        score = average_precision(verdicts)
 
         if np.isnan(score):
             # Match legacy warning behavior
@@ -237,15 +230,7 @@ class ContextPrecisionWithoutReference(BaseMetric):
 
     def _calculate_average_precision(self, verdicts: List[int]) -> float:
         """Calculate average precision from binary verdicts."""
-        cumsum = 0
-        numerator = 0.0
-        for i, v in enumerate(verdicts):
-            cumsum += v
-            if v:
-                numerator += cumsum / (i + 1)
-
-        denominator = cumsum + 1e-10
-        score = numerator / denominator
+        score = average_precision(verdicts)
 
         if np.isnan(score):
             # Match legacy warning behavior

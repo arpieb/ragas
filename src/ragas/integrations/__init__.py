@@ -6,8 +6,8 @@ to enhance the Ragas evaluation experience.
 
 Available integrations:
 - Tracing: Langfuse, MLflow for observability and tracking
-- Frameworks: LangChain, LlamaIndex, Griptape, LangGraph
-- Observability: Helicone, Langsmith, Opik
+- Frameworks: LlamaIndex, Griptape
+- Observability: Helicone
 - Platforms: Amazon Bedrock, R2R
 - AI Systems: Swarm for multi-agent evaluation
 - Protocols: AG-UI for event-based agent communication

@@ -213,11 +213,10 @@ We will use `ContextPrecision`, `ContextRecall` and `ContextRelevance` to measur
 ```python
 from ragas.metrics import ContextPrecision, ContextRecall, ContextRelevance
 from ragas import evaluate
-from langchain_openai import ChatOpenAI
-from ragas.llms import LangchainLLMWrapper
+from openai import OpenAI
+from ragas.llms import llm_factory
 
-llm = ChatOpenAI(model="gpt-4o-mini")
-evaluator_llm = LangchainLLMWrapper(llm)
+evaluator_llm = llm_factory("gpt-4o-mini", client=OpenAI())
 
 ragas_metrics = [
     ContextPrecision(llm=evaluator_llm),

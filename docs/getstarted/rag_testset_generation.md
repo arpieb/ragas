@@ -15,18 +15,22 @@ git clone https://huggingface.co/datasets/vibrantlabsai/Sample_Docs_Markdown
 
 ### Load documents
 
-Now we will load the documents from the sample dataset using `DirectoryLoader`, which is one of the document loaders from [langchain_community](https://python.langchain.com/docs/concepts/document_loaders/). You may also use any loaders from [llama_index](https://docs.llamaindex.ai/en/stable/understanding/loading/llamahub/)
+Now we will load the documents from the sample dataset. Any object exposing `page_content` and `metadata` works, so LangChain and LlamaIndex loaders are both fine -- here we build ragas `Document` objects directly, with no extra dependency.
 
 ```shell
-pip install langchain-community
+# no extra dependency needed
 ```
 
 ```python
-from langchain_community.document_loaders import DirectoryLoader
+from pathlib import Path
+
+from ragas.testset.document import Document
 
 path = "Sample_Docs_Markdown/"
-loader = DirectoryLoader(path, glob="**/*.md")
-docs = loader.load()
+docs = [
+    Document(page_content=p.read_text(), metadata={"source": str(p)})
+    for p in Path(path).rglob("*.md")
+]
 ```
 
 ### Choose your LLM
@@ -44,7 +48,7 @@ Now we will run the test generation using the loaded documents and the LLM setup
 from ragas.testset import TestsetGenerator
 
 generator = TestsetGenerator(llm=generator_llm, embedding_model=generator_embeddings)
-dataset = generator.generate_with_langchain_docs(docs, testset_size=10)
+dataset = generator.generate_with_docs(docs, testset_size=10)
 ```
 
 ### Analyzing the testset
@@ -95,7 +99,10 @@ for doc in docs:
     kg.nodes.append(
         Node(
             type=NodeType.DOCUMENT,
-            properties={"page_content": doc.page_content, "document_metadata": doc.metadata}
+            properties={
+                "page_content": doc.page_content,
+                "document_metadata": doc.metadata,
+            },
         )
     )
 ```
@@ -116,7 +123,9 @@ from ragas.testset.transforms import default_transforms, apply_transforms
 transformer_llm = generator_llm
 embedding_model = generator_embeddings
 
-trans = default_transforms(documents=docs, llm=transformer_llm, embedding_model=embedding_model)
+trans = default_transforms(
+    documents=docs, llm=transformer_llm, embedding_model=embedding_model
+)
 apply_transforms(kg, trans)
 ```
 
@@ -140,7 +149,9 @@ Now we will use the `loaded_kg` to create the [TestsetGenerator][ragas.testset.s
 ```python
 from ragas.testset import TestsetGenerator
 
-generator = TestsetGenerator(llm=generator_llm, embedding_model=embedding_model, knowledge_graph=loaded_kg)
+generator = TestsetGenerator(
+    llm=generator_llm, embedding_model=embedding_model, knowledge_graph=loaded_kg
+)
 ```
 
 We can also define the distribution of queries we would like to generate. Here lets use the default distribution.

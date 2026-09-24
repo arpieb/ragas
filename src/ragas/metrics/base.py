@@ -23,9 +23,9 @@ from ragas.run_config import RunConfig
 from ragas.utils import camel_to_snake, get_metric_language
 
 if t.TYPE_CHECKING:
-    from langchain_core.callbacks import Callbacks
     from pydantic import BaseModel
 
+    from ragas.callbacks import Callbacks
     from ragas.config import DemonstrationConfig, InstructionConfig
     from ragas.dataset import Dataset
     from ragas.embeddings import BaseRagasEmbedding, BaseRagasEmbeddings

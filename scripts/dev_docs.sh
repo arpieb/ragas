@@ -1,3 +1,5 @@
 #!/bin/bash
+# Serve the docs locally with live reload.
+set -euo pipefail
 
-source .venv/bin/activate && mkdocs serve --dirtyreload
+exec uv run --group docs mkdocs serve --dirtyreload

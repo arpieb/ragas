@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 import logging
 import typing as t
 
 import numpy as np
-from langchain_core.callbacks import Callbacks
 from pydantic import BaseModel
 
 from ragas.executor import run_async_batch
 from ragas.llms.base import BaseRagasLLM
 from ragas.prompt import PydanticPrompt, StringIO
 from ragas.testset.graph import KnowledgeGraph, Node
+
+if t.TYPE_CHECKING:
+    from ragas.callbacks import Callbacks
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +27,17 @@ def default_filter(node: Node) -> bool:
 
 
 class Persona(BaseModel):
+    """A user archetype the generated queries are written from the point of view of.
+
+    Attributes
+    ----------
+    name : str
+        A short label for the persona, e.g. ``"New Joinee"``.
+    role_description : str
+        What this persona knows and what they are trying to find out. This is
+        what steers query generation, so it carries most of the signal.
+    """
+
     name: str
     role_description: str
 

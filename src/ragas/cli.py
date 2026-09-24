@@ -3,6 +3,7 @@ Ragas CLI for running experiments from command line.
 """
 
 import asyncio
+import importlib.abc
 import importlib.util
 import sys
 import traceback
@@ -252,7 +253,12 @@ def load_eval_module(eval_path: str) -> Any:
 
     # Load the module
     spec = importlib.util.spec_from_file_location("eval_module", eval_path_obj)
-    if spec is None or spec.loader is None:
+    # `ModuleSpec.loader` is typed as LoaderProtocol, which only promises
+    # `load_module`. InspectLoader is the ABC that declares `exec_module`, so
+    # checking for it both satisfies the type checker and turns a loader that
+    # cannot execute the module into the friendly error below rather than an
+    # AttributeError at call time.
+    if spec is None or not isinstance(spec.loader, importlib.abc.InspectLoader):
         error(f"Error: Could not load evaluation file: {eval_path_obj}")
         raise typer.Exit(1)
 

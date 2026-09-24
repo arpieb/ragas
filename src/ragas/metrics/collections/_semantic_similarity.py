@@ -85,8 +85,8 @@ class SemanticSimilarity(BaseMetric):
         embedding_1 = np.array(self.embeddings.embed_text(reference))
         embedding_2 = np.array(self.embeddings.embed_text(response))
 
-        norms_1 = np.linalg.norm(embedding_1, keepdims=True)
-        norms_2 = np.linalg.norm(embedding_2, keepdims=True)
+        norms_1 = np.linalg.norm(embedding_1)
+        norms_2 = np.linalg.norm(embedding_2)
         embedding_1_normalized = embedding_1 / norms_1
         embedding_2_normalized = embedding_2 / norms_2
         similarity = embedding_1_normalized @ embedding_2_normalized.T

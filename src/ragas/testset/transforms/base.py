@@ -3,7 +3,7 @@ import typing as t
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
-from ragas.llms import BaseRagasLLM, llm_factory
+from ragas.llms import BaseRagasLLM, default_llm
 from ragas.prompt import PromptMixin
 from ragas.testset.graph import KnowledgeGraph, Node, Relationship
 from ragas.tokenizers import DEFAULT_TOKENIZER, BaseTokenizer
@@ -19,14 +19,8 @@ def default_filter(node: Node) -> bool:
 
 
 def _default_llm_factory() -> t.Union[BaseRagasLLM, "InstructorBaseRagasLLM"]:
-    """Create a default LLM instance with OpenAI gpt-4o-mini.
-
-    Returns InstructorBaseRagasLLM instance which satisfies BaseRagasLLM interface.
-    """
-    from openai import OpenAI
-
-    client = OpenAI()
-    return llm_factory("gpt-4o-mini", client=client)
+    """The default LLM, shared with ``evaluate()``. See ``ragas.llms.default_llm``."""
+    return default_llm()
 
 
 @dataclass

@@ -93,7 +93,7 @@ critic_llm = ChatOpenAI(model="gpt-4o")
 openai_client = openai.OpenAI()
 embeddings = OpenAIEmbeddings(client=openai_client)
 
-generator = TestsetGenerator.from_langchain(generator_llm, critic_llm, embeddings)
+generator = TestsetGenerator(llm=generator_llm, embedding_model=embeddings)
 
 # generate testset
 testset = generator.generate_with_llamaindex_docs(documents, test_size=TEST_SIZE)
@@ -443,12 +443,12 @@ Run the Ragas evaluations on your dataset, and the traces will appear in your La
 
 ```python
 from ragas import evaluate
-from ragas.llms import LangchainLLMWrapper
-from langchain_openai import ChatOpenAI
+from openai import OpenAI
+
+from ragas.llms import llm_factory
 from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness
 
-llm = ChatOpenAI(model="gpt-4o-mini")
-evaluator_llm = LangchainLLMWrapper(llm)
+evaluator_llm = llm_factory("gpt-4o-mini", client=OpenAI())
 
 result = evaluate(
     dataset=evaluation_dataset,

@@ -565,14 +565,12 @@ Ragas includes metrics suited to such evaluations, and we will explore some of t
 
 
 ```python
-from langchain_aws import ChatBedrock
-from ragas.llms import LangchainLLMWrapper
+from ragas.llms import llm_factory
 
-model_id = "us.amazon.nova-pro-v1:0"   # Choose your desired model
-region_name = "us-east-1"              # Choose your desired AWS region
+model_id = "us.amazon.nova-pro-v1:0"  # Choose your desired model
+region_name = "us-east-1"  # Choose your desired AWS region
 
-bedrock_llm = ChatBedrock(model_id=model_id, region_name=region_name)
-evaluator_llm = LangchainLLMWrapper(bedrock_llm)
+evaluator_llm = llm_factory(f"bedrock/{model_id}", aws_region_name=region_name)
 ```
 
 
@@ -593,7 +591,9 @@ rubrics = {
     ),
 }
 
-recommendations = RubricsScore(rubrics=rubrics, llm=evaluator_llm, name="Recommendations")
+recommendations = RubricsScore(
+    rubrics=rubrics, llm=evaluator_llm, name="Recommendations"
+)
 
 
 # Metric to evaluate if the AI fulfills all human requests completely.
@@ -651,7 +651,7 @@ Your reservation was found and has been successfully canceled.
 from ragas.integrations.amazon_bedrock import convert_to_ragas_messages
 
 # Convert Amazon Bedrock traces to messages accepted by Ragas.
-# The convert_to_ragas_messages function transforms Bedrock-specific trace data 
+# The convert_to_ragas_messages function transforms Bedrock-specific trace data
 # into a format that Ragas can process as conversation messages.
 ragas_messages_trace_1 = convert_to_ragas_messages(traces_1)
 ragas_messages_trace_2 = convert_to_ragas_messages(traces_2)
@@ -851,7 +851,7 @@ In this tutorial, we will use the following RAG metrics:
 
 
 ```python
-from ragas.metrics import ContextRelevance, Faithfulness,  ResponseGroundedness
+from ragas.metrics import ContextRelevance, Faithfulness, ResponseGroundedness
 
 metrics = [
     ContextRelevance(llm=evaluator_llm),

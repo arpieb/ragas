@@ -1,5 +1,12 @@
 # Phoenix (Arize)
 
+!!! warning "This page is out of date"
+    It uses `ragas.testset.evolutions` and `ragas.testset.generator`, which were
+    removed several releases ago, so the code here will not run as written. The
+    LangChain references have been updated, but the page needs a fuller rewrite.
+    For current usage see [testset generation](../../getstarted/rag_testset_generation.md).
+
+
 ## 1. Introduction
 
 Building a baseline for a RAG pipeline is not usually difficult, but enhancing it to make it suitable for production and ensuring the quality of your responses is almost always hard. Choosing the right tools and parameters for RAG can itself be challenging when there is an abundance of options available. This tutorial shares a robust workflow for making the right choices while building your RAG and ensuring its quality.
@@ -79,16 +86,21 @@ An ideal test dataset should contain data points of high quality and diverse nat
 
 ```python
 from ragas.testset import TestsetGenerator
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+import openai
+
+from ragas.embeddings import embedding_factory
+from ragas.llms import llm_factory
 
 TEST_SIZE = 25
 
 # generator with openai models
-generator_llm = ChatOpenAI(model="gpt-4o-mini")
-critic_llm = ChatOpenAI(model="gpt-4o")
-embeddings = OpenAIEmbeddings()
+openai_client = openai.OpenAI()
+generator_llm = llm_factory("gpt-4o-mini", client=openai_client)
+embeddings = embedding_factory(
+    "openai", model="text-embedding-3-small", client=openai_client
+)
 
-generator = TestsetGenerator.from_langchain(generator_llm, critic_llm, embeddings)
+generator = TestsetGenerator(llm=generator_llm, embedding_model=embeddings)
 
 # generate testset
 testset = generator.generate_with_llamaindex_docs(documents, test_size=TEST_SIZE)

@@ -4,14 +4,14 @@ import typing as t
 
 import numpy as np
 import pytest
-from langchain_core.outputs import Generation, LLMResult
 from pydantic import BaseModel
 
 from ragas.embeddings.base import BaseRagasEmbeddings
 from ragas.llms.base import BaseRagasLLM
+from ragas.llms.output import Generation, LLMResult
 
 if t.TYPE_CHECKING:
-    from langchain_core.prompt_values import PromptValue
+    from ragas.prompt.value import PromptValue
 
 
 def pytest_configure(config):

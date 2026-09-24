@@ -1,6 +1,8 @@
 site_name: Ragas
 site_description: Evaluation framework for your AI Application
-site_url: !ENV READTHEDOCS_CANONICAL_URL
+# ReadTheDocs injects READTHEDOCS_CANONICAL_URL; the fallback keeps local and CI
+# builds working, since the llmstxt plugin hard-requires site_url to be set.
+site_url: !ENV [READTHEDOCS_CANONICAL_URL, "https://docs.ragas.io/"]
 repo_name: vibrantlabsai/ragas
 repo_url: https://github.com/vibrantlabsai/ragas
 watch:
@@ -13,7 +15,12 @@ nav:
       - getstarted/index.md
       - Installation: getstarted/install.md
       - Quick Start: getstarted/quickstart.md
+      - Run Your First Experiment: getstarted/experiments_quickstart.md
+      - Evaluate a Simple LLM App: getstarted/evals.md
+      - Evaluate a Simple RAG System: getstarted/rag_eval.md
+      - Testset Generation for RAG: getstarted/rag_testset_generation.md
       - Tutorials:
+          - tutorials/index.md
           - Evaluate a prompt: tutorials/prompt.md
           - Evaluate a simple RAG system: tutorials/rag.md
           - Evaluate an AI Workflow: tutorials/workflow.md
@@ -34,45 +41,30 @@ nav:
                   - Noise Sensitivity: concepts/metrics/available_metrics/noise_sensitivity.md
                   - Response Relevancy: concepts/metrics/available_metrics/answer_relevance.md
                   - Faithfulness: concepts/metrics/available_metrics/faithfulness.md
-              - Nvidia Metrics:
-                  - Answer Accuracy: concepts/metrics/available_metrics/nvidia_metrics/#answer-accuracy
-                  - Context Relevance: concepts/metrics/available_metrics/nvidia_metrics/#context-relevance
-                  - Response Groundedness: concepts/metrics/available_metrics/nvidia_metrics/#response-groundedness
+              - Nvidia Metrics: concepts/metrics/available_metrics/nvidia_metrics.md
               - Agents or Tool Use Cases:
                     - concepts/metrics/available_metrics/agents.md
-                    - Topic Adherence: concepts/metrics/available_metrics/agents/#topic-adherence
-                    - Tool Call Accuracy: concepts/metrics/available_metrics/agents/#tool-call-accuracy
-                    - Tool Call F1: concepts/metrics/available_metrics/agents/#tool-call-f1
-                    - Agent Goal Accuracy: concepts/metrics/available_metrics/agents/#agent-goal-accuracy
               - Natural Language Comparison:
                   - Factual Correctness: concepts/metrics/available_metrics/factual_correctness.md
                   - Semantic Similarity: concepts/metrics/available_metrics/semantic_similarity.md
+                  - Answer Correctness: concepts/metrics/available_metrics/answer_correctness.md
                   - Traditional non LLM metrics:
                     - concepts/metrics/available_metrics/traditional.md
-                    - Non LLM String Similarity: concepts/metrics/available_metrics/traditional/#non-llm-string-similarity
-                    - BLEU Score: concepts/metrics/available_metrics/traditional/#bleu-score
-                    - CHRF Score: concepts/metrics/available_metrics/traditional/#chrf-score
-                    - ROUGE Score: concepts/metrics/available_metrics/traditional/#rouge-score
-                    - String Presence: concepts/metrics/available_metrics/traditional/#string-presence
-                    - Exact Match: concepts/metrics/available_metrics/traditional/#exact-match
               - SQL:
                   - concepts/metrics/available_metrics/sql.md
-                  - Execution based Datacompy Score: concepts/metrics/available_metrics/sql/#execution-based-metrics
-                  - SQL Query Equivalence: concepts/metrics/available_metrics/sql/#sql-query-semantic-equivalence
               - General Purpose:
                   - concepts/metrics/available_metrics/general_purpose.md
-                  - Aspect Critic: concepts/metrics/available_metrics/general_purpose/#aspect-critic
-                  - Simple Criteria Scoring: concepts/metrics/available_metrics/general_purpose/#simple-criteria-scoring
-                  - Rubrics Based Scoring: concepts/metrics/available_metrics/general_purpose/#rubrics-based-criteria-scoring
-                  - Instance Specific Rubrics Scoring: concepts/metrics/available_metrics/general_purpose/#instance-specific-rubrics-criteria-scoring
+                  - Aspect Critique: concepts/metrics/available_metrics/aspect_critic.md
+                  - Rubric-Based Evaluation: concepts/metrics/available_metrics/rubrics_based.md
+              - Multimodal:
+                  - Multimodal Faithfulness: concepts/metrics/available_metrics/multi_modal_faithfulness.md
+                  - Multimodal Relevance: concepts/metrics/available_metrics/multi_modal_relevance.md
               - Other Tasks:
                   - Summarization: concepts/metrics/available_metrics/summarization_score.md
       - Test Data Generation:
           - concepts/test_data_generation/index.md
           - RAG:
               - concepts/test_data_generation/rag.md
-              - KG Building: concepts/test_data_generation/rag/#knowledge-graph-creation
-              - Scenario Generation: concepts/test_data_generation/rag/#scenario-generation
           - Agents or tool use:
               - concepts/test_data_generation/agents.md
       - Components:
@@ -95,9 +87,10 @@ nav:
           - LLM Adapters: howtos/llm-adapters.md
           - Metrics:
               - Modify Prompts: howtos/customizations/metrics/modifying-prompts-metrics.md
-              - Adapt Metrics to Languages: howtos/customizations/metrics/_metrics_language_adaptation.md
-              - Train and Align Metrics: howtos/customizations/metrics/train_your_own_metric.md
+              - Adapt Metrics to Languages: howtos/customizations/metrics/metrics_language_adaptation.md
+              - Tracing and Logging Evaluations: howtos/customizations/metrics/tracing.md
           - Testset Generation:
+              - howtos/customizations/testgenerator/index.md
               - Non-English Testset Generation: howtos/customizations/testgenerator/_language_adaptation.md
               - Persona Generation: howtos/customizations/testgenerator/_persona_generator.md
               - Custom Single-hop Query: howtos/customizations/testgenerator/_testgen-custom-single-hop.md
@@ -115,6 +108,8 @@ nav:
             - Cost Analysis: howtos/applications/_cost.md
             - Evaluating Multi-turn Conversations: howtos/applications/evaluating_multi_turn_conversations.md
             - Evaluations with Vertex AI models: howtos/applications/vertexai_x_ragas.md
+            - Aligning Vertex AI Evaluators with Human Judgment: howtos/applications/vertexai_alignment.md
+            - Comparing Vertex AI Models: howtos/applications/vertexai_model_comparision.md
           - Testset Generation:
             - Single-hop Query Testset: howtos/applications/singlehop_testset_gen.md
           - Benchmarking:
@@ -124,15 +119,25 @@ nav:
             - Align an LLM as a Judge: howtos/applications/align-llm-as-judge.md
           - RAG Evaluation:
             - Evaluate and Improve a RAG App: howtos/applications/evaluate-and-improve-rag.md
+            - Compare Embeddings for a Retriever: howtos/applications/compare_embeddings.md
+          - Automation:
+            - Adding Ragas to your CI Pipeline: howtos/applications/add_to_ci.md
       - CLI:
           - howtos/cli/index.md
+          - Prompt Evaluation: howtos/cli/prompt_evals.md
           - RAG Evaluation: howtos/cli/rag_eval.md
           - Improve RAG: howtos/cli/improve_rag.md
+          - Workflow Evaluation: howtos/cli/workflow_eval.md
+          - Agent Evaluation: howtos/cli/agent_evals.md
+          - LlamaIndex Agent Evaluation: howtos/cli/llamaIndex_agent_evals.md
+          - Text-to-SQL Evaluation: howtos/cli/text2sql.md
+          - Judge Alignment: howtos/cli/judge_alignment.md
+          - LLM Benchmarking: howtos/cli/benchmark_llm.md
       - Integrations:
           - howtos/integrations/index.md
           - Observability:
+              - Overview: howtos/observability.md
               - Arize: howtos/integrations/_arize.md
-              - LangSmith: howtos/integrations/langsmith.md
           - LLM Providers:
               - Amazon Bedrock: howtos/integrations/amazon_bedrock.md
               - Google Gemini: howtos/integrations/gemini.md
@@ -141,8 +146,6 @@ nav:
               - AG-UI: howtos/integrations/ag_ui.md
               - Griptape: howtos/integrations/griptape.md
               - Haystack: howtos/integrations/haystack.md
-              - LangChain: howtos/integrations/langchain.md
-              - LangGraph: howtos/integrations/_langgraph_agent_evaluation.md
               - LlamaIndex: howtos/integrations/_llamaindex.md
               - LlamaIndex Agents: howtos/integrations/llamaindex_agents.md
               - LlamaStack: howtos/integrations/llama_stack.md
@@ -151,6 +154,7 @@ nav:
       - Migrations:
           - From v0.1 to v0.2: howtos/migrations/migrate_from_v01_to_v02.md
           - From v0.3 to v0.4: howtos/migrations/migrate_from_v03_to_v04.md
+          - Off LangChain: howtos/migrations/migrate_off_langchain.md
   - 📖 References:
     - references/index.md
     - Core:
@@ -175,6 +179,28 @@ nav:
       - Generation: references/generate.md
     - Integrations: references/integrations.md
   - ❤️ Community: community/index.md
+
+# Pages deliberately kept out of the sidebar. Declaring them here is what lets
+# `mkdocs build --strict` pass: without it mkdocs emits one "pages exist in the
+# docs directory but are not included in nav" warning covering all of them,
+# which would also mask a genuinely orphaned new page.
+not_in_nav: |
+  # Snippet partials -- included into other pages via `--8<--`, never standalone.
+  extra/components/choose_evaluator_llm.md
+  extra/components/choose_generator_llm.md
+  howtos/customizations/metrics/_cost.md
+
+  # Both document shipped integrations -- ragas.integrations.helicone (which
+  # evaluate() reads) and ragas.integrations.tracing.langfuse -- but neither is
+  # in the sidebar. Their imports resolve; what they still use is the legacy
+  # metric-injection pattern, so they want modernising before promotion.
+  howtos/integrations/_helicone.md
+  howtos/integrations/_langfuse.md
+
+  # Stubs and internal notes, not user-facing documentation.
+  community/pdf_export.md
+  concepts/feedback/index.md
+  quoted_spans_metric.md
 
 # https://www.mkdocs.org/user-guide/configuration/#validation
 validation:

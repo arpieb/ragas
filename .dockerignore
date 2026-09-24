@@ -1,2 +1,11 @@
 Dockerfile
 test_resources
+# Never copy a host virtualenv into the image - it is large and its
+# symlinks/shebangs point at host paths. uv builds a fresh one inside.
+.venv
+**/.venv
+__pycache__
+**/__pycache__
+*.egg-info
+dist
+build
