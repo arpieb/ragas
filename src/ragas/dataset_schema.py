@@ -419,15 +419,12 @@ class EvaluationResult:
         The dataset containing the scores of the evaluation.
     dataset : Dataset, optional
         The original dataset used for the evaluation. Default is None.
-    binary_columns : list of str, optional
-        List of columns that are binary metrics. Default is an empty list.
     cost_cb : CostCallbackHandler, optional
         The callback handler for cost computation. Default is None.
     """
 
     scores: t.List[t.Dict[str, t.Any]]
     dataset: EvaluationDataset
-    binary_columns: t.List[str] = field(default_factory=list)
     cost_cb: t.Optional[CostCallbackHandler] = None
     traces: t.List[t.Dict[str, t.Any]] = field(default_factory=list)
     ragas_traces: t.Dict[str, ChainRun] = field(default_factory=dict, repr=False)
@@ -439,14 +436,10 @@ class EvaluationResult:
             k: [d[k] for d in self.scores] for k in self.scores[0].keys()
         }
 
-        values = []
-        self._repr_dict = {}
-        for metric_name in self._scores_dict.keys():
-            value = safe_nanmean(self._scores_dict[metric_name])
-            self._repr_dict[metric_name] = value
-            if metric_name not in self.binary_columns:
-                value = t.cast(float, value)
-                values.append(value + 1e-10)
+        self._repr_dict = {
+            metric_name: safe_nanmean(scores)
+            for metric_name, scores in self._scores_dict.items()
+        }
 
         # parse the traces
         run_id = str(self.run_id) if self.run_id is not None else None

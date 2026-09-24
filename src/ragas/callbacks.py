@@ -380,6 +380,10 @@ def parse_run_traces(
         raise ValueError(
             "Multiple root traces found! This is a bug on our end, please file an issue and we will fix it ASAP :)"
         )
+    if not root_traces:
+        # No traces to parse. Reachable whenever an EvaluationResult is built
+        # without them -- constructing one directly used to raise IndexError here.
+        return []
     root_trace = root_traces[0]
 
     # get all the row traces
