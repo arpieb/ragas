@@ -5,7 +5,6 @@ import logging
 import typing as t
 from typing import Dict, List
 
-from ragas._analytics import LLMUsageEvent, track
 from ragas.llms.base import BaseRagasLLM
 from ragas.llms.output import Generation, LLMResult
 from ragas.prompt.value import PromptValue
@@ -85,17 +84,6 @@ class OCIGenAIWrapper(BaseRagasLLM):
         if run_config is None:
             run_config = RunConfig()
         self.set_run_config(run_config)
-
-        # Track initialization
-        track(
-            LLMUsageEvent(
-                provider="oci_genai",
-                model=model_id,
-                llm_type="oci_wrapper",
-                num_requests=1,
-                is_async=False,
-            )
-        )
 
     def _convert_prompt_to_messages(self, prompt: PromptValue) -> List[Dict[str, str]]:
         """Convert PromptValue to a list of role-aware messages for OCI.
@@ -209,17 +197,6 @@ class OCIGenAIWrapper(BaseRagasLLM):
                 generation = Generation(text=text)
                 generations.append([generation])
 
-            # Track usage
-            track(
-                LLMUsageEvent(
-                    provider="oci_genai",
-                    model=self.model_id,
-                    llm_type="oci_wrapper",
-                    num_requests=n,
-                    is_async=False,
-                )
-            )
-
             return LLMResult(generations=generations)
 
         except Exception as e:
@@ -264,17 +241,6 @@ class OCIGenAIWrapper(BaseRagasLLM):
 
                 generation = Generation(text=text)
                 generations.append([generation])
-
-            # Track usage
-            track(
-                LLMUsageEvent(
-                    provider="oci_genai",
-                    model=self.model_id,
-                    llm_type="oci_wrapper",
-                    num_requests=n,
-                    is_async=True,
-                )
-            )
 
             return LLMResult(generations=generations)
 

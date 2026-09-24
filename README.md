@@ -124,11 +124,9 @@ Run `make install` for the full ML stack, which the e2e tests need. Some e2e and
 
 Contributions are welcome. Fork the repo, create a feature branch, and open a pull request against `main`.
 
-## 🔍 Usage analytics
+## 🔍 No usage analytics
 
-The analytics code inherited from upstream is still present. It sends minimal, anonymized usage events to the **upstream project's** endpoint, not to this fork. The code is in [`src/ragas/_analytics.py`](./src/ragas/_analytics.py).
-
-To opt out, set `RAGAS_DO_NOT_TRACK=true`.
+ragas-ng collects no usage data. The upstream analytics module, which sent anonymized usage events to upstream's endpoint, has been removed, so ragas sends no telemetry and no longer writes a persistent user ID to disk. `RAGAS_DO_NOT_TRACK` is no longer needed.
 
 ## Acknowledgements and citation
 

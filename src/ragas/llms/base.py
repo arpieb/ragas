@@ -11,7 +11,6 @@ from dataclasses import dataclass, field
 import instructor
 from pydantic import BaseModel
 
-from ragas._analytics import LLMUsageEvent, track
 from ragas.cache import CacheInterface, cacher
 from ragas.exceptions import LLMDidNotFinishException
 from ragas.llms.output import Generation, LLMResult
@@ -528,16 +527,6 @@ def llm_factory(
             f"Error: {str(e)}"
         )
 
-    track(
-        LLMUsageEvent(
-            provider=provider,
-            model=model,
-            llm_type="llm_factory",
-            num_requests=1,
-            is_async=False,
-        )
-    )
-
     return llm
 
 
@@ -909,16 +898,6 @@ class InstructorLLM(InstructorBaseRagasLLM):
                     **provider_kwargs,
                 )
 
-        # Track the usage
-        track(
-            LLMUsageEvent(
-                provider=self.provider,
-                model=self.model,
-                llm_type="instructor",
-                num_requests=1,
-                is_async=self.is_async,
-            )
-        )
         return result
 
     async def agenerate(
@@ -962,16 +941,6 @@ class InstructorLLM(InstructorBaseRagasLLM):
                 **provider_kwargs,
             )
 
-        # Track the usage
-        track(
-            LLMUsageEvent(
-                provider=self.provider,
-                model=self.model,
-                llm_type="instructor",
-                num_requests=1,
-                is_async=True,
-            )
-        )
         return result
 
     def _get_client_info(self) -> str:

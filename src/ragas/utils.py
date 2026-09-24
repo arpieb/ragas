@@ -344,7 +344,7 @@ def set_logging_level(logger_name: str = __name__, level: int = logging.DEBUG):
     log_format = (
         "[%(local_time)s - (%(utc_time)s UTC)] "
         "[%(levelname)s] [%(name)s] "
-        "[RagasID: %(ragas_id)s, App-Version: %(app_version)s] %(message)s"
+        "[App-Version: %(app_version)s] %(message)s"
     )
 
     # Create a formatter with the custom formatter
@@ -370,14 +370,12 @@ class _ContextualFormatter(logging.Formatter):
 
     def format(self, record):
         from ragas import __version__
-        from ragas._analytics import get_userid
 
         # Add UTC time
         record.utc_time = self.format_time(record, _LOGGER_DATE_TIME)
         # Add local time
         record.local_time = self.format_time(record, _LOGGER_DATE_TIME, local_time=True)
         # Add additional context
-        record.ragas_id = get_userid()
         record.app_version = __version__
         return super().format(record)
 
