@@ -221,3 +221,15 @@ class TestParseRunTraces:
                 "output": "generated",
             }
         }
+
+
+def test_no_traces_parses_to_nothing():
+    """An empty trace tree is not an error.
+
+    ``parse_run_traces`` guarded against more than one root but not against
+    none, so ``EvaluationResult(scores=..., dataset=...)`` -- construction with
+    only its required fields -- raised IndexError from __post_init__.
+    """
+    from ragas.callbacks import parse_run_traces
+
+    assert parse_run_traces({}) == []

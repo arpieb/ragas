@@ -33,7 +33,6 @@ from ragas.integrations.helicone import helicone_config
 from ragas.llms import default_llm
 from ragas.llms.base import BaseRagasLLM, InstructorBaseRagasLLM
 from ragas.metrics._answer_correctness import AnswerCorrectness
-from ragas.metrics._aspect_critic import AspectCritic
 from ragas.metrics._collections_bridge import adapt_collections_metric
 from ragas.metrics.base import (
     Metric,
@@ -168,7 +167,6 @@ async def aevaluate(
         validate_supported_metrics(dataset, metrics)
 
     # init llms and embeddings
-    binary_metrics = []
     llm_changed: t.List[int] = []
     embeddings_changed: t.List[int] = []
     answer_correctness_is_set = -1
@@ -176,8 +174,6 @@ async def aevaluate(
     # loop through the metrics and perform initializations
     for i, metric in enumerate(metrics):
         # set llm and embeddings if not set
-        if isinstance(metric, AspectCritic):
-            binary_metrics.append(metric.name)
         if isinstance(metric, MetricWithLLM) and metric.llm is None:
             if llm is None:
                 llm = default_llm()
@@ -337,7 +333,6 @@ async def aevaluate(
         result = EvaluationResult(
             scores=scores,
             dataset=dataset,
-            binary_columns=binary_metrics,
             cost_cb=t.cast(
                 t.Union["TokenUsageCollector", None],
                 cost_cb,
