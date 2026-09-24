@@ -90,5 +90,5 @@ All the prompts have been rewritten to use [`PydanticPrompts`][ragas.prompt.pyda
 
 !!! note "Need Further Assistance?"
 
-    If you have any further questions feel free to post them in this [github issue](https://github.com/vibrantlabsai/ragas/issues/1486) or reach out to us on [cal.com](https://cal.com/shahul-ragas/30min)
+    If you have any further questions feel free to post them in this [github issue](https://github.com/vibrantlabsai/ragas/issues/1486).
 

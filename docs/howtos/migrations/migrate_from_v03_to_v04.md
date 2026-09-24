@@ -1777,10 +1777,6 @@ If you encounter issues during migration:
     - Search [existing issues](https://github.com/arpieb/ragas-ng/issues)
     - Create a new issue with migration-specific details
 
-3. **Community Support**
-    - [Join our Discord community](https://discord.gg/5djav8GGNZ)
-    - [Schedule a call](https://cal.com/shahul-ragas/30min) with the maintainers
-
 ---
 
 ## Summary
