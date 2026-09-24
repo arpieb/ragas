@@ -41,7 +41,7 @@ Before doing anything else, check if the feature works with the new API:
 
 ```
 📋 *Doc Update Skipped*: `<guide_path>`
-*Link*: https://docs.ragas.io/en/latest/<guide_path_without_extension>/
+*Link*: https://github.com/arpieb/ragas-ng/blob/main/<guide_path>
 *Reason*: <feature> only works with legacy `evaluate()` API, not yet supported in `experiment()`/collections
 *Action*: Keep as-is until collections API adds support
 ```

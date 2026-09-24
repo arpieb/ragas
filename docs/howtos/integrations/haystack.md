@@ -212,7 +212,7 @@ Meta AI's LLaMA models stand out due to their open-source nature, which allows r
 
 ## Advance Usage
 
-Instead of using the default ragas metrics, you can change them to fit your needs or even create your own custom metrics. After that, you can pass these to the RagasEvaluator component. To learn more about how to customize ragas metrics, check out the [docs](https://docs.ragas.io/en/stable/howtos/customizations/).
+Instead of using the default ragas metrics, you can change them to fit your needs or even create your own custom metrics. After that, you can pass these to the RagasEvaluator component. To learn more about how to customize ragas metrics, check out the [docs](../customizations/index.md).
 
 In the example below, we will define two custom Ragas metrics:
 

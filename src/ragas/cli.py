@@ -783,7 +783,7 @@ uv run python evals.py --agentic
 
 ## Documentation
 
-Visit https://docs.ragas.io for more information.
+Visit https://github.com/arpieb/ragas-ng/tree/main/docs for more information.
 """
         else:
             readme_content = f"""# {template_info["name"]}
@@ -879,7 +879,7 @@ Update the `my_metric` definition in `evals.py` to use different grading criteri
 
 ## Documentation
 
-Visit https://docs.ragas.io for more information.
+Visit https://github.com/arpieb/ragas-ng/tree/main/docs for more information.
 """
 
         readme_path = output_path / "README.md"
@@ -905,7 +905,9 @@ Visit https://docs.ragas.io for more information.
     console.print("  export OPENAI_API_KEY='your-api-key'")
     console.print("  uv run python evals.py")
     console.print("\n📚 For detailed instructions, see:")
-    console.print("  https://docs.ragas.io/en/latest/getstarted/quickstart/\n")
+    console.print(
+        "  https://github.com/arpieb/ragas-ng/blob/main/docs/getstarted/quickstart.md\n"
+    )
 
 
 @app.command()

@@ -104,7 +104,7 @@ async def aevaluate(
     warnings.warn(
         "aevaluate() is deprecated and will be removed in a future version. "
         "Use the @experiment decorator instead. "
-        "See https://docs.ragas.io/en/latest/concepts/experiment/ for more information.",
+        "See https://github.com/arpieb/ragas-ng/blob/main/docs/concepts/experimentation.md for more information.",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -458,7 +458,7 @@ def evaluate(
     warnings.warn(
         "evaluate() is deprecated and will be removed in a future version. "
         "Use the @experiment decorator instead. "
-        "See https://docs.ragas.io/en/latest/concepts/experiment/ for more information.",
+        "See https://github.com/arpieb/ragas-ng/blob/main/docs/concepts/experimentation.md for more information.",
         DeprecationWarning,
         stacklevel=2,
     )
