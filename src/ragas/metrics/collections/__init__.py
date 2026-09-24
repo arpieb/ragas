@@ -25,6 +25,7 @@ from ragas.metrics.collections.agent_goal_accuracy import (
 from ragas.metrics.collections.answer_accuracy import AnswerAccuracy
 from ragas.metrics.collections.answer_correctness import AnswerCorrectness
 from ragas.metrics.collections.answer_relevancy import AnswerRelevancy
+from ragas.metrics.collections.aspect_critic import AspectCritic
 from ragas.metrics.collections.base import BaseMetric
 from ragas.metrics.collections.chrf_score import CHRFScore
 from ragas.metrics.collections.context_entity_recall import ContextEntityRecall
@@ -50,6 +51,7 @@ from ragas.metrics.collections.multi_modal_relevance import MultiModalRelevance
 from ragas.metrics.collections.noise_sensitivity import NoiseSensitivity
 from ragas.metrics.collections.quoted_spans import QuotedSpansAlignment
 from ragas.metrics.collections.response_groundedness import ResponseGroundedness
+from ragas.metrics.collections.simple_criteria import SimpleCriteriaScore
 from ragas.metrics.collections.sql_semantic_equivalence import SQLSemanticEquivalence
 from ragas.metrics.collections.summary_score import SummaryScore
 from ragas.metrics.collections.tool_call_accuracy import ToolCallAccuracy
@@ -62,7 +64,9 @@ __all__ = [
     "AnswerAccuracy",
     "AnswerCorrectness",
     "AnswerRelevancy",
+    "AspectCritic",
     "BleuScore",
+    "SimpleCriteriaScore",
     "IDBasedContextPrecision",
     "IDBasedContextRecall",
     "NonLLMContextPrecisionWithReference",

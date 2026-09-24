@@ -51,6 +51,21 @@ def _ascore_params(metric: SimpleBaseMetric) -> t.Dict[str, bool]:
     return params
 
 
+def _wants_rendered_conversation(metric: SimpleBaseMetric) -> bool:
+    """Does this metric want ``user_input`` as text rather than as messages?
+
+    Agent metrics (ToolCallAccuracy, TopicAdherence, the AgentGoalAccuracy
+    family) annotate ``user_input`` as a list of Message types and walk it. The
+    criteria and rubric metrics annotate it ``str`` and expect the conversation
+    already rendered -- which is what the legacy implementations did with
+    ``MultiTurnSample.pretty_repr()``.
+    """
+    param = inspect.signature(type(metric).ascore).parameters.get("user_input")
+    if param is None:
+        return False
+    return "Message" not in str(param.annotation)
+
+
 def _required_columns_for(
     params: t.Dict[str, bool], metric_type: MetricType
 ) -> t.Dict[MetricType, t.Set[str]]:
@@ -93,6 +108,7 @@ class _CollectionsMetricAdapter(Metric):
 
     metric: SimpleBaseMetric = field(default=None)  # type: ignore[assignment]
     _params: t.Dict[str, bool] = field(default_factory=dict)
+    _render_conversation: bool = field(default=False)
 
     def __post_init__(self):
         if self.metric is not None and not self.name:
@@ -108,6 +124,12 @@ class _CollectionsMetricAdapter(Metric):
         kwargs = {}
         for name, required in self._params.items():
             value = getattr(sample, name, None)
+            if (
+                name == "user_input"
+                and isinstance(sample, MultiTurnSample)
+                and self._render_conversation
+            ):
+                value = sample.pretty_repr()
             if value is None and not required:
                 continue
             kwargs[name] = value
@@ -146,7 +168,11 @@ def adapt_collections_metric(metric: SimpleBaseMetric) -> Metric:
         of either sample type, so no sample could ever satisfy it.
     """
     params = _ascore_params(metric)
-    names = set(params)
+    # Only *required* parameters constrain which sample types can drive the
+    # metric: an optional one that the sample does not carry is simply skipped.
+    # Deciding on all parameters wrongly marked the rubric and criteria metrics
+    # single-turn-only, though their legacy counterparts are both.
+    names = {name for name, required in params.items() if required}
     single = names <= SINGLE_TURN_FIELDS
     multi = names <= MULTI_TURN_FIELDS
 
@@ -168,7 +194,12 @@ def adapt_collections_metric(metric: SimpleBaseMetric) -> Metric:
             f"MultiTurnSample. Score it directly with `await metric.ascore(...)`."
         )
 
-    adapter = cls(metric=metric, _params=params, name=metric.name)
+    adapter = cls(
+        metric=metric,
+        _params=params,
+        _render_conversation=_wants_rendered_conversation(metric),
+        name=metric.name,
+    )
     # Set the backing field directly: the `required_columns` setter validates
     # against VALID_COLUMNS, which is narrower than the sample models (it has
     # `rubric`, while SingleTurnSample has `rubrics`, and omits the agent fields).
