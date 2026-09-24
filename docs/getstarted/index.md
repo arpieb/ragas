@@ -7,7 +7,7 @@ Before you proceed further, ensure that you have [Ragas installed](./install.md)
 !!! note
     The tutorials provide an overview of what you can accomplish with Ragas and the basic skills needed to utilize it effectively. For an in-depth explanation of the core concepts behind Ragas, check out the [Core Concepts](../concepts/index.md) page. You can also explore the [How-to Guides](../howtos/index.md) for specific applications of Ragas.
 
-If you have any questions about Ragas, feel free to join our [Discord community](../community/index.md) and ask in the `#questions` channel.
+If you have any questions about Ragas, open an issue on [GitHub](https://github.com/arpieb/ragas-ng/issues).
 
 ## Quickstart
 

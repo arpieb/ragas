@@ -230,5 +230,4 @@ my_metric = DiscreteMetric(
 ## Getting Help
 
 - 📚 [Full Documentation](../index.md)
-- 💬 [Join our Discord Community](https://discord.gg/5djav8GGNZ)
 - 🐛 [Report Issues](https://github.com/arpieb/ragas-ng/issues)
