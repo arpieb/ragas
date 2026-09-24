@@ -1777,6 +1777,9 @@ If you encounter issues during migration:
     - Search [existing issues](https://github.com/arpieb/ragas-ng/issues)
     - Create a new issue with migration-specific details
 
+3. **GitHub Discussions**
+    - Ask migration questions in [Q&A](https://github.com/arpieb/ragas-ng/discussions/categories/q-a)
+
 ---
 
 ## Summary

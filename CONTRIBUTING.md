@@ -343,6 +343,7 @@ make install
 ### Getting Help
 - **Documentation**: Check `CLAUDE.md` for AI assistant guidance
 - **Commands**: Run `make help` for all available targets
+- **Questions**: Ask in [GitHub Discussions](https://github.com/arpieb/ragas-ng/discussions/categories/q-a)
 - **Issues**: Check existing GitHub issues or create a new one
 
 ## Contributing Guidelines

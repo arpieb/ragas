@@ -110,6 +110,11 @@ make serve-docs
 
 Upstream's hosted docs at docs.ragas.io describe the original project and will not match this fork on LangChain, provider setup or the metrics APIs.
 
+## Getting help
+
+- **Questions**: ask in [GitHub Discussions](https://github.com/arpieb/ragas-ng/discussions/categories/q-a).
+- **Bugs and feature requests**: open a [GitHub issue](https://github.com/arpieb/ragas-ng/issues).
+
 ## Development
 
 ```bash
