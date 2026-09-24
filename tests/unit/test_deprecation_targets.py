@@ -65,6 +65,7 @@ def test_suggested_import_resolves(name):
 
 @pytest.mark.parametrize("name", sorted(_NO_COLLECTIONS_EQUIVALENT))
 def test_unported_metrics_do_not_promise_a_replacement(name):
+    """Skipped while every metric has a port -- the set is empty, not broken."""
     msg = warning_for(name)
     assert IMPORT_RE.search(msg) is None, (
         f"{name} has no collections port, but its warning suggests an import"
@@ -89,6 +90,20 @@ def test_renames_are_actually_renames():
             f"{old} now exists in collections; drop it from _COLLECTIONS_RENAMES"
         )
         assert hasattr(collections, new), f"rename target {new} does not exist"
+
+
+def test_nothing_is_left_unported():
+    """Records the state the tier 1-3 ports reached.
+
+    An empty set is why `test_unported_metrics_do_not_promise_a_replacement`
+    skips. If a metric ever lands in ragas.metrics with no collections
+    equivalent, add it here -- that un-skips the test and restores the honest
+    "no migration target" warning for it.
+    """
+    assert _NO_COLLECTIONS_EQUIVALENT == frozenset(), (
+        f"un-ported metrics: {sorted(_NO_COLLECTIONS_EQUIVALENT)}. Update this "
+        f"test deliberately when that is intended."
+    )
 
 
 def test_every_deprecated_name_is_classified():
