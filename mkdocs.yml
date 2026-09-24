@@ -190,15 +190,12 @@ not_in_nav: |
   extra/components/choose_generator_llm.md
   howtos/customizations/metrics/_cost.md
 
-  # Unmaintained integration pages, superseded or never linked from anywhere.
-  # _ag_ui.md and _haystack.md are older copies of ag_ui.md / haystack.md.
-  howtos/integrations/_ag_ui.md
-  howtos/integrations/_athina.md
-  howtos/integrations/_haystack.md
+  # Both document shipped integrations -- ragas.integrations.helicone (which
+  # evaluate() reads) and ragas.integrations.tracing.langfuse -- but neither is
+  # in the sidebar. _langfuse.md also imports ragas.metrics.critique, which no
+  # longer exists. They need a pass, not a nav entry.
   howtos/integrations/_helicone.md
   howtos/integrations/_langfuse.md
-  howtos/integrations/_tonic-validate.md
-  howtos/integrations/_zeno.md
 
   # Stubs and internal notes, not user-facing documentation.
   community/pdf_export.md
