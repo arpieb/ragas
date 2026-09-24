@@ -192,8 +192,8 @@ not_in_nav: |
 
   # Both document shipped integrations -- ragas.integrations.helicone (which
   # evaluate() reads) and ragas.integrations.tracing.langfuse -- but neither is
-  # in the sidebar. _langfuse.md also imports ragas.metrics.critique, which no
-  # longer exists. They need a pass, not a nav entry.
+  # in the sidebar. Their imports resolve; what they still use is the legacy
+  # metric-injection pattern, so they want modernising before promotion.
   howtos/integrations/_helicone.md
   howtos/integrations/_langfuse.md
 
