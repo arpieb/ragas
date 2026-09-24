@@ -258,12 +258,12 @@ Imagine your goal is to create 50 different queries where each query is about so
 
 ```python
 from dataclasses import dataclass
-from ragas.testset.synthesizers.base_query import QuerySynthesizer
+from ragas.testset.synthesizers import BaseSynthesizer
 
 
 @dataclass
-class EntityQuerySynthesizer(QuerySynthesizer):
-    async def _generate_scenarios(self, n, knowledge_graph, callbacks):
+class EntityQuerySynthesizer(BaseSynthesizer):
+    async def _generate_scenarios(self, n, knowledge_graph, persona_list, callbacks):
         """
         logic to query nodes with entity
         logic describing how to combine nodes,styles,length,persona to form n scenarios
@@ -278,6 +278,6 @@ class EntityQuerySynthesizer(QuerySynthesizer):
         """
 
         return SingleTurnSample(
-            user_input=query, reference_contexs=contexts, reference=reference
+            user_input=query, reference_contexts=contexts, reference=reference
         )
 ```
