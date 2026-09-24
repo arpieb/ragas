@@ -91,10 +91,17 @@ exclude = ["*.ipynb", "*/_version.py"]  # Exclude Jupyter notebooks and auto-gen
 select = ["E", "F", "I", "TID251"]
 ignore = ["E501"]  # Line length handled by formatter
 
-# LangChain is banned outright. The removal is complete -- no file in src, tests
-# or docs imports it, so there are no per-file-ignores left. The ban stays: it is
-# what stops one being reintroduced. tests/unit/test_langchain_boundary.py
-# asserts the same thing at runtime.
+# examples/ is linted for this ban only. It sat outside ruff's paths entirely
+# until now, which is how four langchain imports survived the whole removal --
+# `make format` ran on `src tests docs`. Bringing it fully under lint means 24
+# pre-existing findings, 9 of them E402s that need judgement, so that is left as
+# a separate decision; the ban is the part that matters here.
+[tool.ruff.lint.per-file-ignores]
+"examples/**" = ["E", "F", "I"]
+
+# LangChain is banned outright. No file in src, tests, docs or examples imports
+# it. The ban stays: it is what stops one being reintroduced.
+# tests/unit/test_langchain_boundary.py asserts the same thing at runtime.
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "langchain".msg = "ragas does not depend on LangChain. See docs/howtos/migrations/migrate_off_langchain.md."
 "langchain_core".msg = "ragas does not depend on LangChain. See docs/howtos/migrations/migrate_off_langchain.md."

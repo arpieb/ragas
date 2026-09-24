@@ -55,9 +55,9 @@ format: ## Format and lint all code
 	@echo "(ruff format) Formatting ragas..."
 	$(Q)uv run --active ruff format src tests docs --exclude src/ragas/_version.py --config pyproject.toml
 	@echo "(ruff) Auto-fixing ragas (includes import sorting and unused imports)..."
-	$(Q)uv run --active ruff check src tests docs --exclude src/ragas/_version.py --fix-only --config pyproject.toml
+	$(Q)uv run --active ruff check src tests docs examples --exclude src/ragas/_version.py --fix-only --config pyproject.toml
 	@echo "(ruff) Final linting check for ragas..."
-	$(Q)uv run --active ruff check src tests docs --exclude src/ragas/_version.py --config pyproject.toml
+	$(Q)uv run --active ruff check src tests docs examples --exclude src/ragas/_version.py --config pyproject.toml
 
 type: ## Type check all code
 	@echo "Type checking all code..."
@@ -95,7 +95,7 @@ run-ci: ## Run complete CI pipeline (mirrors GitHub CI exactly)
 	@echo "Running complete CI pipeline..."
 	@echo "Format check..."
 	$(Q)uv run --active ruff format --check src tests docs --exclude src/ragas/_version.py --config pyproject.toml
-	$(Q)uv run --active ruff check src tests docs --exclude src/ragas/_version.py --config pyproject.toml
+	$(Q)uv run --active ruff check src tests docs examples --exclude src/ragas/_version.py --config pyproject.toml
 	@echo "Type check..."
 	$(Q)$(MAKE) type
 	@echo "Unit tests..."
@@ -106,7 +106,7 @@ run-ci-format-check: ## Run format check in dry-run mode (like GitHub CI)
 	@echo "Running format check (dry-run, like GitHub CI)..."
 	@echo "Checking ragas formatting..."
 	$(Q)uv run --active ruff format --check src tests docs --exclude src/ragas/_version.py --config pyproject.toml
-	$(Q)uv run --active ruff check src docs tests --exclude src/ragas/_version.py --config pyproject.toml
+	$(Q)uv run --active ruff check src docs tests examples --exclude src/ragas/_version.py --config pyproject.toml
 
 run-ci-type: ## Run type checking (matches GitHub CI)
 	@echo "Running type checking (matches GitHub CI)..."
@@ -120,7 +120,7 @@ run-ci-fast: ## Fast CI check for quick local validation (2-3 minutes)
 	@echo "Running fast CI check for quick feedback..."
 	@echo "Format check..."
 	$(Q)uv run --active ruff format --check src tests docs --exclude src/ragas/_version.py --config pyproject.toml
-	$(Q)uv run --active ruff check src docs tests --exclude src/ragas/_version.py --config pyproject.toml
+	$(Q)uv run --active ruff check src docs tests examples --exclude src/ragas/_version.py --config pyproject.toml
 	@echo "Core unit tests (no nbmake for speed)..."
 	$(Q)uv run --active pytest tests/unit --dist loadfile -n auto -x
 	@echo "Fast CI check completed!"

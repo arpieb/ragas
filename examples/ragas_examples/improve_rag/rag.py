@@ -13,13 +13,13 @@ import os
 from typing import Any, Dict, Optional
 
 import mlflow
-from langchain_core.documents import Document
 
 # Suppress MLflow warnings when server is not running
 logging.getLogger("mlflow.tracing.export.mlflow_v3").setLevel(logging.ERROR)
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.retrievers import BM25Retriever as LangchainBM25Retriever
 from openai import AsyncOpenAI
+from rank_bm25 import BM25Okapi
+
+from ragas.testset.document import Document
 
 import datasets
 
@@ -27,15 +27,61 @@ import datasets
 logger = logging.getLogger(__name__)
 
 
+def split_text(text: str, chunk_size: int = 1000, chunk_overlap: int = 100) -> list[str]:
+    """Split text into overlapping chunks, preferring natural boundaries.
+
+    Walks the separators from coarsest to finest and splits on the first one
+    that gets a piece under ``chunk_size``, falling back to a hard character
+    cut. This replaces langchain's RecursiveCharacterTextSplitter -- ragas no
+    longer depends on langchain, and neither should its examples.
+    """
+    separators = ["\n\n", "\n", ".", " ", ""]
+
+    def split(piece: str, seps: list[str]) -> list[str]:
+        if len(piece) <= chunk_size:
+            return [piece] if piece.strip() else []
+        if not seps:
+            return [piece[i : i + chunk_size] for i in range(0, len(piece), chunk_size)]
+
+        sep, rest = seps[0], seps[1:]
+        parts = piece.split(sep) if sep else list(piece)
+
+        chunks, current = [], ""
+        for part in parts:
+            candidate = f"{current}{sep}{part}" if current else part
+            if len(candidate) <= chunk_size:
+                current = candidate
+            else:
+                if current:
+                    chunks.append(current)
+                current = part if len(part) <= chunk_size else ""
+                if not current:
+                    chunks.extend(split(part, rest))
+        if current:
+            chunks.append(current)
+        return [c for c in chunks if c.strip()]
+
+    chunks = split(text, separators)
+    if chunk_overlap <= 0 or len(chunks) < 2:
+        return chunks
+
+    # Re-introduce overlap by prefixing each chunk with the tail of the previous.
+    overlapped = [chunks[0]]
+    for previous, chunk in zip(chunks, chunks[1:]):
+        overlapped.append(previous[-chunk_overlap:] + chunk)
+    return overlapped
+
+
 class BM25Retriever:
     """Simple BM25-based retriever for document search."""
-    
+
     def __init__(self, dataset_name="m-ric/huggingface_doc", default_k=3):
         self.default_k = default_k
+        self.chunks: list[Document] = []
         self.retriever = self._build_retriever(dataset_name)
-    
-    def _build_retriever(self, dataset_name: str) -> LangchainBM25Retriever:
-        """Build a BM25 retriever from HuggingFace docs."""
+
+    def _build_retriever(self, dataset_name: str) -> BM25Okapi:
+        """Build a BM25 index over chunks of the HuggingFace docs."""
         knowledge_base = datasets.load_dataset(dataset_name, split="train")
         
         # Create documents
@@ -48,18 +94,11 @@ class BM25Retriever:
         ]
         
         # Split documents
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=100,
-            add_start_index=True,
-            strip_whitespace=True,
-            separators=["\n\n", "\n", ".", " ", ""],
-        )
-        
-        all_chunks = []
-        for document in source_documents:
-            chunks = text_splitter.split_documents([document])
-            all_chunks.extend(chunks)
+        all_chunks = [
+            Document(page_content=piece, metadata=dict(document.metadata))
+            for document in source_documents
+            for piece in split_text(document.page_content)
+        ]
         
         # Simple deduplication
         unique_chunks = []
@@ -69,17 +108,18 @@ class BM25Retriever:
                 seen_content.add(chunk.page_content)
                 unique_chunks.append(chunk)
         
-        return LangchainBM25Retriever.from_documents(
-            documents=unique_chunks,
-            k=1,  # Will be overridden by retrieve method
-        )
-    
-    def retrieve(self, query: str, top_k: int = None):
+        self.chunks = unique_chunks
+        # langchain's BM25Retriever was a thin wrapper over this same library,
+        # with whitespace tokenisation.
+        return BM25Okapi([chunk.page_content.split() for chunk in unique_chunks])
+
+    def retrieve(self, query: str, top_k: int = None) -> list[Document]:
         """Retrieve documents for a given query."""
         if top_k is None:
             top_k = self.default_k
-        self.retriever.k = top_k
-        return self.retriever.invoke(query)
+        scores = self.retriever.get_scores(query.split())
+        ranked = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+        return [self.chunks[i] for i in ranked[:top_k]]
 
 
 class RAG:

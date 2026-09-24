@@ -15,7 +15,13 @@ import os
 from datasets import Dataset
 from ragas import evaluate
 from ragas.llms import oci_genai_factory
-from ragas.metrics import faithfulness, answer_relevancy, context_precision
+
+# These metrics import from the legacy `ragas.metrics` namespace and emit a
+# DeprecationWarning pointing at `ragas.metrics.collections`. That is correct
+# here: collections metrics require an InstructorBaseRagasLLM, and
+# oci_genai_factory returns a BaseRagasLLM, so this example stays on
+# evaluate() with the legacy metrics.
+from ragas.metrics import answer_relevancy, context_precision, faithfulness
 
 
 def main():
@@ -71,19 +77,18 @@ def main():
     # Run evaluation
     print("\n🔍 Running RAG evaluation with OCI Gen AI...")
     try:
-        result = evaluate(
-            dataset,
-            metrics=[faithfulness, answer_relevancy, context_precision],
-            llm=llm
-        )
+        metrics = [faithfulness, answer_relevancy, context_precision]
+        result = evaluate(dataset, metrics=metrics, llm=llm)
         
         print("✅ Evaluation completed successfully!")
         print("\n📈 Results:")
         print(result)
         
-        # Print individual metric scores
+        # Print individual metric scores. EvaluationResult has no .items();
+        # to_pandas() gives the per-row scores, and their mean is the aggregate.
         print("\n📊 Detailed Scores:")
-        for metric_name, score in result.items():
+        scores = result.to_pandas()[[m.name for m in metrics]]
+        for metric_name, score in scores.mean().items():
             print(f"  {metric_name}: {score:.4f}")
             
     except Exception as e:
@@ -105,7 +110,7 @@ def test_llm_connection():
         )
         
         # Test simple generation
-        from langchain_core.prompt_values import StringPromptValue
+        from ragas.prompt.value import StringPromptValue
         prompt = StringPromptValue(text="Hello, how are you?")
         
         result = llm.generate_text(prompt, n=1, temperature=0.1)
