@@ -13,7 +13,7 @@ In this guide, you'll learn how to evaluate and iteratively improve a RAG (Retri
 
 We've built a simple RAG system that retrieves relevant documents from the [Hugging Face documentation dataset](https://huggingface.co/datasets/m-ric/huggingface_doc) and generates answers using an LLM. This dataset contains documentation pages for many Hugging Face packages stored as markdown, providing a rich knowledge base for testing RAG capabilities.
 
-The complete implementation is available at: [ragas_examples/improve_rag/](https://github.com/vibrantlabsai/ragas/blob/main/examples/ragas_examples/improve_rag/)
+The complete implementation is available at: [ragas_examples/improve_rag/](https://github.com/arpieb/ragas-ng/blob/main/examples/ragas_examples/improve_rag/)
 
 ```mermaid
 flowchart LR

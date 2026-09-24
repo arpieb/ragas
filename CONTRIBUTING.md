@@ -6,7 +6,7 @@ This comprehensive guide covers development workflows for the Ragas monorepo, de
 
 ```bash
 # 1. Clone and enter the repository
-git clone https://github.com/vibrantlabsai/ragas.git
+git clone https://github.com/arpieb/ragas-ng.git
 
 # 2. Install uv (if not already installed)
 curl -LsSf https://astral.sh/uv/install.sh | sh

@@ -12,7 +12,7 @@ Langfuse ([GitHub](https://github.com/langfuse/langfuse)) is an open-source plat
 - **Detailed Analytics**: Segment and [analyze](https://langfuse.com/docs/analytics/overview) traces to identify low-quality scores and improve your system's performance.
 - **Score Reporting**: Drill down into detailed reports for specific use cases and user segments.
 
-Ragas ([GitHub](https://github.com/vibrantlabsai/ragas)) is an open-source tool that can help you run [Model-Based Evaluation](https://langfuse.com/docs/scores/model-based-evals) on your traces/spans, especially for RAG pipelines. Ragas can perform reference-free evaluations of various aspects of your RAG pipeline. Because it is reference-free you don't need ground-truths when running the evaluations and can run it on production traces that you've collected with Langfuse.
+Ragas ([GitHub](https://github.com/arpieb/ragas-ng)) is an open-source tool that can help you run [Model-Based Evaluation](https://langfuse.com/docs/scores/model-based-evals) on your traces/spans, especially for RAG pipelines. Ragas can perform reference-free evaluations of various aspects of your RAG pipeline. Because it is reference-free you don't need ground-truths when running the evaluations and can run it on production traces that you've collected with Langfuse.
 
 ## Getting Started
 

@@ -387,17 +387,25 @@ def llm_factory(
     for both sync and async operations. Returns instances with .generate() and .agenerate()
     methods that accept Pydantic models for structured outputs.
 
-    Auto-detects the best adapter for your provider:
+    Without a client, routes through LiteLLM and resolves credentials from the
+    environment, so any LiteLLM-supported provider works with no vendor SDK.
+
+    With a client, auto-detects the best adapter for your provider:
     - Google Gemini → uses LiteLLM adapter
     - Other providers → uses Instructor adapter (default)
     - Explicit control available via adapter parameter
 
     Args:
         model: Model name (e.g., "gpt-4o", "claude-3-sonnet", "gemini-2.0-flash").
+               Without a client, any LiteLLM model string is accepted, such as
+               "anthropic/claude-sonnet-4-5" or "ollama/llama3".
         provider: LLM provider (default: "openai").
                  Examples: openai, anthropic, google, groq, mistral, etc.
-        client: Pre-initialized client instance (required). For OpenAI, can be
-               OpenAI(...) or AsyncOpenAI(...).
+                 Without a client, a non-OpenAI provider is prefixed onto a bare
+                 model name to form LiteLLM's "provider/model" string.
+        client: Optional pre-initialized client instance. For OpenAI, can be
+               OpenAI(...) or AsyncOpenAI(...). If omitted, the LLM is created
+               through LiteLLM and the adapter argument is ignored.
         adapter: Structured output adapter to use (default: "auto").
                 - "auto": Auto-detect based on provider/client (recommended)
                 - "instructor": Use Instructor library
@@ -415,13 +423,18 @@ def llm_factory(
         InstructorBaseRagasLLM: Instance with generate() and agenerate() methods.
 
     Raises:
-        ValueError: If client is missing, provider is unsupported, model is invalid,
-                   or adapter initialization fails.
+        ValueError: If model is empty, provider is unsupported, or adapter
+                   initialization fails.
 
     Examples:
+        # No client: routed through LiteLLM, credentials read from the environment
+        llm = llm_factory("gpt-4o-mini")
+        llm = llm_factory("anthropic/claude-sonnet-4-5")
+        llm = llm_factory("llama3", provider="ollama")  # -> "ollama/llama3"
+
+        # With an explicit client
         from openai import OpenAI
 
-        # Basic usage
         client = OpenAI(api_key="...")
         llm = llm_factory("gpt-4o-mini", client=client)
         response = llm.generate(prompt, ResponseModel)
@@ -436,13 +449,11 @@ def llm_factory(
         client = Anthropic(api_key="...")
         llm = llm_factory("claude-3-sonnet", provider="anthropic", client=client)
 
-        # Google Gemini (auto-detects litellm adapter)
-        from litellm import OpenAI as LiteLLMClient
-        client = LiteLLMClient(api_key="...", model="gemini-2.0-flash")
-        llm = llm_factory("gemini-2.0-flash", client=client)
+        # Google Gemini, no SDK needed (reads GEMINI_API_KEY)
+        llm = llm_factory("gemini/gemini-2.0-flash")
 
         # Explicit adapter selection
-        llm = llm_factory("gemini-2.0-flash", client=client, adapter="litellm")
+        llm = llm_factory("gpt-4o-mini", client=client, adapter="litellm")
 
         # Custom instructor mode for backends without response_format support
         import instructor

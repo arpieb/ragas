@@ -3,8 +3,8 @@ site_description: Evaluation framework for your AI Application
 # ReadTheDocs injects READTHEDOCS_CANONICAL_URL; the fallback keeps local and CI
 # builds working, since the llmstxt plugin hard-requires site_url to be set.
 site_url: !ENV [READTHEDOCS_CANONICAL_URL, "https://docs.ragas.io/"]
-repo_name: vibrantlabsai/ragas
-repo_url: https://github.com/vibrantlabsai/ragas
+repo_name: arpieb/ragas-ng
+repo_url: https://github.com/arpieb/ragas-ng
 watch:
   - src
 
@@ -293,7 +293,7 @@ plugins:
   - social:
       enabled: !ENV [MKDOCS_CI, true]
   - copy-to-llm:
-      repo_url: "https://raw.githubusercontent.com/vibrantlabsai/ragas/main/docs"
+      repo_url: "https://raw.githubusercontent.com/arpieb/ragas-ng/main/docs"
       buttons:
         copy_page: true
         copy_markdown_link: false  # Disabled until plugin bug is fixed
@@ -337,7 +337,7 @@ plugins:
       enable_creation_date: true
   - git-committers:
       enabled: !ENV [MKDOCS_CI, false]
-      repository: vibrantlabsai/ragas
+      repository: arpieb/ragas-ng
       branch: main
   - mkdocstrings:
       handlers:

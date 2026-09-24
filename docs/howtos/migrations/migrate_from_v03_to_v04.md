@@ -1774,7 +1774,7 @@ If you encounter issues during migration:
     - [LLM Configuration](../../references/llms.md)
 
 2. **GitHub Issues**
-    - Search [existing issues](https://github.com/explodinggradients/ragas/issues)
+    - Search [existing issues](https://github.com/arpieb/ragas-ng/issues)
     - Create a new issue with migration-specific details
 
 3. **Community Support**

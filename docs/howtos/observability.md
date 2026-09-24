@@ -360,7 +360,7 @@ This notebook is just an introduction to the capabilities of Ragas and Phoenix. 
 
 If you enjoyed this tutorial, please leave a ⭐ on GitHub:
 
-- [Ragas](https://github.com/vibrantlabsai/ragas)
+- [Ragas](https://github.com/arpieb/ragas-ng)
 - [Phoenix](https://github.com/Arize-ai/phoenix)
 - [OpenInference](https://github.com/Arize-ai/openinference)
 

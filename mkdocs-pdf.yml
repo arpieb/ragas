@@ -37,7 +37,7 @@ plugins:
       enable_creation_date: true
   - git-committers:
       enabled: !ENV [MKDOCS_CI, false]
-      repository: vibrantlabsai/ragas
+      repository: arpieb/ragas-ng
       branch: main
   - mkdocstrings:
       handlers:

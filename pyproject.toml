@@ -31,10 +31,10 @@ dependencies = [
 dynamic = ["version", "readme"]
 
 [project.urls]
-Homepage = "https://github.com/vibrantlabsai/ragas"
-Documentation = "https://docs.ragas.io"
-Code = "https://github.com/vibrantlabsai/ragas"
-Issues = "https://github.com/vibrantlabsai/ragas/issues"
+Homepage = "https://github.com/arpieb/ragas-ng"
+Documentation = "https://github.com/arpieb/ragas-ng/tree/main/docs"
+Code = "https://github.com/arpieb/ragas-ng"
+Issues = "https://github.com/arpieb/ragas-ng/issues"
 
 [project.optional-dependencies]
 # Core optional features
